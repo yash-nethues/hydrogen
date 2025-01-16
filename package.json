@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
-  "name": "jerry-hydrogen",
-=======
   "name": "hydrogen-quickstart",
->>>>>>> bf50fe21f7b2a45740e44f884219c08572807c27
   "private": true,
   "sideEffects": false,
   "version": "2024.10.4",
@@ -29,32 +25,17 @@
   },
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.2",
-<<<<<<< HEAD
-    "@remix-run/dev": "^2.13.1",
-=======
     "@remix-run/dev": "^2.15.2",
->>>>>>> bf50fe21f7b2a45740e44f884219c08572807c27
     "@remix-run/eslint-config": "^2.13.1",
     "@shopify/cli": "~3.73.0",
     "@shopify/hydrogen-codegen": "^0.3.2",
     "@shopify/mini-oxygen": "^3.1.0",
     "@shopify/oxygen-workers-types": "^4.1.2",
     "@shopify/prettier-config": "^1.1.2",
-<<<<<<< HEAD
-    "@tailwindcss/vite": "4.0.0-alpha.17",
-=======
->>>>>>> bf50fe21f7b2a45740e44f884219c08572807c27
     "@total-typescript/ts-reset": "^0.4.2",
     "@types/eslint": "^8.4.10",
     "@types/react": "^18.2.22",
     "@types/react-dom": "^18.2.7",
-<<<<<<< HEAD
-    "eslint": "^8.20.0",
-    "eslint-plugin-hydrogen": "0.12.2",
-    "prettier": "^2.8.4",
-    "typescript": "^5.2.2",
-    "vite": "^5.1.0",
-=======
     "autoprefixer": "^10.4.20",
     "eslint": "^8.20.0",
     "eslint-plugin-hydrogen": "0.12.2",
@@ -62,18 +43,9 @@
     "prettier": "^2.8.4",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.2.2",
->>>>>>> bf50fe21f7b2a45740e44f884219c08572807c27
     "vite-tsconfig-paths": "^4.3.1"
   },
   "engines": {
     "node": ">=18.0.0"
-<<<<<<< HEAD
-  },
-  "browserslist": [
-    "defaults"
-  ]
-}
-=======
   }
 }
->>>>>>> bf50fe21f7b2a45740e44f884219c08572807c27
