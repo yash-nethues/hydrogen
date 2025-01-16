@@ -13,7 +13,7 @@ import {
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
-import tailwindCss from './styles/tailwind.css?url';
+import tailwind from "~/styles/tailwind.css?url";
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 
@@ -21,26 +21,26 @@ import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
  * This is important to avoid re-fetching root queries on sub-navigations
  * @type {ShouldRevalidateFunction}
  */
-export const shouldRevalidate = ({
-  formMethod,
-  currentUrl,
-  nextUrl,
-  defaultShouldRevalidate,
-}) => {
+
+export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
   // revalidate when a mutation is performed e.g add to cart, login...
-  if (formMethod && formMethod !== 'GET') return true;
+  if (formMethod && formMethod !== 'GET') {
+    return true;
+  }
 
   // revalidate when manually revalidating via useRevalidator
-  if (currentUrl.toString() === nextUrl.toString()) return true;
+  if (currentUrl.toString() === nextUrl.toString()) {
+    return true;
+  }
 
-  return defaultShouldRevalidate;
+  return false;
 };
 
 export function links() {
   return [
-    {rel: 'stylesheet', href: tailwindCss},
     {rel: 'stylesheet', href: resetStyles},
     {rel: 'stylesheet', href: appStyles},
+    {rel: 'stylesheet', href: tailwind},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -65,23 +65,26 @@ export async function loader(args) {
 
   const {storefront, env} = args.context;
 
-  return defer({
-    ...deferredData,
-    ...criticalData,
-    publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
-    shop: getShopAnalytics({
-      storefront,
-      publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
-    }),
-    consent: {
-      checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
-      storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      withPrivacyBanner: false,
-      // localize the privacy banner
-      country: args.context.storefront.i18n.country,
-      language: args.context.storefront.i18n.language,
+  return defer(
+    {
+      ...deferredData,
+      ...criticalData,
+      publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
+      shop: getShopAnalytics({
+        storefront,
+        publicStorefrontId: env.PUBLIC_STOREFRONT_ID,
+      }),
+      consent: {
+        checkoutDomain: env.PUBLIC_CHECKOUT_DOMAIN,
+        storefrontAccessToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+      },
     },
-  });
+    {
+      headers: {
+        'Set-Cookie': await args.context.session.commit(),
+      },
+    },
+  );
 }
 
 /**
@@ -102,7 +105,9 @@ async function loadCriticalData({context}) {
     // Add other queries here, so that they are loaded in parallel
   ]);
 
-  return {header};
+  return {
+    header,
+  };
 }
 
 /**
@@ -137,7 +142,8 @@ function loadDeferredData({context}) {
 /**
  * @param {{children?: React.ReactNode}}
  */
-export function Layout({children}) {
+
+function Layout({children}) {
   const nonce = useNonce();
   /** @type {RootLoader} */
   const data = useRouteLoaderData('root');
@@ -170,7 +176,11 @@ export function Layout({children}) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
 }
 
 export function ErrorBoundary() {
@@ -186,15 +196,17 @@ export function ErrorBoundary() {
   }
 
   return (
-    <div className="route-error">
-      <h1>Oops</h1>
-      <h2>{errorStatus}</h2>
-      {errorMessage && (
-        <fieldset>
-          <pre>{errorMessage}</pre>
-        </fieldset>
-      )}
-    </div>
+    <Layout>
+      <div className="route-error">
+        <h1>Oops</h1>
+        <h2>{errorStatus}</h2>
+        {errorMessage && (
+          <fieldset>
+            <pre>{errorMessage}</pre>
+          </fieldset>
+        )}
+      </div>
+    </Layout>
   );
 }
 
