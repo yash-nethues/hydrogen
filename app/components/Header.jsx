@@ -2,16 +2,19 @@ import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
-
+import TopMenu from './TopMenu';
 /**
  * @param {HeaderProps}
  */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
-  return (
+ 
+  return (       
     <header className="header">
+
+      <TopMenu />
       <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <strong>{shop.name}</strong>
+        <img src="/image/logo.svg" className='logo'/>
       </NavLink>
       <HeaderMenu
         menu={menu}
