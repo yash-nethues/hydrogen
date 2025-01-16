@@ -6,6 +6,3 @@ node_modules
 /.mf
 .env
 .shopify
-/storefrontapi.generated.d.ts
-/package.json
-/package-lock.json
