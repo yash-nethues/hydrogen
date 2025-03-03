@@ -8,9 +8,12 @@
   --color-light: #fff;
 }
 
+
+
 img {
   border-radius: 4px;
 }
+
 
 /*
 * --------------------------------------------------
@@ -21,7 +24,9 @@ img {
   text-decoration: underline;
   cursor: pointer;
 }
+body{
 
+}
 /*
 * --------------------------------------------------
 * components/Aside
@@ -508,3 +513,62 @@ button.reset:hover:not(:has(> *)) {
 .account-logout {
   display: inline-block;
 }
+
+.swiper-button-prev {
+  width: 25px;
+  height: 34px;
+  position: absolute;
+  top: 50%;
+  left:0;
+  cursor: pointer;
+  z-index: 9;
+}
+.swiper-button-next {
+  width: 25px;
+  height: 34px;
+  position: absolute;
+  top: 50%;
+  right: 0;
+  cursor: pointer;
+
+  z-index: 9;
+}
+.swiper-button-prev::before{
+  content: "";
+    width: 25px;
+    height: 25px;
+    border-left: #334f67 solid 1px;
+    border-bottom: #334f67 solid 1px;
+    display: inline-block;
+    transform: rotate(45deg);
+    position: absolute;
+    transform-origin: right center;
+    left: 1px;
+    margin: 1px 0 0;
+
+    top: 50%;
+    z-index: 99;
+ }
+ .swiper-button-next::before {
+  content: "";
+  width: 25px;
+  height: 25px;
+  border-top: #334f67 solid 1px;
+  border-right: #334f67 solid 1px;
+  display: inline-block;
+  transform: rotate(45deg);
+  position: absolute;
+  transform-origin: right center;
+  right: 12px;
+  margin: 1px 0 0;
+ 
+  top: 50%;
+  z-index: 99;
+}
+
+
+.w-full-m-10 {
+  width: calc(100% - 40px);
+}
+
+.home-page-tab{ padding:1px;}

@@ -2,8 +2,9 @@ import {Await, Link} from '@remix-run/react';
 import {Suspense, useId} from 'react';
 import {Aside} from '~/components/Aside';
 import {Footer} from '~/components/Footer';
-import {Header, HeaderMenu} from '~/components/Header';
+import {Header, HeaderTop, HeaderMenu} from '~/components/Header';
 import {CartMain} from '~/components/CartMain';
+
 import {
   SEARCH_ENDPOINT,
   SearchFormPredictive,
@@ -25,7 +26,9 @@ export function PageLayout({
     <Aside.Provider>
       <CartAside cart={cart} />
       <SearchAside />
+      <HeaderTop />
       <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+     
       {header && (
         <Header
           header={header}
@@ -35,7 +38,7 @@ export function PageLayout({
         />
       )}
       <main>{children}</main>
-      <Footer
+      <Footer  className="mt-10 pt-10 border-t border-b-50 border-t-grey-200  border-b-blue-100"
         footer={footer}
         header={header}
         publicStoreDomain={publicStoreDomain}

@@ -1,29 +1,134 @@
-import {Suspense} from 'react';
+import React, {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
-import TopMenu from './TopMenu';
+import {Form, useLoaderData, useNavigate} from '@remix-run/react';
+
 /**
  * @param {HeaderProps}
  */
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
- 
-  return (       
-    <header className="header">
-
-      <TopMenu />
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
-        <img src="/image/logo.svg" className='logo'/>
-      </NavLink>
-      <HeaderMenu
+  return (
+    <header className="header pr-0 pl-0">
+      <HeaderMainMenus
         menu={menu}
         viewport="desktop"
         primaryDomainUrl={header.shop.primaryDomain.url}
         publicStoreDomain={publicStoreDomain}
       />
-      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+      {/* <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} /> */}
     </header>
+  );
+}
+
+export function HeaderTop({isLoggedIn, cart}) {
+  return (
+    <div className="">
+      {/* Top Bar with Navigation */}
+      <div className='custom-container'>
+      <div className="flex items-center justify-between ps-lg-48">
+        <span>
+          <a tabIndex="0" href="" className="text-brand text-15 font-bold">Free Shipping $79+</a>
+        </span>
+        <div>
+          <ul className="flex text-xs -mx-3.5">
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+                <span><img src="/image/chat.png" width="16" height="14" alt="Live Chat" /></span> Live Chat
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs"  href="tel:1-800-827-8478">
+                <span><img src="/image/call.png" width="16" height="15" alt="Call" /></span> 1-800-827-8478
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand relative after:absolute after:w-px after:inset-y-2 after:end-0 after:bg-grey text-0 lg:text-xs" href="#" role="button">
+                <span><img src="/image/help.png" width="17" height="17" alt="Help" /></span> Help
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" rel="nofollow" href="">
+                <span><img src="/image/order-status.png" width="19" height="18" alt="Order Status" /></span> Order Status
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5  px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" rel="nofollow" href="">
+                <span><img src="/image/tag.png" width="16" height="16" alt="Quick Shop" /></span> Quick Shop
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+                <span><img src="/image/giftcard.png" width="19" height="13" alt="Gift Cards" /></span> Gift Cards
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+                <span><img src="/image/email.png" width="18" height="13" alt="Email Sign Up" /></span> Email Sign Up
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+                <span><img src="/image/all-brand.png" width="16" height="16" alt="All Brands" /></span> All Brands
+              </a>
+            </li>
+            <li>
+              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+                <span><img src="/image/bag.png" width="16" height="16" alt="Retail Stores" /></span> Retail Stores
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      </div>
+
+      {/* Main Header Section */}
+      <div className="bg-gray-100 pt-8 pb-12 border-y relative border-grey-200 custom-container">
+        <div className="">
+          <div className="flex items-center gap-x-10 ">
+            <a href="" className="flex-none">
+              <img src="/image/logo-red.svg" className='w-44 sm:w-56 lg:w-72 xl:w-420'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
+            </a>
+            <SearchBar />
+
+            <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+
+          </div>
+
+          {/* Footer Bar with Links */}
+          <div className="absolute start-0 end-0 bottom-0 custom-container">
+            <div className="">
+              <ul className="font-bold uppercase text-xs flex">
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6">Special Buys</a></li>
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Free Offers</a></li>
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Big Paints Sale</a></li>
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 px-4">Exclusives</a></li>
+              </ul>
+              <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden lg:block">
+                <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SearchBar() {
+  return (
+    <div className="flex-1">
+      <Form method="get" action="/search" className="w-full relative">
+        <input  
+          className="text-base border border-grey-300 h-10 pl-4 pr-14 rounded-sm w-full"
+          name="q"
+          placeholder="Search From 85,000+ Art Supplies... keyword or item#"
+          type="text"
+        />
+        <button className="absolute right-2 top-1"><img src="/image/search-icon.png" width="30" height="31" alt="search" /></button>
+      </Form>
+    </div>
   );
 }
 
@@ -35,53 +140,103 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
  *   publicStoreDomain: HeaderProps['publicStoreDomain'];
  * }}
  */
-export function HeaderMenu({
+export function HeaderMainMenus({
   menu,
   primaryDomainUrl,
   viewport,
   publicStoreDomain,
 }) {
   const className = `header-menu-${viewport}`;
-  const {close} = useAside();
+
+  function closeAside(event) {
+    if (viewport === 'mobile') {
+      event.preventDefault();
+      window.location.href = event.currentTarget.href;
+    }
+  }
 
   return (
-    <nav className={className} role="navigation">
-      {viewport === 'mobile' && (
-        <NavLink
-          end
-          onClick={close}
-          prefetch="intent"
-          style={activeLinkStyle}
-          to="/"
-        >
-          Home
-        </NavLink>
-      )}
-      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
-        if (!item.url) return null;
+    <div className="bg-white border-b border-grey-200 w-full custom-container hidden lg:block">
+      <div className=" 3xl:px-5 m-auto">
+        <ul className="flex text-base font-semibold justify-between">
+          {viewport === 'mobile' && (
+            <NavLink
+              end
+              onClick={closeAside}
+              prefetch="intent"
+              style={activeLinkStyle}
+              to="/">
+              Home
+            </NavLink>
+          )}
+          {(menu || FALLBACK_HEADER_MENU).items.map((item, count) => {
+            if (!item.url) return null;
+            // if the url is internal, we strip the domain
+            const url =
+              item.url.includes('myshopify.com') ||
+              item.url.includes(publicStoreDomain) ||
+              item.url.includes(primaryDomainUrl)
+                ? new URL(item.url).pathname
+                : item.url;
+            return (
+              <li key={count}>
+                <NavLink
+                  className="p-2 2xl:p-2.5 xl:p-2 2xl:text-base xl:text-sm md:text-xs block transition-all text-blue hover:bg-blue min-h-14 flex items-center hover:text-white"
+                  end
+                  key={item.id}
+                  onClick={closeAside}
+                  prefetch="intent"
+                  to={url}
+                >
+                  {item.title}
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
 
-        // if the url is internal, we strip the domain
-        const url =
-          item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain) ||
-          item.url.includes(primaryDomainUrl)
-            ? new URL(item.url).pathname
-            : item.url;
-        return (
-          <NavLink
-            className="header-menu-item"
-            end
-            key={item.id}
-            onClick={close}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
-            {item.title}
-          </NavLink>
-        );
-      })}
-    </nav>
+/**
+ * @param {{
+ *   menu: HeaderProps['header']['menu'];
+ *   primaryDomainUrl: HeaderProps['header']['shop']['primaryDomain']['url'];
+ *   viewport: Viewport;
+ *   publicStoreDomain: HeaderProps['publicStoreDomain'];
+ * }}
+ */
+export function HeaderMenu() {
+  const menuItems = [
+    "Canvases & Painting Surfaces",
+    "Paints & Mediums",
+    "Brushes",
+    "Frames & Matting",
+    "Papers & Surfaces",
+    "Drawing & Illustration",
+    "Art Easels",
+    "Artist Studio & Furniture",
+    "Resources",
+    "NEW",
+    "SALEssss",
+    "More"
+  ];
+
+  return (
+    <div className="bg-white border-b border-grey-200 w-full">
+      <div className="container file:2xl:container 3xl:px-5 m-auto">
+        <ul className="flex text-base font-semibold justify-between">
+          {menuItems.map((item, index) => (
+            <li key={index}>
+              <a href="#" className="p-2.5 block transition-all text-blue hover:bg-blue min-h-14 flex items-center hover:text-white">
+                {item}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
   );
 }
 
@@ -90,18 +245,22 @@ export function HeaderMenu({
  */
 function HeaderCtas({isLoggedIn, cart}) {
   return (
-    <nav className="header-ctas" role="navigation">
-      <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        <Suspense fallback="Sign in">
-          <Await resolve={isLoggedIn} errorElement="Sign in">
-            {(isLoggedIn) => (isLoggedIn ? 'Account' : 'Sign in')}
-          </Await>
-        </Suspense>
-      </NavLink>
-      <SearchToggle />
-      <CartToggle cart={cart} />
-    </nav>
+    <div className="flex-none flex gap-x-10">
+      <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
+        <span><img src="/image/my-account.png" width="31" height="31" alt="My Account" /></span>
+        <span className="font-semibold text-base uppercase text-blue hidden lg:block">Account</span>
+        <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden lg:block absolute text-xs top-full font-medium whitespace-nowrap end-0 text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyle}>
+          <Suspense fallback="Sign in">
+            <Await resolve={isLoggedIn} errorElement="Sign in">
+              {(isLoggedIn) => (isLoggedIn ? 'Hello, Sign In' : 'Account')}
+            </Await>
+          </Suspense>
+        </NavLink>
+      </div>
+      <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
+        <CartToggle cart={cart} />
+      </div>
+    </div>
   );
 }
 
@@ -132,23 +291,25 @@ function SearchToggle() {
 function CartBadge({count}) {
   const {open} = useAside();
   const {publish, shop, cart, prevCart} = useAnalytics();
-
   return (
-    <a
-      href="/cart"
-      onClick={(e) => {
-        e.preventDefault();
-        open('cart');
-        publish('cart_viewed', {
-          cart,
-          prevCart,
-          shop,
-          url: window.location.href || '',
-        });
-      }}
-    >
-      Cart {count === null ? <span>&nbsp;</span> : count}
-    </a>
+    <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
+      <span className="relative">
+        <img src="/image/cart.png" width="35" height="33" alt="Cart" />
+        <span className="bg-brand text-white absolute start-5 flex items-center justify-center text-sm font-semibold -top-2.5 min-w-6 h-6 rounded-full">{count === null ? <span>&nbsp;</span> : count}</span>
+      </span>
+      <a href="/cart"
+        onClick={(e) => {
+          e.preventDefault();
+          open('cart');
+          publish('cart_viewed', {
+            cart,
+            prevCart,
+            shop,
+            url: window.location.href || '',
+          });
+        }} className="font-semibold text-base uppercase text-blue hidden lg:block">Cart</a>
+      <span className="text-xs absolute top-full font-medium whitespace-nowrap end-0 text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200 hidden lg:block">You saved $0.00</span>
+    </div>
   );
 }
 
@@ -222,7 +383,7 @@ const FALLBACK_HEADER_MENU = {
 function activeLinkStyle({isActive, isPending}) {
   return {
     fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'black',
+    color: isPending ? 'grey' : 'text-blue',
   };
 }
 

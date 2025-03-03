@@ -13,7 +13,7 @@ import {
 import favicon from '~/assets/favicon.svg';
 import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
-import tailwind from "~/styles/tailwind.css?url";
+import tailwind from "~/tailwind.css?url";
 import {PageLayout} from '~/components/PageLayout';
 import {FOOTER_QUERY, HEADER_QUERY} from '~/lib/fragments';
 
@@ -37,9 +37,6 @@ export const shouldRevalidate = ({formMethod, currentUrl, nextUrl}) => {
 
 export function links() {
   return [
-    {rel: 'stylesheet', href: resetStyles},
-    {rel: 'stylesheet', href: appStyles},
-    {rel: 'stylesheet', href: tailwind},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -49,7 +46,29 @@ export function links() {
       href: 'https://shop.app',
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
-  ];
+
+    {
+      rel: 'preconnect',
+      href: 'http://fonts.googleapis.com',
+      referrerPolicy: 'origin',
+    },
+    {
+      rel: 'preconnect',
+      href: 'http://fonts.gstatic.com',
+      crossOrigin: 'anonymous',
+      referrerPolicy: 'origin',
+    },
+    {
+      rel: 'stylesheet',
+      //href: 'https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap',
+      crossOrigin: 'anonymous',
+      referrerPolicy: 'origin',
+    },
+    {rel: 'stylesheet', href: resetStyles},
+    {rel: 'stylesheet', href: appStyles},
+    {rel: 'stylesheet', href: tailwind},
+   
+   ];
 }
 
 /**
@@ -151,6 +170,7 @@ function Layout({children}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <meta http-equiv="Content-Security-Policy" content="frame-src 'self' https://allowed-iframe-source.com;"></meta>
         <Meta />
         <Links />
       </head>

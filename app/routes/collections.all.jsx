@@ -59,11 +59,14 @@ export default function Collection() {
   const {products} = useLoaderData();
 
   return (
-    <div className="collection">
-      <h1>Products</h1>
+    <div className='2xl:container'>
+       <div className="collection mt-50">
+            <div className='relative text-center pb-10'>
+                  <h1 className='custom-h2 text-center text-blue text-3xl'>Products</h1>
+            </div>
       <PaginatedResourceSection
         connection={products}
-        resourcesClassName="products-grid"
+        resourcesClassName="products-grid patric"
       >
         {({node: product, index}) => (
           <ProductItem
@@ -73,6 +76,7 @@ export default function Collection() {
           />
         )}
       </PaginatedResourceSection>
+    </div>
     </div>
   );
 }
@@ -86,6 +90,8 @@ export default function Collection() {
 function ProductItem({product, loading}) {
   const variantUrl = useVariantUrl(product.handle);
   return (
+    <>
+    <div className='categoryBox'>
     <Link
       className="product-item"
       key={product.id}
@@ -93,19 +99,31 @@ function ProductItem({product, loading}) {
       to={variantUrl}
     >
       {product.featuredImage && (
+         <div className='p-5 text-center'>
         <Image
           alt={product.featuredImage.altText || product.title}
           aspectRatio="1/1"
           data={product.featuredImage}
           loading={loading}
+           className='inline-block'
           sizes="(min-width: 45em) 400px, 100vw"
+          style={{ width: '75%' }}
+          
         />
+        </div>
       )}
-      <h4>{product.title}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
+
+    <div className='text-center pt-5'>
+      <h4 className='text-18'>{product.title}</h4>
+      <small className='text-17 font-semibold   text-brand flex justify-center gap-2'>
+          Only:    <Money data={product.priceRange.minVariantPrice} />
       </small>
+      </div>
+
+     
     </Link>
+    </div>
+    </>
   );
 }
 

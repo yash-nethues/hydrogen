@@ -13,21 +13,25 @@
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
+    "@apollo/client": "^3.13.1",
     "@remix-run/react": "^2.13.1",
     "@remix-run/server-runtime": "^2.13.1",
     "@shopify/hydrogen": "2024.10.1",
     "@shopify/remix-oxygen": "^2.0.9",
-    "graphql": "^16.6.0",
+    "graphql": "^16.10.0",
     "graphql-tag": "^2.12.6",
+    "i": "^0.3.7",
     "isbot": "^3.8.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-slick": "^0.30.3",
+    "swiper": "^11.2.1"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "5.0.2",
     "@remix-run/dev": "^2.15.2",
     "@remix-run/eslint-config": "^2.13.1",
-    "@shopify/cli": "~3.73.0",
+    "@shopify/cli": "^3.73.2",
     "@shopify/hydrogen-codegen": "^0.3.2",
     "@shopify/mini-oxygen": "^3.1.0",
     "@shopify/oxygen-workers-types": "^4.1.2",
