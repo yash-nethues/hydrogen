@@ -24,6 +24,7 @@ export async function loader(args) {
   const bannerData = await loadBannerData(args);
 
   const adsData = await loadADSData(args);
+
   const supplyData = await loadFooterSupplyData(args);
 
   const FinestcollectionId = '484561191209'; // Change this to any dynamic value
@@ -42,7 +43,7 @@ export async function loader(args) {
   const artistcollectionData = await fetchCollectionById(args, artistID);
 
   const bannerWithContentImageData = await bannerWithContentImage(args);
-  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, bannerWithContentImageData , finestcollectionData, bettercollectionData , arrivalcollectionData, professionalcollectionData, artistcollectionData});
+  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, bannerWithContentImageData, finestcollectionData, bettercollectionData, arrivalcollectionData, professionalcollectionData, artistcollectionData });
 }
 
 /**
@@ -84,7 +85,7 @@ function loadDeferredData({ context }) {
     });
 
 
-  console.log('blogPosts', blogPosts);
+  ////console.log('blogPosts', blogPosts);
 
   return {
     recommendedProducts,
@@ -110,13 +111,13 @@ async function fetchCollectionById(args, id) {
   const shopifyGid = `gid://shopify/Collection/${id}`;
 
   try {
-    console.log(`Fetching collection with ID: ${shopifyGid}`);
-    
+    ////console.log(`Fetching collection with ID: ${shopifyGid}`);
+
     const response = await args.context.storefront.query(GET_COLLECTION_BY_ID_QUERY, {
       variables: { id: shopifyGid },
     });
 
-    console.log("Raw API response:", response); // Log the response
+    ////console.log("Raw API response:", response); // Log the response
 
     if (!response || !response.collection) {
       console.error(`Collection with ID ${id} not found.`);
@@ -137,16 +138,18 @@ async function loadBannerData({ context }, type = "home_banner") {
       variables: { type }
     });
 
-    // Parse the banner_images field from the response
+    // Parse the banner_images and banner_links fields from the response
     const bannerImagesStr = GetMetaobject?.metaobjects?.edges?.[0]?.node?.fields?.find(field => field.key === "banner_images")?.value;
+    const bannerLinksStr = GetMetaobject?.metaobjects?.edges?.[0]?.node?.fields?.find(field => field.key === "banner_links")?.value;
 
-    if (!bannerImagesStr) {
-      console.error("No banner images found.");
-      return { bannerImages: [] };
+    if (!bannerImagesStr || !bannerLinksStr) {
+      console.error("No banner images or links found.");
+      return { bannerImages: [], bannerLinks: [] };
     }
 
-    // Parse the JSON string to get an array of image IDs
+    // Parse the JSON strings to get arrays of image IDs and links
     const bannerImageIds = bannerImagesStr ? JSON.parse(bannerImagesStr) : [];
+    const bannerLinks = bannerLinksStr ? JSON.parse(bannerLinksStr) : [];
 
     // Fetch the actual image data using the MediaImage IDs
     const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, {
@@ -156,10 +159,10 @@ async function loadBannerData({ context }, type = "home_banner") {
     // Extract the image URLs from the response
     const bannerImages = mediaResponse?.nodes?.map(node => node?.image?.url) || [];
 
-    return { bannerImages };
+    return { bannerImages, bannerLinks };
   } catch (error) {
     console.error('Error fetching banner data:', error);
-    return { bannerImages: [] };  // Return an empty array in case of error
+    return { bannerImages: [], bannerLinks: [] };  // Return empty arrays in case of error
   }
 }
 
@@ -170,7 +173,7 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
       variables: { type }
     });
 
-    console.log('Metaobject Response:', GetMetaobject);
+   // //console.log('Metaobject Response:', GetMetaobject);
 
     const adsAllData = GetMetaobject?.metaobjects?.edges || [];
 
@@ -181,14 +184,14 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
       }, {});
     });
 
-    console.log('Processed Ads Data (Before Fetching Images):', adsData);
+    //console.log('Processed Ads Data (Before Fetching Images):', adsData);
 
     // Extract MediaImage IDs from adsData
     const mediaImageIds = adsData
       .filter(ad => ad.ads_image?.startsWith('gid://shopify/MediaImage/'))
       .map(ad => ad.ads_image);
 
-    console.log('MediaImage IDs:', mediaImageIds);
+    //console.log('MediaImage IDs:', mediaImageIds);
 
     // Fetch image URLs for MediaImage IDs
     if (mediaImageIds.length > 0) {
@@ -196,7 +199,7 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
         variables: { ids: mediaImageIds }
       });
 
-      console.log('Media Response:', mediaResponse);
+      //console.log('Media Response:', mediaResponse);
 
       // Create a map of MediaImage IDs to URLs
       const imageUrlMap = mediaResponse.nodes.reduce((acc, node) => {
@@ -206,7 +209,7 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
         return acc;
       }, {});
 
-      console.log('Image URL Map:', imageUrlMap);
+      //console.log('Image URL Map:', imageUrlMap);
 
       // Map image URLs back to adsData
       adsData.forEach(ad => {
@@ -216,7 +219,7 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
       });
     }
 
-    console.log('Processed Ads Data (After Fetching Images):', adsData);
+    //console.log('Processed Ads Data (After Fetching Images):', adsData);
 
     return adsData;
   } catch (error) {
@@ -225,7 +228,6 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
   }
 }
 
-
 async function loadFooterSupplyData({ context }, type = "before_footer_supplies") {
   try {
     // Fetch the metaobject data
@@ -233,7 +235,7 @@ async function loadFooterSupplyData({ context }, type = "before_footer_supplies"
       variables: { type }
     });
 
-    console.log('Metaobject Response:', GetMetaobject);
+    //console.log('Metaobject Response:', GetMetaobject);
 
     // Parse the metaobject edges from the response
     const allSupplyData = GetMetaobject?.metaobjects?.edges || [];
@@ -246,14 +248,14 @@ async function loadFooterSupplyData({ context }, type = "before_footer_supplies"
       }, {});
     });
 
-    console.log('Processed Supply Data (Before Fetching Images):', supplyData);
+    //console.log('Processed Supply Data (Before Fetching Images):', supplyData);
 
     // Extract MediaImage IDs from supplyData
     const mediaImageIds = supplyData
       .map(supply => supply.icon)
       .filter(icon => icon?.startsWith('gid://shopify/MediaImage/'));
 
-    console.log('MediaImage IDs:', mediaImageIds);
+    //console.log('MediaImage IDs:', mediaImageIds);
 
     // Fetch image URLs for MediaImage IDs
     if (mediaImageIds.length > 0) {
@@ -261,7 +263,7 @@ async function loadFooterSupplyData({ context }, type = "before_footer_supplies"
         variables: { ids: mediaImageIds }
       });
 
-      console.log('Media Response:', mediaResponse);
+      //console.log('Media Response:', mediaResponse);
 
       // Ensure `mediaResponse.nodes` exists before using reduce
       const imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
@@ -271,7 +273,7 @@ async function loadFooterSupplyData({ context }, type = "before_footer_supplies"
         return acc;
       }, {});
 
-      console.log('Image URL Map:', imageUrlMap);
+      //console.log('Image URL Map:', imageUrlMap);
 
       // Map image URLs back to supplyData
       supplyData.forEach(supply => {
@@ -281,7 +283,7 @@ async function loadFooterSupplyData({ context }, type = "before_footer_supplies"
       });
     }
 
-    console.log('Processed Supply Data (After Fetching Images):', supplyData);
+    //console.log('Processed Supply Data (After Fetching Images):', supplyData);
 
     return supplyData;
   } catch (error) {
@@ -297,7 +299,7 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
       variables: { type }
     });
 
-    console.log('Metaobject Response:', GetMetaobject);
+    //console.log('Metaobject Response:', GetMetaobject);
 
     // Parse the metaobject edges from the response
     const allbannerWithContentImageData = GetMetaobject?.metaobjects?.edges || [];
@@ -310,14 +312,14 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
       }, {});
     });
 
-    console.log('Processed Supply Data (Before Fetching Images):', bannerWithContentImageData);
+    //console.log('Processed Supply Data (Before Fetching Images):', bannerWithContentImageData);
 
     // Extract MediaImage IDs from supplyData
     const mediaImageIds = bannerWithContentImageData
       .map(bannerWithContentImage => bannerWithContentImage.image)
       .filter(image => image?.startsWith('gid://shopify/MediaImage/'));
 
-    console.log('MediaImage IDs:', mediaImageIds);
+    //console.log('MediaImage IDs:', mediaImageIds);
 
     // Fetch image URLs for MediaImage IDs
     if (mediaImageIds.length > 0) {
@@ -325,7 +327,7 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
         variables: { ids: mediaImageIds }
       });
 
-      console.log('Media Response:', mediaResponse);
+      //console.log('Media Response:', mediaResponse);
 
       // Ensure `mediaResponse.nodes` exists before using reduce
       const imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
@@ -335,7 +337,7 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
         return acc;
       }, {});
 
-      console.log('Image URL Map:', imageUrlMap);
+      //console.log('Image URL Map:', imageUrlMap);
 
       // Map image URLs back to supplyData
       bannerWithContentImageData.forEach(bannerWithContentImage => {
@@ -345,7 +347,7 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
       });
     }
 
-    console.log('Processed Supply Data (After Fetching Images):', bannerWithContentImageData);
+    //console.log('Processed Supply Data (After Fetching Images):', bannerWithContentImageData);
 
     return bannerWithContentImageData;
   } catch (error) {
@@ -357,14 +359,14 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
 export default function Homepage() {
 
   const data = useLoaderData();
-  console.log('collectionData',data.collectionData);
+  ////console.log('bannerImages', data.bannerImages);
   return (
     <div className="home">
-      <HomeBannerCaraousel banner={data.bannerImages} type="home_banner" />
+      <HomeBannerCaraousel banner={data.bannerImages} links={data.bannerLinks} type="home_banner" />
       {/*<TopAdsLink />*/}
       <RecommendedProducts products={data.recommendedProducts} title="Jerry's Choice Artist Deals!" />
       <SaleProducts ads={data.adsData} type="home_ads_with_link" />
-      <BetterMaterials  title="Only At Jerry's: The Finest Supplies" collectionData={data.finestcollectionData} />
+      <BetterMaterials title="Only At Jerry's: The Finest Supplies" collectionData={data.finestcollectionData} />
       <FinestSupplies />
       <ArtAndSupplies />
       <BetterMaterials title="Better Materials @ Amazing Prices" collectionData={data.bettercollectionData} />
@@ -379,23 +381,13 @@ export default function Homepage() {
     </div>
   );
 }
-/**   {Array(20).fill().map((_, index) => {
-                            return (
-                            <SwiperSlide key={index}>
-                                  <div className="slider-item">
-                                        <figure>
-                                            <img src="image/tusc-pine-oils-main-group.jpg" />
-                                        </figure>
-                                        <div className="info text-center">
-                                        <div className="savinBox ">
-                                                <div className="saveTxt text-brand text-center font-bold">Now Only</div>
-                                                <div className="amount-text te
+/** 
  * @param {{
  *   collections: FeaturedCollectionFragment[];
  * }}
  */
 
-function HomeBannerCaraousel({ banner, type }) {
+function HomeBannerCaraousel({ banner, links, type }) {
 
   useEffect(() => {
     const slides = document.querySelector('.carousel-slides');
@@ -435,31 +427,33 @@ function HomeBannerCaraousel({ banner, type }) {
     <div className="pt-5">
       <div className="container 2xl:container">
         <div className='pl-3  pr-3'>
-        <div id="carousel" className="relative pb-8">
-          <div className="relative overflow-hidden">
-            <div className="carousel-slides flex transition-transform duration-500">
-              {banner && banner.length > 0 ? (
-                banner.map((image, index) => (
-                  <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full flex-shrink-0" />
-                ))
-              ) : (
-                <div>No Banner Images Available</div>
-              )}
+          <div id="carousel" className="relative pb-8">
+            <div className="relative overflow-hidden">
+              <div className="carousel-slides flex transition-transform duration-500">
+                {banner && banner.length > 0 ? (
+                  banner.map((image, index) => (
+                    <a className="w-full flex-shrink-0" key={index} href={links[index]}>
+                      <img src={image} alt={`Slide ${index + 1}`} />
+                    </a>
+                  ))
+                ) : (
+                  <div>No Banner Images Available</div>
+                )}
+              </div>
+              <button id="prev" className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl transition-all text-blue w-10 h-10 rounded-full">
+                &#8249;
+              </button>
+              <button id="next" className="absolute top-1/2 right-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl  transition-all text-blue w-10 h-10 rounded-full">
+                &#8250;
+              </button>
             </div>
-            <button id="prev" className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl transition-all text-blue w-10 h-10 rounded-full">
-              &#8249;
-            </button>
-            <button id="next" className="absolute top-1/2 right-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl  transition-all text-blue w-10 h-10 rounded-full">
-              &#8250;
-            </button>
-          </div>
-          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
               {banner.map((image, index) => (
-                <button className="indicator w-2 h-2 bg-gray-400 rounded-full" data-slide={index}></button>
+                <button key={index} className="indicator w-2 h-2 bg-gray-400 rounded-full" data-slide={index}></button>
               ))}
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
@@ -470,19 +464,19 @@ function TopAdsLink({ adsData }) {
   return (
     <div className="2xl:container pt-5">
       <div className="flex">
-      {adsData
-  ?.filter(ad => ad.position_?.trim().toLowerCase() === "top")
-  .map((ad, index) => (
-    <li key={index} data-position={ad.position_}>
-      <a href={ad.ads_link || "#"}>
-        <img
-          src={ad.ads_image || "/image/placeholder.jpg"}
-          alt={`Ad ${index + 1}`}
-          className="cat-list inline-block"
-        />
-      </a>
-    </li>
-  ))}
+        {adsData
+          ?.filter(ad => ad.position_?.trim().toLowerCase() === "top")
+          .map((ad, index) => (
+            <li key={index} data-position={ad.position_}>
+              <a href={ad.ads_link || "#"}>
+                <img
+                  src={ad.ads_image || "/image/placeholder.jpg"}
+                  alt={`Ad ${index + 1}`}
+                  className="cat-list inline-block"
+                />
+              </a>
+            </li>
+          ))}
 
       </div>
     </div>
@@ -510,19 +504,19 @@ function RecommendedProducts({ products, title }) {
                 {response
                   ? response.products.nodes.map((product) => (
                     <div className='recommended_box relative bg-white p-5 border-dashed  border-gray border-r w-3/12'>
-                       <span className='absolute top-3 left-3 bg-themeteal text-white font-bold pt-1 pb-1 pl-2 pr-2 text-base text-sm
+                      <span className='absolute top-3 left-3 bg-themeteal text-white font-bold pt-1 pb-1 pl-2 pr-2 text-base text-sm
 '> TOP CHOICE </span>
                       <Link
                         key={product.id}
                         className="recommended-product"
                         to={`/products/${product.handle}`}
                       >
-                        <figure class="mb-0 pb-0">
-                        <Image
-                          data={product.images.nodes[0]}
-                          aspectRatio="1/1"
-                          sizes="(min-width: 45em) 20vw, 50vw"
-                        />
+                        <figure className="mb-0 pb-0">
+                          <Image
+                            data={product.images.nodes[0]}
+                            aspectRatio="1/1"
+                            sizes="(min-width: 45em) 20vw, 50vw"
+                          />
                         </figure>
                         <div className='text-center pt-5'>
                           <h4 className='font-semibold text-14'>{product.title}</h4>
@@ -579,7 +573,7 @@ function AdvertisementBanner({ ads, type }) {
       {ads
         ?.filter(ad => ad.position_?.trim().toLowerCase() === "bottom")
         .map((ad, index) => (
-            <div class="advertisement-banner" key={index}>
+          <div className="advertisement-banner" key={index}>
             <a data-discover="true" href={ad.ads_link || "#"}>
               <img
                 src={ad.ads_image || "/image/placeholder.jpg"}
@@ -587,7 +581,7 @@ function AdvertisementBanner({ ads, type }) {
                 className="advertisement w-full"
               />
             </a>
-        </div>
+          </div>
         ))}
     </div>
   );
@@ -630,27 +624,27 @@ function SaleProducts({ ads, type }) {
 
   return (
     <div className='container 2xl:container'>
-        {ads
-  .filter(ad => ad.position_?.trim().toLowerCase() === "top") // Filter only "Top" ads
-  .reduce((rows, ad, index) => {
-    if (index % 3 === 0) {
-      rows.push([]); // Start a new row every 3 items
-    }
-    rows[rows.length - 1].push({ ...ad, globalIndex: index }); // Track the global index
-    return rows;
-  }, [])
-  .map((row, rowIndex) => (
-    <div key={rowIndex}  className={`${row.length  > 2 ? "flex gap-5 pt-16" : "flex  gap-5 pt-8 pb-8"}`}>
-      {row.map((ad, index) => (
-        <div key={index} className={`${ad.globalIndex > 2 ? "w-6/12" : "w-4/12"}`}>
-          <a href={ad.ads_link || "#"}>
-            <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${ad.globalIndex + 1}`} />
-          </a>
-        </div>
-      ))}
-    </div>
-  ))}
-   
+      {ads
+        .filter(ad => ad.position_?.trim().toLowerCase() === "top") // Filter only "Top" ads
+        .reduce((rows, ad, index) => {
+          if (index % 3 === 0) {
+            rows.push([]); // Start a new row every 3 items
+          }
+          rows[rows.length - 1].push({ ...ad, globalIndex: index }); // Track the global index
+          return rows;
+        }, [])
+        .map((row, rowIndex) => (
+          <div key={rowIndex} className={`${row.length > 2 ? "flex gap-5 pt-16" : "flex  gap-5 pt-8 pb-8"}`}>
+            {row.map((ad, index) => (
+              <div key={index} className={`${ad.globalIndex > 2 ? "w-6/12" : "w-4/12"}`}>
+                <a href={ad.ads_link || "#"}>
+                  <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${ad.globalIndex + 1}`} />
+                </a>
+              </div>
+            ))}
+          </div>
+        ))}
+
     </div>
   );
 }
@@ -691,7 +685,7 @@ function ShopSupplies({ supplyList = [], type, title }) {
     <section className="bg-gray-100 mt-50 mb-50 py-8">
       <div className="container 2xl:container">
         <div className="specialist-in-providing center text-center">
-            <h2 className="text-blue text-38 font-bold pb-2">{title}</h2>
+          <h2 className="text-blue text-38 font-bold pb-2">{title}</h2>
         </div>
       </div>
 
@@ -735,19 +729,19 @@ function ImageLinkList({ ads, type }) {
     <div className='container 2xl:container pt-20'>
       <div className="image-link-lists">
         <ul className="image-catList flex gap-10 justify-center">
-          
-        {ads ?.filter(ad => ad.position_?.trim().toLowerCase() === "middle")
-  .map((ad, index) => (
-    <li key={index}>
-      <a href={ad.ads_link || "#"}>
-        <img
-          src={ad.ads_image || "/image/placeholder.jpg"}
-          alt={`Ad ${index + 1}`}
-          className="cat-list inline-block"
-        />
-      </a>
-    </li>
-  ))}
+
+          {ads?.filter(ad => ad.position_?.trim().toLowerCase() === "middle")
+            .map((ad, index) => (
+              <li key={index}>
+                <a href={ad.ads_link || "#"}>
+                  <img
+                    src={ad.ads_image || "/image/placeholder.jpg"}
+                    alt={`Ad ${index + 1}`}
+                    className="cat-list inline-block"
+                  />
+                </a>
+              </li>
+            ))}
 
         </ul>
       </div>

@@ -332,13 +332,6 @@ export type FooterQuery = {
   >;
 };
 
-export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
-  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-}>;
-
-export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
-
 export type GetMediaImagesQueryVariables = StorefrontAPI.Exact<{
   ids:
     | Array<StorefrontAPI.Scalars['ID']['input']>
@@ -354,6 +347,27 @@ export type GetMediaImagesQuery = {
     >
   >;
 };
+
+export type GetMetaobjectQueryVariables = StorefrontAPI.Exact<{
+  type: StorefrontAPI.Scalars['String']['input'];
+}>;
+
+export type GetMetaobjectQuery = {
+  metaobjects: {
+    edges: Array<{
+      node: Pick<StorefrontAPI.Metaobject, 'handle' | 'type'> & {
+        fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
+      };
+    }>;
+  };
+};
+
+export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
 
 export type FeaturedCollectionFragment = Pick<
   StorefrontAPI.Collection,
@@ -423,20 +437,6 @@ export type RecommendedProductsQuery = {
         };
       }
     >;
-  };
-};
-
-export type GetMetaobjectQueryVariables = StorefrontAPI.Exact<{
-  type: StorefrontAPI.Scalars['String']['input'];
-}>;
-
-export type GetMetaobjectQuery = {
-  metaobjects: {
-    edges: Array<{
-      node: Pick<StorefrontAPI.Metaobject, 'handle' | 'type'> & {
-        fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
-      };
-    }>;
   };
 };
 
@@ -1304,13 +1304,17 @@ interface GeneratedQueryTypes {
     return: FooterQuery;
     variables: FooterQueryVariables;
   };
-  '#graphql\n  query StoreRobots($country: CountryCode, $language: LanguageCode)\n   @inContext(country: $country, language: $language) {\n    shop {\n      id\n    }\n  }\n': {
-    return: StoreRobotsQuery;
-    variables: StoreRobotsQueryVariables;
-  };
   '#graphql\n  query GetMediaImages($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on MediaImage {\n        id\n        image {\n          url\n        }\n      }\n    }\n  }\n': {
     return: GetMediaImagesQuery;
     variables: GetMediaImagesQueryVariables;
+  };
+  '#graphql\n  query GetMetaobject($type: String!) {\n    metaobjects(type: $type, first: 10) {\n      edges {\n        node {\n          handle\n          type\n          fields {\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n': {
+    return: GetMetaobjectQuery;
+    variables: GetMetaobjectQueryVariables;
+  };
+  '#graphql\n  query StoreRobots($country: CountryCode, $language: LanguageCode)\n   @inContext(country: $country, language: $language) {\n    shop {\n      id\n    }\n  }\n': {
+    return: StoreRobotsQuery;
+    variables: StoreRobotsQueryVariables;
   };
   '#graphql\n  fragment FeaturedCollection on Collection {\n    id\n    title\n    image {\n      id\n      url\n      altText\n      width\n      height\n    }\n    handle\n  }\n  query FeaturedCollection($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    collections(first: 8, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...FeaturedCollection\n      }\n    }\n  }\n': {
     return: FeaturedCollectionQuery;
@@ -1319,10 +1323,6 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment RecommendedProduct on Product {\n    id\n    title\n    handle\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    images(first: 1) {\n      nodes {\n        id\n        url\n        altText\n        width\n        height\n      }\n    }\n  }\n  query RecommendedProducts($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    products(first: 5, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...RecommendedProduct\n      }\n    }\n  }\n': {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
-  };
-  '#graphql\n  query GetMetaobject($type: String!) {\n    metaobjects(type: $type, first: 10) {\n      edges {\n        node {\n          handle\n          type\n          fields {\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n': {
-    return: GetMetaobjectQuery;
-    variables: GetMetaobjectQueryVariables;
   };
   '#graphql\n  query BlogPosts($country: CountryCode, $language: LanguageCode) \n    @inContext(country: $country, language: $language) {\n    blog(handle: "blogs") {\n      articles(first: 5, sortKey: PUBLISHED_AT, reverse: true) {\n        nodes {\n          id\n          title\n          handle\n          publishedAt\n          content\n          image {\n            url\n            altText\n          }\n        }\n      }\n    }\n  }\n': {
     return: BlogPostsQuery;

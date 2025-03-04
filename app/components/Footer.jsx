@@ -1,6 +1,6 @@
 import {Suspense} from 'react';
 import {Await, NavLink} from '@remix-run/react';
-
+import {useLoaderData} from '@remix-run/react';
 /**
  * @param {FooterProps}
  */
@@ -17,36 +17,6 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
     </Suspense>
   );
 }
-function ShippingMethod() {
-  return (
-    <div className="mt-52">
-        <div className="2xl:container">
-            <div className="flex flex-wrap text-center -mx-3.5">
-                <div className="flex-1 w-1/2 md:w-1/4 flex flex-col items-center p-3.5">
-                    <img src="/image/amazing-values.png" width="100" height="90" alt="Amazing Values" />
-                    <h3 className="text-sm md:text-xl text-base-100 font-semibold py-2.5">Real Materials, Better Values</h3>
-                    <p className="text-xs md:text-sm">Save more everyday @ Jerry’s!</p>
-                </div>
-                <div className="flex-1 w-1/2 md:w-1/4 flex flex-col items-center p-3.5">
-                    <img src="/image/fast-shipping.png" width="100" height="90" alt="Fast Shipping" />
-                    <h3 className="text-sm md:text-xl text-base-100 font-semibold py-2.5">Free & Fast Shipping $59+*</h3>
-                    <p className="text-xs md:text-sm">Orders $35+ (Flat Rate: $2.95*)</p>
-                </div>
-                <div className="flex-1 w-1/2 md:w-1/4 flex flex-col items-center p-3.5">
-                    <img src="/image/art-supplies.png" width="100" height="90" alt="Art Supplies" />
-                    <h3 className="text-sm md:text-xl text-base-100 font-semibold py-2.5">Best Fine Art Supply Selection</h3>
-                    <p className="text-xs md:text-sm">Art materials curated for artists!</p>
-                </div>
-                <div className="flex-1 w-1/2 md:w-1/4 flex flex-col items-center p-3.5">
-                    <img src="/image/expert-service.png" width="100" height="90" alt="Expert Service" />
-                    <h3 className="text-sm md:text-xl text-base-100 font-semibold py-2.5">Personalized & Expert Service</h3>
-                    <p className="text-xs md:text-sm">Our experts are here to help you!</p>
-                </div>
-            </div>
-        </div>
-    </div>
-  );
-}
 /**
  * @param {{
  *   menu: FooterQuery['menu'];
@@ -55,36 +25,33 @@ function ShippingMethod() {
  * }}
  */
 function FooterMenu() {
+  const footerData = useLoaderData();
+  console.log('footerData',footerData);
+  const helpMenus = footerData.footer_help_menus; 
+  const resourcesMenus = footerData.footer_resources_menus; 
+  const shoppingMenus = footerData.footer_shopping_menus; 
+
   return (
     <div className="container 2xl:container">
       <div className="flex flex-wrap pb-10 -mx-4">
+      <Suspense fallback={<div>Loading...</div>}>
           <FooterColumn title="Need Help">
-              <FooterLink label="At Your Service" />
-              <FooterLink label="Contact Us" />
-              <FooterLink label="Returns" />
-              <FooterLink label="FAQ's" />
-              <FooterLink label="Order Status" />
-              <FooterLink label="Product, Healthy & Safety Details" />
-              <FooterLink label="Terms Of Use" />
+          {helpMenus[0].menu.items && helpMenus[0].menu.items.map((menu) => (
+              <FooterLink label={menu.title} link={menu.url}/>
+          ))}
+
           </FooterColumn>
-          
+          </Suspense>
           <FooterColumn title="Artist Resources">
-              <FooterLink label="Jerry's LIVE" />
-              <FooterLink label="Teacher Class Lists" />
-              <FooterLink label="Artists in the Spotlight" />
-              <FooterLink label="Art Contests" />
-              <FooterLink label="Testimonials" />
-              <FooterLink label="How To Articles" />
+          {resourcesMenus[0].menu.items && resourcesMenus[0].menu.items.map((menu) => (
+              <FooterLink label={menu.title} link={menu.url} />
+          ))}              
           </FooterColumn>
 
           <FooterColumn title="More Shopping">
-              <FooterLink label="Free Offers" />
-              <FooterLink label="Shop by Brands" />
-              <FooterLink label="Buy It, Try It Supplies" />
-              <FooterLink label="Custom Stretched Canvas" />
-              <FooterLink label="Custom Online Framing" />
-              <FooterLink label="Best Sellers" />
-              <FooterLink label="Online Listing" />
+          {shoppingMenus[0].menu.items && shoppingMenus[0].menu.items.map((menu) => (
+              <FooterLink label={menu.title} link={menu.url} />
+          ))}  
           </FooterColumn>
 
           <div className="flex-none w-full lg:w-2/5 xl:w-1/4 px-4">
@@ -232,9 +199,9 @@ const FooterColumn = ({ title, children }) => (
   </div>
 );
 
-const FooterLink = ({ label }) => (
+const FooterLink = ({ label, link }) => (
   <li className="pt-2.5">
-      <a href="" className="text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left">
+      <a href={link} className="text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left">
           {label}
       </a>
   </li>

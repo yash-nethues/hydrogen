@@ -23,6 +23,8 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
 }
 
 export function HeaderTop({isLoggedIn, cart}) {
+  const dataMenu = useLoaderData();
+  const topMenus = Array.isArray(dataMenu) ? dataMenu : dataMenu?.topMenus; 
   return (
     <div className="">
       {/* Top Bar with Navigation */}
@@ -33,51 +35,26 @@ export function HeaderTop({isLoggedIn, cart}) {
         </span>
         <div>
           <ul className="flex text-xs -mx-3.5">
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
-                <span><img src="/image/chat.png" width="16" height="14" alt="Live Chat" /></span> Live Chat
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs"  href="tel:1-800-827-8478">
-                <span><img src="/image/call.png" width="16" height="15" alt="Call" /></span> 1-800-827-8478
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand relative after:absolute after:w-px after:inset-y-2 after:end-0 after:bg-grey text-0 lg:text-xs" href="#" role="button">
-                <span><img src="/image/help.png" width="17" height="17" alt="Help" /></span> Help
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" rel="nofollow" href="">
-                <span><img src="/image/order-status.png" width="19" height="18" alt="Order Status" /></span> Order Status
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5  px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" rel="nofollow" href="">
-                <span><img src="/image/tag.png" width="16" height="16" alt="Quick Shop" /></span> Quick Shop
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
-                <span><img src="/image/giftcard.png" width="19" height="13" alt="Gift Cards" /></span> Gift Cards
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
-                <span><img src="/image/email.png" width="18" height="13" alt="Email Sign Up" /></span> Email Sign Up
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
-                <span><img src="/image/all-brand.png" width="16" height="16" alt="All Brands" /></span> All Brands
-              </a>
-            </li>
-            <li>
-              <a className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
-                <span><img src="/image/bag.png" width="16" height="16" alt="Retail Stores" /></span> Retail Stores
-              </a>
-            </li>
+          <li>
+            <a class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+              <span><img src="/image/chat.png" width="16" height="14" alt="Live Chat" /></span> Live Chat</a></li>
+          <li>
+            <a class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="tel:1-800-827-8478"><span><img src="/image/call.png" width="16" height="15" alt="Call" /></span> 1-800-827-8478</a></li>
+          {topMenus?.slice().reverse().map((menu, index) => (
+                <li key={index}>
+                  <a
+                    className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand lg:text-xs"
+                    href={menu.link}
+                  >
+                    {menu.icon && (
+                      <span>
+                        <img src={menu.icon} width="16" height="14" alt={menu.menu} />
+                      </span>
+                    )}
+                    {menu.menu}
+                  </a>
+                </li>
+              ))}        
           </ul>
         </div>
       </div>

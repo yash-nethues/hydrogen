@@ -76,17 +76,18 @@ export function links() {
  */
 export async function loader(args) {
   // Start fetching non-critical data without blocking time to first byte
-  const deferredData = loadDeferredData(args);
+  const deferredData = await loadDeferredData(args);
 
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
+  const topMenus = await loadTopMenuData(args); 
   const {storefront, env} = args.context;
-
   return defer(
     {
       ...deferredData,
       ...criticalData,
+      topMenus,
       publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
       shop: getShopAnalytics({
         storefront,
@@ -128,32 +129,119 @@ async function loadCriticalData({context}) {
   };
 }
 
+async function loadTopMenuData({ context }, type = "top_menus") {
+  try {
+    // Fetch Metaobjects (Top Menu Items)
+    const metaobjectData = await context.storefront.query(GET_METAOBJECT_QUERY, {
+      variables: { type }
+    });
+
+    //console.log("Metaobject Response:", metaobjectData);
+
+    const menuItems = metaobjectData?.metaobjects?.edges || [];
+
+    // Transform menu data
+    let topMenus = menuItems.map(edge => {
+      const item = edge.node.fields.reduce((acc, field) => {
+        acc[field.key] = field.value;
+        return acc;
+      }, {});
+
+      // Ensure menu item has required fields
+      return {
+        link: item.link || "#",
+        icon: item.icon || "", // Will be updated later if needed
+        menu: item.menu || "Unnamed Menu"
+      };
+    });
+
+    //console.log("Processed Menus (Before Fetching Icons):", topMenus);
+
+    // Extract MediaImage IDs for icons
+    const mediaImageIds = topMenus
+      .filter(item => item.icon?.startsWith("gid://shopify/MediaImage/"))
+      .map(item => item.icon);
+
+    //console.log("MediaImage IDs:", mediaImageIds);
+
+    // Fetch image URLs for icons
+    if (mediaImageIds.length > 0) {
+      const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, {
+        variables: { ids: mediaImageIds }
+      });
+
+      //console.log("Media Response:", mediaResponse);
+
+      // Ensure response has nodes and map the image URLs
+      const imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
+        if (node?.id && node?.image?.url) {
+          acc[node.id] = node.image.url;
+        }
+        return acc;
+      }, {});
+
+      //console.log("Image URL Map:", imageUrlMap);
+
+      // Replace icon ID with actual image URL
+      topMenus = topMenus.map(item => ({
+        ...item,
+        icon: item.icon.startsWith("gid://shopify/MediaImage/")
+          ? imageUrlMap[item.icon] || "/image/placeholder.jpg"
+          : item.icon
+      }));
+    }
+
+    //console.log("Processed Menus (After Fetching Icons):", topMenus);
+
+    return topMenus;
+  } catch (error) {
+    console.error("Error fetching top menu data:", error);
+    return [];
+  }
+}
+
 /**
  * Load data for rendering content below the fold. This data is deferred and will be
  * fetched after the initial page load. If it's unavailable, the page should still 200.
  * Make sure to not throw any errors here, as it will cause the page to 500.
  * @param {LoaderFunctionArgs}
  */
-function loadDeferredData({context}) {
+async function loadDeferredData({context}) {
   const {storefront, customerAccount, cart} = context;
 
-  // defer the footer query (below the fold)
-  const footer = storefront
+  const footer_help_menus = await Promise.all([
+    storefront.query(FOOTER_QUERY, {
+        cache: storefront.CacheLong(),
+        variables: {
+          footerMenuHandle: 'footer', 
+        },
+      })
+]);
+
+    const footer_resources_menus = await Promise.all([storefront
     .query(FOOTER_QUERY, {
       cache: storefront.CacheLong(),
       variables: {
-        footerMenuHandle: 'footer', // Adjust to your footer menu handle
+        footerMenuHandle: 'resources-footer-menu', 
       },
     })
-    .catch((error) => {
-      // Log query errors, but don't throw them so the page can still render
-      console.error(error);
-      return null;
-    });
+  ]);
+
+    const footer_shopping_menus = await Promise.all([storefront
+    .query(FOOTER_QUERY, {
+      cache: storefront.CacheLong(),
+      variables: {
+        footerMenuHandle: 'shopping-footer-menu', 
+      },
+    })
+    ]);
+
   return {
     cart: cart.get(),
     isLoggedIn: customerAccount.isLoggedIn(),
-    footer,
+    footer_help_menus,
+    footer_resources_menus,
+    footer_shopping_menus
   };
 }
 
@@ -170,7 +258,7 @@ function Layout({children}) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <meta http-equiv="Content-Security-Policy" content="frame-src 'self' https://allowed-iframe-source.com;"></meta>
+        <meta httpEquiv="Content-Security-Policy" content="frame-src 'self' https://allowed-iframe-source.com;"></meta>
         <Meta />
         <Links />
       </head>
@@ -227,6 +315,37 @@ export function ErrorBoundary() {
     </Layout>
   );
 }
+
+const GET_MEDIA_IMAGES_QUERY = `#graphql
+  query GetMediaImages($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on MediaImage {
+        id
+        image {
+          url
+        }
+      }
+    }
+  }
+`;
+
+const GET_METAOBJECT_QUERY = `#graphql
+  query GetMetaobject($type: String!) {
+    metaobjects(type: $type, first: 10) {
+      edges {
+        node {
+          handle
+          type
+          fields {
+            key
+            value
+          }
+        }
+      }
+    }
+  }
+`;
+
 
 /** @typedef {LoaderReturnData} RootLoader */
 

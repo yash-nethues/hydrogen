@@ -26,26 +26,26 @@ function CustomShop() {
                             </div>
                             <div className="custom-shop-heading relative before:content-[''] before:absolute before:left-full before:top-1/2 before:-translate-y-1/2 before:border-transparent before:border-l-[15px] before:border-l-[#334f67] before:border-t-transparent before:border-b-transparent before:mr-[-15px]"></div>
                             <div className='customShopList  w-3/4 text-left pl-5'>
-                            <ul class="">
-                            <li class="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
-                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                            <ul className="">
+                            <li className="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
+                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd">
   <path d="M21.883 12l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"/>
 </svg>
                                         74 Types of Canvas (cotton/linen)</li>
-                                        <li class="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
-                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+                                        <li className="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
+                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd">
   <path d="M21.883 12l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"/>
 </svg> 9 Stretcher Bar</li>
-<li class="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
-                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+<li className="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
+                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd">
   <path d="M21.883 12l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"/>
 </svg>100's of Custom Configurations</li>
-<li class="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
-                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+<li className="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
+                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd">
   <path d="M21.883 12l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"/>
 </svg>4 Easy Steps</li>
-<li class="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
-                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd">
+<li className="grid grid-cols-[13px_auto] gap-y-[5px] gap-x-[25px]">
+                            <svg width="24" height="24" xmlns="http://www.w3.org/2000/svg" fillRule="evenodd" clipRule="evenodd">
   <path d="M21.883 12l-7.527 6.235.644.765 9-7.521-9-7.479-.645.764 7.529 6.236h-21.884v1h21.883z"/>
 </svg> Expert Craftmanship backed by 125 years of Industry Experience</li>
                                     </ul>

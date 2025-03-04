@@ -7,7 +7,7 @@ const ProductsTabs = ({arrivals,professional,artist}) => {
 const [activeTab, setActiveTab] = useState(0);
 const tabs = ["New Arrivals", "Professional", "Artist Value"];
 const tabRefs = useRef([]); 
-console.log('arrivals',arrivals);
+
 const tabContent = [
   {
     content: (
