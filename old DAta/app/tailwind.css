@@ -1,0 +1,49 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+@layer components {
+    .btn-secondary {
+      @apply py-3 px-10 bg-pink-gradient text-white font-semibold 
+       shadow-md inline-block
+       hover:bg-violet-700 focus:outline-none focus:ring focus:ring-violet-400 focus:ring-opacity-75;
+    }
+    .btn-primary {
+      @apply py-3 px-10 bg-blue text-white font-semibold 
+       shadow-md inline-block
+       hover:bg-pink-gradient focus:outline-none focus:ring focus:ring-violet-400 focus:ring-opacity-75;
+    }
+  }
+
+  @layer components {
+    .custom-h2::before,
+    .custom-h2::after {
+      left: 50%;
+      -moz-transform: translateX(-50%);
+      -webkit-transform: translateX(-50%);
+      transform: translateX(-50%);
+      content: "";
+      position: absolute;
+      background: #334f67;
+      height: 1px;
+      width: 136px;
+      bottom: 0;
+      
+    }
+    .custom-h2::before {
+      margin-left: -37px;
+    }
+    .custom-h2::after {
+      margin-left: 37px;
+      bottom: 11px;
+    }
+
+   
+  } 
+  @layer components {
+    .custom-container {
+      @apply container w-full; /* Apply full width */
+      max-width: 1860px; /* Set custom max-width */
+    }
+  }
+  

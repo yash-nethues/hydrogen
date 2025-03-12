@@ -1,0 +1,27 @@
+body {
+ font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Open Sans',
+    'Helvetica Neue',
+    sans-serif;
+    /* font-family: "Poppins", serif;  */
+  margin: 0;
+  padding: 0;
+}
+
+
+blockquote, dl, dd, h1, h2, h3, h4, h5, h6, hr, figure, p, pre {
+  margin:auto ;
+}
+.logo{
+  width:32rem;
+}
+
+.featured-collections-grid{ display: inline-flex;}

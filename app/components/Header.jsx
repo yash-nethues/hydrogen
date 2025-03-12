@@ -28,7 +28,7 @@ export function HeaderTop({isLoggedIn, cart}) {
   return (
     <div className="">
       {/* Top Bar with Navigation */}
-      <div className='custom-container'>
+      <div className='custom-container pt-p-2 pb-p-2'>
       <div className="flex items-center justify-between ps-lg-48">
         <span>
           <a tabIndex="0" href="" className="text-brand text-15 font-bold">Free Shipping $79+</a>
@@ -64,7 +64,7 @@ export function HeaderTop({isLoggedIn, cart}) {
       <div className="bg-gray-100 pt-8 pb-12 border-y relative border-grey-200 custom-container">
         <div className="">
           <div className="flex items-center gap-x-10 ">
-            <a href="" className="flex-none">
+            <a href="/" className="flex-none">
               <img src="/image/logo-red.svg" className='w-44 sm:w-56 lg:w-72 xl:w-420'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
             </a>
             <SearchBar />
@@ -77,10 +77,10 @@ export function HeaderTop({isLoggedIn, cart}) {
           <div className="absolute start-0 end-0 bottom-0 custom-container">
             <div className="">
               <ul className="font-bold uppercase text-xs flex">
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6">Special Buys</a></li>
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Free Offers</a></li>
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Big Paints Sale</a></li>
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 px-4">Exclusives</a></li>
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6">Special Sale</a></li>
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Enter Contest</a></li>
+                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Deals/offers</a></li>
+                
               </ul>
               <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden lg:block">
                 <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
@@ -158,7 +158,7 @@ export function HeaderMainMenus({
             return (
               <li key={count}>
                 <NavLink
-                  className="p-2 2xl:p-2.5 xl:p-2 2xl:text-base xl:text-sm md:text-xs block transition-all text-blue hover:bg-blue min-h-14 flex items-center hover:text-white"
+                  className="p-2 2xl:p-2.5 xl:p-2 2xl:text-base xl:text-sm md:text-xs block transition-all !text-blue hover:bg-blue min-h-14 flex items-center hover:!text-white"
                   end
                   key={item.id}
                   onClick={closeAside}
@@ -226,7 +226,7 @@ function HeaderCtas({isLoggedIn, cart}) {
       <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
         <span><img src="/image/my-account.png" width="31" height="31" alt="My Account" /></span>
         <span className="font-semibold text-base uppercase text-blue hidden lg:block">Account</span>
-        <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden lg:block absolute text-xs top-full font-medium whitespace-nowrap end-0 text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyle}>
+        <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden lg:block absolute text-xs top-full font-medium whitespace-nowrap  text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyle}>
           <Suspense fallback="Sign in">
             <Await resolve={isLoggedIn} errorElement="Sign in">
               {(isLoggedIn) => (isLoggedIn ? 'Hello, Sign In' : 'Account')}
