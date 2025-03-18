@@ -1,5 +1,5 @@
 import React, {Suspense} from 'react';
-import {Await, NavLink, useAsyncValue} from '@remix-run/react';
+import {Await, NavLink, useAsyncValue, Link} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {Form, useLoaderData, useNavigate} from '@remix-run/react';
@@ -31,18 +31,18 @@ export function HeaderTop({isLoggedIn, cart}) {
       <div className='custom-container pt-p-2 pb-p-2'>
       <div className="flex items-center justify-between ps-lg-48">
         <span>
-          <a tabIndex="0" href="" className="text-brand text-15 font-bold">Free Shipping $79+</a>
+          <Link tabIndex="0" href="" className="text-brand text-15 font-bold">Free Shipping $69+</Link>
         </span>
         <div>
           <ul className="flex text-xs -mx-3.5">
           <li>
-            <a class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
-              <span><img src="/image/chat.png" width="16" height="14" alt="Live Chat" /></span> Live Chat</a></li>
-          <li>
+            <Link class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+              <span><img src="/image/chat.png" width="16" height="14" alt="Live Chat" /></span> Live Chat</Link></li>
+           <li>
             <a class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="tel:1-800-827-8478"><span><img src="/image/call.png" width="16" height="15" alt="Call" /></span> 1-800-827-8478</a></li>
           {topMenus?.slice().reverse().map((menu, index) => (
                 <li key={index}>
-                  <a
+                  <Link
                     className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand lg:text-xs"
                     href={menu.link}
                   >
@@ -52,7 +52,7 @@ export function HeaderTop({isLoggedIn, cart}) {
                       </span>
                     )}
                     {menu.menu}
-                  </a>
+                  </Link>
                 </li>
               ))}        
           </ul>
@@ -63,24 +63,20 @@ export function HeaderTop({isLoggedIn, cart}) {
       {/* Main Header Section */}
       <div className="bg-gray-100 pt-8 pb-12 border-y relative border-grey-200 custom-container">
         <div className="">
-          <div className="flex items-center gap-x-10 ">
-            <a href="/" className="flex-none">
-              <img src="/image/logo-red.svg" className='w-44 sm:w-56 lg:w-72 xl:w-420'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
-            </a>
+          <div className="flex items-center gap-x-10">
+            <Link href="/" className="flex-none">
+               <img src="/image/logo-red.svg" className='w-44 sm:w-56 lg:w-72 xl:w-420'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
+            </Link>
             <SearchBar />
-
             <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
-
           </div>
-
           {/* Footer Bar with Links */}
           <div className="absolute start-0 end-0 bottom-0 custom-container">
             <div className="">
               <ul className="font-bold uppercase text-xs flex">
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6">Special Sale</a></li>
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Enter Contest</a></li>
-                <li><a href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Deals/offers</a></li>
-                
+                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6">Special Sale</Link></li>
+                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Enter Contest</Link></li>
+                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Deals/offers</Link></li>
               </ul>
               <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden lg:block">
                 <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
@@ -95,8 +91,8 @@ export function HeaderTop({isLoggedIn, cart}) {
 
 function SearchBar() {
   return (
-    <div className="flex-1">
-      <Form method="get" action="/search" className="w-full relative">
+    <div className="flex-1 xl:pr-6">
+        <Form method="get" action="/search" className="w-full relative">
         <input  
           className="text-base border border-grey-300 h-10 pl-4 pr-14 rounded-sm w-full"
           name="q"
@@ -201,7 +197,7 @@ export function HeaderMenu() {
   ];
 
   return (
-    <div className="bg-white border-b border-grey-200 w-full">
+    <div className="bg-white border-b border-grey-200 w-full ">
       <div className="container file:2xl:container 3xl:px-5 m-auto">
         <ul className="flex text-base font-semibold justify-between">
           {menuItems.map((item, index) => (
@@ -222,8 +218,8 @@ export function HeaderMenu() {
  */
 function HeaderCtas({isLoggedIn, cart}) {
   return (
-    <div className="flex-none flex gap-x-10">
-      <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
+    <div className="flex-none flex gap-x-10 -mt-4 m-j2">
+      <div className="flex items-center gap-x-2.5 relative w-36">
         <span><img src="/image/my-account.png" width="31" height="31" alt="My Account" /></span>
         <span className="font-semibold text-base uppercase text-blue hidden lg:block">Account</span>
         <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden lg:block absolute text-xs top-full font-medium whitespace-nowrap  text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyle}>
@@ -234,7 +230,7 @@ function HeaderCtas({isLoggedIn, cart}) {
           </Suspense>
         </NavLink>
       </div>
-      <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
+      <div className="flex items-center gap-x-2.5 relative w-32">
         <CartToggle cart={cart} />
       </div>
     </div>
@@ -285,7 +281,7 @@ function CartBadge({count}) {
             url: window.location.href || '',
           });
         }} className="font-semibold text-base uppercase text-blue hidden lg:block">Cart</a>
-      <span className="text-xs absolute top-full font-medium whitespace-nowrap end-0 text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200 hidden lg:block">You saved $0.00</span>
+      <span className="text-xs absolute top-full font-medium whitespace-nowrap text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200 hidden lg:block">You saved $0.00</span>
     </div>
   );
 }

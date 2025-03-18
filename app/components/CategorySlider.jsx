@@ -35,7 +35,7 @@ function CategorySlider() {
                             return (
                                  <SwiperSlide key={index}>
                                   <div className="slider-item hover:[&>a> h6]:text-brand  h-48">
-                                  <a href="#" className='hover:[&>h6]:text-brand'>
+                                    <a href="#" className='hover:[&>h6]:text-brand'>
                                         <figure>
                                         <img src="image/canvas-stretched-cotton-200x200.jpg" alt="" className="w-full h-full object-cover" />
                                         </figure>

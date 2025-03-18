@@ -332,13 +332,6 @@ export type FooterQuery = {
   >;
 };
 
-export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
-  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-}>;
-
-export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
-
 export type GetMediaImagesQueryVariables = StorefrontAPI.Exact<{
   ids:
     | Array<StorefrontAPI.Scalars['ID']['input']>
@@ -354,6 +347,27 @@ export type GetMediaImagesQuery = {
     >
   >;
 };
+
+export type GetMetaobjectQueryVariables = StorefrontAPI.Exact<{
+  type: StorefrontAPI.Scalars['String']['input'];
+}>;
+
+export type GetMetaobjectQuery = {
+  metaobjects: {
+    edges: Array<{
+      node: Pick<StorefrontAPI.Metaobject, 'handle' | 'type'> & {
+        fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
+      };
+    }>;
+  };
+};
+
+export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
 
 export type FeaturedCollectionFragment = Pick<
   StorefrontAPI.Collection,
@@ -423,20 +437,6 @@ export type RecommendedProductsQuery = {
         };
       }
     >;
-  };
-};
-
-export type GetMetaobjectQueryVariables = StorefrontAPI.Exact<{
-  type: StorefrontAPI.Scalars['String']['input'];
-}>;
-
-export type GetMetaobjectQuery = {
-  metaobjects: {
-    edges: Array<{
-      node: Pick<StorefrontAPI.Metaobject, 'handle' | 'type'> & {
-        fields: Array<Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>>;
-      };
-    }>;
   };
 };
 
@@ -760,10 +760,42 @@ export type PageQueryVariables = StorefrontAPI.Exact<{
 
 export type PageQuery = {
   page?: StorefrontAPI.Maybe<
-    Pick<StorefrontAPI.Page, 'id' | 'title' | 'body'> & {
+    Pick<StorefrontAPI.Page, 'id' | 'title' | 'body' | 'handle'> & {
       seo?: StorefrontAPI.Maybe<
         Pick<StorefrontAPI.Seo, 'description' | 'title'>
       >;
+      bannerContent?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.Metafield, 'value'>
+      >;
+      bannerImage?: StorefrontAPI.Maybe<{
+        reference?: StorefrontAPI.Maybe<{
+          image?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.Image, 'url' | 'altText'>
+          >;
+        }>;
+      }>;
+      listCollections?: StorefrontAPI.Maybe<{
+        references?: StorefrontAPI.Maybe<{
+          edges: Array<{
+            node: Pick<StorefrontAPI.Collection, 'id' | 'title' | 'handle'> & {
+              image?: StorefrontAPI.Maybe<
+                Pick<StorefrontAPI.Image, 'url' | 'altText'>
+              >;
+            };
+          }>;
+        }>;
+      }>;
+      listBrands?: StorefrontAPI.Maybe<{
+        references?: StorefrontAPI.Maybe<{
+          edges: Array<{
+            node: Pick<StorefrontAPI.Collection, 'id' | 'title' | 'handle'> & {
+              image?: StorefrontAPI.Maybe<
+                Pick<StorefrontAPI.Image, 'url' | 'altText'>
+              >;
+            };
+          }>;
+        }>;
+      }>;
     }
   >;
 };
@@ -1304,13 +1336,17 @@ interface GeneratedQueryTypes {
     return: FooterQuery;
     variables: FooterQueryVariables;
   };
-  '#graphql\n  query StoreRobots($country: CountryCode, $language: LanguageCode)\n   @inContext(country: $country, language: $language) {\n    shop {\n      id\n    }\n  }\n': {
-    return: StoreRobotsQuery;
-    variables: StoreRobotsQueryVariables;
-  };
   '#graphql\n  query GetMediaImages($ids: [ID!]!) {\n    nodes(ids: $ids) {\n      ... on MediaImage {\n        id\n        image {\n          url\n        }\n      }\n    }\n  }\n': {
     return: GetMediaImagesQuery;
     variables: GetMediaImagesQueryVariables;
+  };
+  '#graphql\n  query GetMetaobject($type: String!) {\n    metaobjects(type: $type, first: 10) {\n      edges {\n        node {\n          handle\n          type\n          fields {\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n': {
+    return: GetMetaobjectQuery;
+    variables: GetMetaobjectQueryVariables;
+  };
+  '#graphql\n  query StoreRobots($country: CountryCode, $language: LanguageCode)\n   @inContext(country: $country, language: $language) {\n    shop {\n      id\n    }\n  }\n': {
+    return: StoreRobotsQuery;
+    variables: StoreRobotsQueryVariables;
   };
   '#graphql\n  fragment FeaturedCollection on Collection {\n    id\n    title\n    image {\n      id\n      url\n      altText\n      width\n      height\n    }\n    handle\n  }\n  query FeaturedCollection($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    collections(first: 8, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...FeaturedCollection\n      }\n    }\n  }\n': {
     return: FeaturedCollectionQuery;
@@ -1319,10 +1355,6 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment RecommendedProduct on Product {\n    id\n    title\n    handle\n    priceRange {\n      minVariantPrice {\n        amount\n        currencyCode\n      }\n    }\n    images(first: 1) {\n      nodes {\n        id\n        url\n        altText\n        width\n        height\n      }\n    }\n  }\n  query RecommendedProducts($country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    products(first: 5, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...RecommendedProduct\n      }\n    }\n  }\n': {
     return: RecommendedProductsQuery;
     variables: RecommendedProductsQueryVariables;
-  };
-  '#graphql\n  query GetMetaobject($type: String!) {\n    metaobjects(type: $type, first: 10) {\n      edges {\n        node {\n          handle\n          type\n          fields {\n            key\n            value\n          }\n        }\n      }\n    }\n  }\n': {
-    return: GetMetaobjectQuery;
-    variables: GetMetaobjectQueryVariables;
   };
   '#graphql\n  query BlogPosts($country: CountryCode, $language: LanguageCode) \n    @inContext(country: $country, language: $language) {\n    blog(handle: "blogs") {\n      articles(first: 5, sortKey: PUBLISHED_AT, reverse: true) {\n        nodes {\n          id\n          title\n          handle\n          publishedAt\n          content\n          image {\n            url\n            altText\n          }\n        }\n      }\n    }\n  }\n': {
     return: BlogPostsQuery;
@@ -1356,7 +1388,7 @@ interface GeneratedQueryTypes {
     return: CatalogQuery;
     variables: CatalogQueryVariables;
   };
-  '#graphql\n  query Page(\n    $language: LanguageCode,\n    $country: CountryCode,\n    $handle: String!\n  )\n  @inContext(language: $language, country: $country) {\n    page(handle: $handle) {\n      id\n      title\n      body\n      seo {\n        description\n        title\n      }\n    }\n  }\n': {
+  '#graphql\nquery Page(\n  $language: LanguageCode\n  $country: CountryCode\n  $handle: String!\n) @inContext(language: $language, country: $country) {\n  page(handle: $handle) {\n    id\n    title\n    body\n    handle\n    seo {\n      description\n      title\n    }\n    bannerContent: metafield(namespace: "custom", key: "banner_content") { value }\n    bannerImage: metafield(namespace: "custom", key: "banner_image") {\n      reference {\n        ... on MediaImage {\n          image {\n            url\n            altText\n          }\n        }\n      }\n    }\n    listCollections: metafield(namespace: "custom", key: "list_collections") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Collection {\n              id\n              title\n              handle\n              image {\n                url\n                altText\n              }\n            }\n          }\n        }\n      }\n    }\n    listBrands: metafield(namespace: "custom", key: "list_brands") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Collection {\n              id\n              title\n              handle\n              \n              image {\n                url\n                altText\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n\n': {
     return: PageQuery;
     variables: PageQueryVariables;
   };

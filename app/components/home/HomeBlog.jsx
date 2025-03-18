@@ -58,14 +58,12 @@ const tabContent = [
   {
     content: (
       <>
- <div className="flex flex-col lg:flex-row gap-5">
-                        <div className="w-full lg:w-70 aspect-video">
-                        <iframe src="https://www.youtube.com/embed/U1spGWjF8Rc" title="Acrylic Painting with Soho Acrylics by Dan Nelson Free Art Lesson - Jerry&#39;s Artarama" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
+        <div className="flex flex-col lg:flex-row gap-5">
+            <div className="w-full lg:w-70 aspect-video">
+                <iframe className="w-full h-full " src="https://www.youtube.com/embed/U1spGWjF8Rc" title="Acrylic Painting with Soho Acrylics by Dan Nelson Free Art Lesson - Jerry&#39;s Artarama" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
                         </div>
                         <div className="w-full lg:w-30 bg-white">
                         <div className=''>
-                              
-                                      
                             </div>
                         </div>
                     </div>
