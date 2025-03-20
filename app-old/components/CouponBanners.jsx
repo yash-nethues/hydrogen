@@ -1,21 +1,30 @@
-import React from 'react';
-function CouponBanners() {
-    return (
-       <>
-        <div className='2xl:container mt-5 mb-5'>
-          <ul className='flex border border-grey-200 justify-between'>
-            <li className='w-1/3'>
-                <a href=""><img className='w-full' src="/image/top-0310-canvas-super-sale-soon_01-min.jpg"  alt="" /></a>
+import React from "react";
+
+function CouponBanners({ bannerCoupons }) {
+  return (
+    <div className="container 2xl:container mt-5 mb-5">
+      <ul className="flex border border-grey-200 justify-between">
+        {bannerCoupons.references.edges.map(({ node }) => {
+          const fields = Object.fromEntries(node.fields.map(({ key, value, reference }) => [
+            key,
+            reference?.image?.url || value // Extract image URL if available
+          ]));
+
+          return (
+            <li key={node.id} className="w-1/3">
+              <a href={fields.coupon_link}>
+                <img
+                  className="w-full"
+                  src={fields.coupon_image || "/default-placeholder.jpg"} // Use extracted image URL
+                  alt={fields.coupon_name}
+                />
+              </a>
             </li>
-            <li className='w-1/3'>
-                <a href=""><img className='w-full' src="/image/top-0310-canvas-super-sale-soon_02-min.jpg"  alt="" /></a>
-            </li>
-            <li className='w-1/3'>
-                <a href=""><img className='w-full' src="/image/top-0310-canvas-super-sale-soon_03-min.jpg"  alt="" /></a>
-            </li>
-          </ul>
-        </div>
-       </> 
-    )
+          );
+        })}
+      </ul>
+    </div>
+  );
 }
-export default CouponBanners
+
+export default CouponBanners;

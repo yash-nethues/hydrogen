@@ -8,10 +8,9 @@ function Accordion({ page, faqs }) {
   };
 
   return (
-    <section className="mt-10 xl:p-10 bg-themegray">
+    <section className="mt-10 xl:p-10 bg-grey-100" id="faq">
       <div className="faqs custom-container">
         <ul className="bg-white border border-gray-200">
-          {/* First Item: Page Title & Content */}
           <li>
             <div
               onClick={() => handleToggle(0)}
@@ -30,7 +29,7 @@ function Accordion({ page, faqs }) {
             )}
           </li>
 
-          {/* FAQ Items */}
+        
           {faqs.map(({ node }, index) => {
             const title = node.fields.find((field) => field.key === "faq_title")?.value;
             const content = node.fields.find((field) => field.key === "faq_content")?.value;

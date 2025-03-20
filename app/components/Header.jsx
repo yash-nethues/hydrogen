@@ -28,22 +28,39 @@ export function HeaderTop({isLoggedIn, cart}) {
   return (
     <div className="">
       {/* Top Bar with Navigation */}
-      <div className='custom-container pt-p-2 pb-p-2'>
+      <div className='custom-container pt-j3 pb-j3'>
       <div className="flex items-center justify-between ps-lg-48">
         <span>
-          <Link tabIndex="0" href="" className="text-brand text-15 font-bold">Free Shipping $69+</Link>
+          <Link tabIndex="0" href="" className="text-brand text-15 font-bold outline-none">Free Shipping $69+</Link>
         </span>
         <div>
           <ul className="flex text-xs -mx-3.5">
-          <li>
-            <Link class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="">
+          <li><Link class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-90 xl:text-13" href="">
               <span><img src="/image/chat.png" width="16" height="14" alt="Live Chat" /></span> Live Chat</Link></li>
            <li>
-            <a class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-xs" href="tel:1-800-827-8478"><span><img src="/image/call.png" width="16" height="15" alt="Call" /></span> 1-800-827-8478</a></li>
-          {topMenus?.slice().reverse().map((menu, index) => (
-                <li key={index}>
+            <a class="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-90 xl:text-13" href="tel:1-800-827-8478"><span><img src="/image/call.png" width="16" height="15" alt="Call" /></span> 1-800-827-8478</a></li>
+           <li className='group hover:visible relative'>
+            <a class="flex items-center relative py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-90 xl:text-13 after:content-[''] after:absolute after:w-[1px] after:h-4   after:bg-black after:right-0 " href=""><span><img src="/image/help.png" width="16" height="15" alt="Call" /></span> Help</a>
+            <ul id="help-content" className='invisible absolute w-48 right-0 top-full bg-grey-100 border border-grey-200 group-hover:visible z-20 
+             [&>li>a]:p-j10 [&>li>a]:pl-5 hover:[&>li>a]:pl-6 
+            [&>li>a]:block [&>li>a]:border-b border-grey-200 [&>li>a]:text-sm hover:[&>li>a]:text-brand
+            [&>li>a]:relative [&>li>a]:before:transition-all [&>li>a]:before:duration-300 ease-linear [&>li>a]:before:delay-0 [&>li>a]:before:z-[-1]
+            [&>li>a]:before:content-[""] [&>li>a]:before:absolute [&>li>a]:before:bg-white [&>li>a]:before:w-0 [&>li>a]:before:h-full
+            [&>li>a]:before:left-0 [&>li>a]:before:top-0 hover:[&>li>a]:before:w-full
+            '>
+              <li><a href="#">At Your Service</a></li>
+              <li><a href="#">Shipping Info</a></li>
+              <li><a href="#">Contact Us</a></li>
+              <li><a href="#">FAQ's</a></li>
+              <li><a href="#">About Us</a></li>
+              <li><a href="#">Product Icon Details</a></li>
+                   </ul>
+            </li>
+            
+                 {topMenus?.slice().reverse().map((menu, index) => (
+                  <li key={index}>
                   <Link
-                    className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand lg:text-xs"
+                    className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-90 xl:text-97"
                     href={menu.link}
                   >
                     {menu.icon && (
@@ -61,10 +78,10 @@ export function HeaderTop({isLoggedIn, cart}) {
       </div>
 
       {/* Main Header Section */}
-      <div className="bg-gray-100 pt-8 pb-12 border-y relative border-grey-200 custom-container">
+      <div className="bg-grey-100 pt-8 pb-12 border-y relative border-grey-200 custom-container">
         <div className="">
           <div className="flex items-center gap-x-10">
-            <Link href="/" className="flex-none">
+            <Link href="/" className="flex-none -mt-j2">
                <img src="/image/logo-red.svg" className='w-44 sm:w-56 lg:w-72 xl:w-420'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
             </Link>
             <SearchBar />
@@ -74,13 +91,12 @@ export function HeaderTop({isLoggedIn, cart}) {
           <div className="absolute start-0 end-0 bottom-0 custom-container">
             <div className="">
               <ul className="font-bold uppercase text-xs flex">
-                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6">Special Sale</Link></li>
-                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Enter Contest</Link></li>
-                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6">Deals/offers</Link></li>
+                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6 leading-j18">Special Sale</Link></li>
+                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6 leading-j18">Enter Contest</Link></li>
+                <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6 leading-j18">Deals/offers</Link></li>
+
               </ul>
-              <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden lg:block">
-                <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
-              </div>
+
             </div>
           </div>
         </div>
@@ -91,7 +107,7 @@ export function HeaderTop({isLoggedIn, cart}) {
 
 function SearchBar() {
   return (
-    <div className="flex-1 xl:pr-6">
+    <div className="flex-1 xl:pr-6 -mt-j10">
         <Form method="get" action="/search" className="w-full relative">
         <input  
           className="text-base border border-grey-300 h-10 pl-4 pr-14 rounded-sm w-full"
@@ -101,6 +117,9 @@ function SearchBar() {
         />
         <button className="absolute right-2 top-1"><img src="/image/search-icon.png" width="30" height="31" alt="search" /></button>
       </Form>
+      <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden lg:block">
+                <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
+              </div>
     </div>
   );
 }
@@ -152,15 +171,16 @@ export function HeaderMainMenus({
                 ? new URL(item.url).pathname
                 : item.url;
             return (
+         
               <li key={count}>
-                <NavLink
-                  className="p-2 2xl:p-2.5 xl:p-2 2xl:text-base xl:text-sm md:text-xs block transition-all !text-blue hover:bg-blue min-h-14 flex items-center hover:!text-white"
+                <NavLink className=
+                  {`${count === 9 || count === 10 ? 'font-bold p-2 2xl:p-2.5 xl:p-2 2xl:text-lg xl:text-sm md:text-xs block transition-all !text-blue hover:bg-blue min-h-14 flex items-center hover:!text-white' : 'p-2 2xl:p-2.5 xl:p-2 2xl:text-base xl:text-sm md:text-xs block transition-all !text-blue hover:bg-blue min-h-14 flex items-center hover:!text-white'}`}
                   end
                   key={item.id}
                   onClick={closeAside}
                   prefetch="intent"
                   to={url}
-                >
+                 >
                   {item.title}
                 </NavLink>
               </li>
@@ -171,7 +191,6 @@ export function HeaderMainMenus({
     </div>
   );
 }
-
 /**
  * @param {{
  *   menu: HeaderProps['header']['menu'];
@@ -181,21 +200,7 @@ export function HeaderMainMenus({
  * }}
  */
 export function HeaderMenu() {
-  const menuItems = [
-    "Canvases & Painting Surfaces",
-    "Paints & Mediums",
-    "Brushes",
-    "Frames & Matting",
-    "Papers & Surfaces",
-    "Drawing & Illustration",
-    "Art Easels",
-    "Artist Studio & Furniture",
-    "Resources",
-    "NEW",
-    "SALEssss",
-    "More"
-  ];
-
+  const menuItems = [];
   return (
     <div className="bg-white border-b border-grey-200 w-full ">
       <div className="container file:2xl:container 3xl:px-5 m-auto">

@@ -9,7 +9,9 @@ export default {
               '100': '#102e48',
               '200': '#97b9c5',
               '300' : '#b2c8dc',
-              '400' : '#c1d5e7'
+              '400' : '#c1d5e7',
+              '500' : '#386489'
+              
            },
           base: {
               DEFAULT: '#1d1d1d',
@@ -27,7 +29,8 @@ export default {
               '200': '#e3e3e3',
               '300': '#abb7c1',
               '400': '#fafafa',
-              '500' : '#6f6f6f' 
+              '500' : '#6f6f6f', 
+              
           },
   
       },
@@ -37,24 +40,27 @@ export default {
       spacing: {
           'negative-5': '0.313rem',
           '50' : '50px',
-          'p-2' : '2px'   
+          'j2' : '2px',
+          'j3' : '3px',
+          'j10' : '10px',
+          'j7' : '29.72px',
+             
         },
        backgroundImage: {
-        'pink-gradient': 'linear-gradient(to right, #dc4654 0%, #dc4654 50%, #dc4654 51%, #ff4052 100%)',
+        'pink-gradient': 'linear-gradient(to right, #dc4654 0%, #dc4654 50%, #dc4654 51%, #ff4052 100%);',
+        'Hoverpink': 'linear-gradient(to right, #dc4654 0%, #dc4654 50%, #dc4654 51%, #ff4052 100%);',
   
         },
-      margin: {
-          '50' : '50px'
-      },
-      width: {
+       width: {
         '30': '30%',
         '70': '70%',
-        '420': '420px'
-   
+        '420': '420px' 
       },
 
       fontSize: {
         '0': '0px',
+        '97': '97.5%',
+        '90': '90%',
         '10': '10px',
         '13': '13px',
         '14': '14px',
@@ -86,7 +92,10 @@ export default {
         themegray: '#fafafa',
         themeteal: '#289798'
   
-      }
+      },
+      lineHeight: {
+        'j18': '18px',  // Added line height of 18px
+      },
   },
   container: {
       center: true,

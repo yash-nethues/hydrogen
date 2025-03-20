@@ -1,5 +1,4 @@
 import React from "react";
-
 function CouponBanners({ bannerCoupons }) {
   return (
     <div className="container 2xl:container mt-5 mb-5">

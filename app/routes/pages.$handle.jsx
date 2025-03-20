@@ -60,7 +60,7 @@ function loadDeferredData({ context }) {
   return {};
 }
 export default function Page() {
-  /** @type {LoaderReturnData} */
+  /* @type {LoaderReturnData} */
   const { page } = useLoaderData();
 
   return (
@@ -76,15 +76,15 @@ export default function Page() {
             <h1 className='text-40 pt-5 pb-5 block font-semibold'><span className='' style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)' }}>{page.title}</span></h1>
             {page.bannerContent?.value && <p className='pt-2 text-base
 !text-white'>{page.bannerContent.value}</p>}
-            <a href="#">...Read More+</a>
+            <a href="#faq">...Read More+</a>
           </div>
         </div>
       </header>
       <div className=' bg-grey-100 pl-0 pr-0 mb-5 h-11 flex items-center'>
         <div className="container breadcrumb 2xl:container">
           <ul className="flex">
-            <li className="!text-gay-500 text-sm underline hover:no-underline hover:!text-brand"><a href="/">Home&nbsp; </a></li>
-            <li className="text-10 top-1 relative !text-gay-500 ">/ </li>
+            <li className="!text-grey-500 text-sm underline hover:no-underline hover:!text-brand"><a href="/">Home&nbsp; </a></li>
+            <li className="text-10 top-1 relative !text-grey-500 ">/ </li>
             <li className="active text-sm !text-brand ">&nbsp; {page.title}</li>
           </ul>
         </div>
@@ -306,6 +306,6 @@ query Page(
 
 `;
 
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
+/**  @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */

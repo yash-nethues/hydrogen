@@ -1,5 +1,5 @@
 import {Suspense} from 'react';
-import {Await, NavLink} from '@remix-run/react';
+import {Await, NavLink, Link} from '@remix-run/react';
 import {useLoaderData} from '@remix-run/react';
 
 /**
@@ -56,15 +56,18 @@ function FooterMenu() {
           ))}  
           </FooterColumn>
 
-          <div className="flex-none w-full lg:w-2/5 xl:w-1/4 px-4">
-              <h2 className="text-blue text-2xl font-medium pb-4">Email Exclusive Club</h2>
+          <div className="flex-none w-full lg:w-2/5 xl:w-1/4 px-4  relative 
+            before:content-[''] before:absolute before:left-[-60px] before:top-0
+            before:w-[1px] before:h-full before:bg-gray-200
+          ">
+              <h2 className="text-blue text-2xl font-medium pb-1">Email Exclusive Club</h2>
               <p className="text-base text-grey">Subscribe and receive coupon specials, great promos &amp; VIP offers!</p>
               <div className="relative pt-3 pb-5">
-                <span className="ext-blue font-semibold text-sm  pb-3 block">Sign Up for Our Newsletter:</span>
+                <span className="!text-blue font-semibold text-sm  pb-3 block">Sign Up for Our Newsletter:</span>
                   <label className="relative bg-white border border-grey-200 rounded-full  w-full block p-4 pr-40">
                       <input
                           type="text"
-                          className="  "
+                          className=" outline-none text-lg"
                           placeholder="Enter your email address"
                       />
                  
@@ -76,8 +79,8 @@ function FooterMenu() {
               <div>
                   <h2 className="text-blue text-2xl font-medium pb-4">eGift Cards & Gift Cards</h2>
                   <div className="flex gap-x-4">
-                      <FooterButton label="Send Now" />
-                      <FooterButton label="Check Balance" />
+                      <FooterButton label="Send Now" url="" />
+                      <FooterButton label="Check Balance" url="" />
                   </div>
               </div>
           </div>
@@ -119,7 +122,7 @@ function FooterSecond() {
 
             <div className="text-center">
               <h2 className="text-xl text-blue font-medium">Payment Options</h2>
-              <ul className="flex flex-wrap justify-center gap-x-1.5">
+              <ul className="flex flex-wrap justify-center gap-x-1.5 ">
                 <li className="border border-grey-200 p-1.5 w-16 h-10 flex items-center justify-center bg-white">
                     <img className="max-h-full" src="/image/paypal.png" alt="PayPal" />
                 </li>
@@ -168,15 +171,15 @@ function FooterSecond() {
                 <p className="text-base text-blue-200 pb-4">© 1989-2023 Jerry's Artarama All Rights Reserved.</p>
                 <p className="text-base text-blue-200 pb-4">TEL: 1-800-U-ARTIST (827-8478)</p>
                 <p className="text-blue-200">
-                    <a href="" className="text-xs underline  text-blue-400  my-2.5 mx-5 hover:text-white transition-all pt-2 pb-2 pl-5 pr-5">Privacy Policy</a> |
-                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2 pl-5 pr-5">Terms Of Use </a> |
-                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2 pl-5 pr-5">Accessibility Statement</a><br />
-                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-flex items-center gap-x-1.5 hover:text-white transition-all pt-2 pb-2 pl-5 pr-5">
+                    <a href="" className="text-xs underline  text-blue-400  my-2.5 mx-5 hover:text-white transition-all pt-2 pb-2 ">Privacy Policy</a> |
+                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2">Terms Of Use </a> |
+                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2 ">Accessibility Statement</a><br />
+                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-flex items-center gap-x-1.5 hover:text-white transition-all pt-2 pb-2 ">
                         <img src="/image/optout-icon-transparent.svg" width="30" height="14" alt="Opt Out" />
                         Your Privacy Choices
                     </a>|
-                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2 pl-5 pr-5 ">California Privacy Notice</a> |
-                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2 pl-5 pr-5">Site Map</a>
+                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2">California Privacy Notice</a> |
+                    <a href="" className="text-xs underline text-blue-400 my-2.5 mx-5 inline-block hover:text-white transition-all pt-2 pb-2 ">Site Map</a>
                 </p>
             </div>
 
@@ -194,7 +197,7 @@ function FooterSecond() {
 
 const FooterColumn = ({ title, children }) => (
   <div className="flex-none w-full md:w-1/3 lg:w-1/5 xl:w-1/4 px-4">
-      <h2 className="text-blue text-2xl font-medium pb-4">{title}</h2>
+      <h2 className="text-blue text-2xl font-medium pb-1">{title}</h2>
       <ul>
           {children}
       </ul>
@@ -209,10 +212,10 @@ const FooterLink = ({ label }) => (
   </li>
 );
 
-const FooterButton = ({ label }) => (
-  <a href="" className="flex-1 flex items-center justify-center text-base text-brand font-medium h-12 border-2 rounded-sm border-brand">
+const FooterButton = ({ label, url }) => (
+  <Link to={url} className="btn-outer">
       {label}
-  </a>
+  </Link>
 );
 
 /**

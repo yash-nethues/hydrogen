@@ -499,7 +499,7 @@ function TopAdsLink({ adsData }) {
 function RecommendedProducts({ products, title }) {
   return (
     <div className="2xl:container pt-6 ">
-      <div className="recommended-products  bg-themegray  p-10 pl-10 pr-10 ">
+      <div className="recommended-products  bg-themegray p-10 pl-10 pr-10 ">
         <div className='text-center'>
           <h2 className="flex justify-center text-center font-semibold text-blue text-34 pb-8 center">{title}</h2>
         </div>
@@ -509,7 +509,7 @@ function RecommendedProducts({ products, title }) {
               <div className="flex w-full border-dashed  border-gray border border-r-0 rounded">
                 {response
                   ? response.products.nodes.map((product) => (
-                    <div className='recommended_box relative bg-white p-5 border-dashed  border-gray border-r w-3/12'  key={product.id}>
+                    <div className='recommended_box relative bg-white p-5 pb  -10 border-dashed  border-gray border-r w-3/12'  key={product.id}>
                        <span className='absolute top-3 left-3 bg-themeteal text-white font-bold pt-1 pb-1 pl-2 pr-2 text-base text-sm
 '> TOP CHOICE </span>
                       <Link
@@ -525,7 +525,7 @@ function RecommendedProducts({ products, title }) {
                         />
                         </figure>
                         <div className='text-center pt-5'>
-                          <h4 className='font-semibold text-14'>{product.title}</h4>
+                          <h4 className='font-semibold text-sm '>{product.title}</h4>
                           <small className='text-17 font-bold text-brand flex justify-center gap-2'>
                             Only: <Money data={product.priceRange.minVariantPrice} />
                           </small>
@@ -538,7 +538,7 @@ function RecommendedProducts({ products, title }) {
             )}
           </Await>
         </Suspense>
-        <br />
+      
       </div>
     </div>
   );
@@ -551,7 +551,7 @@ function FeaturedCollections({ collections, title }) {
   return (
     <div className='container 2xl:container pt-20'>
       <div className='text-center pb-20'>
-        <h2 className='text-blue text-4xl font-bold custom-h2 relative pb-8'>{title}</h2>
+        <h2 className='text-blue text-4xl font-semibold custom-h2 relative pb-8'>{title}</h2>
       </div>
       <div className="featured-collectionShop By Categoriesons-grid flex flex-wrap">
         {collections.map((collection) => (
@@ -670,11 +670,11 @@ function OfferProducts() {
 
 function ArtAndSupplies() {
   return (
-    <section className='bg-gray-100 mt-20 py-10'>
+    <section className='bg-grey-100 mt-20 py-10'>
       <div className='container 2xl:container'>
         <div className="specialist-in-providing center text-center">
           <div data-content-type="html" data-appearance="default" data-element="main" data-decoded="true">
-            <h1 className='text-blue text-48  bold font-bold pb-2 block'>Professional Art Supplies &amp; Framing Specialists</h1>
+            <h1 className='text-blue text-48  font-semibold pb-2 block'>Professional Art Supplies &amp; Framing Specialists</h1>
             <span className='text-blue block pb-negative-5'>Better Art Materials, Reliability, Great Prices, Exceptional Service! Trusted For Over 50 Years. The Quality Of Your Art Matters To Us!</span>
             <Link to="#" className='text-blue underline '><strong>About Us &gt;</strong></Link></div></div>
       </div>
@@ -692,7 +692,7 @@ function ShopSupplies({ supplyList = [], type, title }) {
     <section className="bg-gray-100 mt-50 mb-50 py-8">
       <div className="container 2xl:container">
         <div className="specialist-in-providing center text-center">
-            <h2 className="text-blue text-38 font-bold pb-2">{title}</h2>
+            <h2 className="text-blue text-38 font-semibold pb-2">{title}</h2>
         </div>
       </div>
 

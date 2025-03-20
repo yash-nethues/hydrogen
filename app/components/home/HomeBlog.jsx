@@ -9,7 +9,7 @@ const [activeTab, setActiveTab] = useState(0);
 const tabs = [
     title,
     '',
-    'Free Video Art Lessons  <span className="block w-full text-60% mt-2.5">Over 12,000 hours of Art Instruction!</span>'
+    'Free Video Art Lessons <br/>  <span className="block w-full text-sm mt-2.5">Over 12,000 hours of Art Instruction!</span>'
   ];
 
 const tabRefs = useRef([]); 
@@ -36,7 +36,7 @@ const tabContent = [
                     </p>
                     <div className="mt-auto text-center">
                       <Link to={`/blogs/news/${article.handle}`}>
-                        <button className="bg-blue text-white min-h-9 py-1.5 px-5 rounded-sm">Read More</button>
+                        <button className="btn-primary rmin-h-9 py-1.5 px-5 rounded-sm">Read More</button>
                       </Link>
                     </div>
                   </div>

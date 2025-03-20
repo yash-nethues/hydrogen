@@ -4,15 +4,30 @@
 
 @layer components {
     .btn-secondary {
-      @apply py-3 px-10 bg-pink-gradient text-white font-semibold 
+      @apply py-3 px-j7 bg-pink-gradient text-white font-semibold 
        shadow-md inline-block
-       hover:bg-violet-700 focus:outline-none focus:ring focus:ring-violet-400 focus:ring-opacity-75;
+ 
     }
+    .btn-secondary:hover {
+      background-size: 200% 100%; /* Desired background size on hover */
+    }
+
     .btn-primary {
-      @apply py-3 px-10 bg-blue text-white font-semibold 
-       shadow-md inline-block
-       hover:bg-pink-gradient focus:outline-none focus:ring focus:ring-violet-400 focus:ring-opacity-75;
+      @apply py-3 px-10 bg-blue text-white font-[500] text-sm
+       shadow-md inline-block  min-h-9 leading-none relative
+       before:content-[""] before:absolute before:left-0 before:top-0  before:w-0 z-[0] before:h-full
+       before:transition-all before:duration-300 ease-linear before:delay-0 
+       hover:before:bg-blue-500 hover:before:w-full hover:before:z-[-1]
     }
+
+    .btn-outer {
+      @apply flex-1 flex items-center justify-center text-base text-brand font-medium h-12 border-2 rounded-sm border-brand
+      leading-none relative
+      before:content-[""] before:absolute before:left-0 before:top-0  before:w-0 z-[0] before:h-full
+      before:transition-all before:duration-300 ease-linear before:delay-0 
+      hover:before:bg-pink-gradient hover:text-white hover:before:w-full hover:before:z-[-1]
+    }
+   
   }
 
   @layer components {

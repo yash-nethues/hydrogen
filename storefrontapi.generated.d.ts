@@ -796,6 +796,34 @@ export type PageQuery = {
           }>;
         }>;
       }>;
+      faqs?: StorefrontAPI.Maybe<{
+        references?: StorefrontAPI.Maybe<{
+          edges: Array<{
+            node: Pick<StorefrontAPI.Metaobject, 'id' | 'handle'> & {
+              fields: Array<
+                Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'>
+              >;
+            };
+          }>;
+        }>;
+      }>;
+      banner_coupons?: StorefrontAPI.Maybe<{
+        references?: StorefrontAPI.Maybe<{
+          edges: Array<{
+            node: Pick<StorefrontAPI.Metaobject, 'id' | 'handle'> & {
+              fields: Array<
+                Pick<StorefrontAPI.MetaobjectField, 'key' | 'value'> & {
+                  reference?: StorefrontAPI.Maybe<{
+                    image?: StorefrontAPI.Maybe<
+                      Pick<StorefrontAPI.Image, 'url'>
+                    >;
+                  }>;
+                }
+              >;
+            };
+          }>;
+        }>;
+      }>;
     }
   >;
 };
@@ -1388,7 +1416,7 @@ interface GeneratedQueryTypes {
     return: CatalogQuery;
     variables: CatalogQueryVariables;
   };
-  '#graphql\nquery Page(\n  $language: LanguageCode\n  $country: CountryCode\n  $handle: String!\n) @inContext(language: $language, country: $country) {\n  page(handle: $handle) {\n    id\n    title\n    body\n    handle\n    seo {\n      description\n      title\n    }\n    bannerContent: metafield(namespace: "custom", key: "banner_content") { value }\n    bannerImage: metafield(namespace: "custom", key: "banner_image") {\n      reference {\n        ... on MediaImage {\n          image {\n            url\n            altText\n          }\n        }\n      }\n    }\n    listCollections: metafield(namespace: "custom", key: "list_collections") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Collection {\n              id\n              title\n              handle\n              image {\n                url\n                altText\n              }\n            }\n          }\n        }\n      }\n    }\n    listBrands: metafield(namespace: "custom", key: "list_brands") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Collection {\n              id\n              title\n              handle\n              \n              image {\n                url\n                altText\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n}\n\n': {
+  '#graphql\nquery Page(\n  $language: LanguageCode\n  $country: CountryCode\n  $handle: String!\n) @inContext(language: $language, country: $country) {\n  page(handle: $handle) {\n    id\n    title\n    body\n    handle\n    seo {\n      description\n      title\n    }\n    bannerContent: metafield(namespace: "custom", key: "banner_content") { value }\n    bannerImage: metafield(namespace: "custom", key: "banner_image") {\n      reference {\n        ... on MediaImage {\n          image {\n            url\n            altText\n          }\n        }\n      }\n    }\n    listCollections: metafield(namespace: "custom", key: "list_collections") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Collection {\n              id\n              title\n              handle\n              image {\n                url\n                altText\n              }\n            }\n          }\n        }\n      }\n    }\n    listBrands: metafield(namespace: "custom", key: "list_brands") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Collection {\n              id\n              title\n              handle\n              \n              image {\n                url\n                altText\n              }\n            }\n          }\n        }\n      }\n    }\n    faqs: metafield(namespace: "custom", key: "faqs") {\n      references(first: 10) {\n        edges {\n          node {\n            ... on Metaobject {\n              id\n              handle\n              fields {\n                key\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n    banner_coupons: metafield(namespace: "custom", key: "banner_coupons") {\n      references(first: 3) {\n        edges {\n          node {\n            ... on Metaobject {\n              id\n              handle\n              fields {\n                key\n                value\n                reference {\n                  ... on MediaImage {\n                    image {\n                      url\n                    }\n                  }\n                }\n              }\n            }\n          }\n        }\n      }\n    }\n    \n  }\n}\n\n': {
     return: PageQuery;
     variables: PageQueryVariables;
   };
