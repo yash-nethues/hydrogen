@@ -227,7 +227,7 @@ query Page(
       }
     }
     listCollections: metafield(namespace: "custom", key: "list_collections") {
-      references(first: 10) {
+      references(first: 20) {
         edges {
           node {
             ... on Collection {
@@ -244,7 +244,7 @@ query Page(
       }
     }
     listBrands: metafield(namespace: "custom", key: "list_brands") {
-      references(first: 10) {
+      references(first: 20) {
         edges {
           node {
             ... on Collection {
