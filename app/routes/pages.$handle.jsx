@@ -62,7 +62,7 @@ function loadDeferredData({ context }) {
 export default function Page() {
   /* @type {LoaderReturnData} */
   const { page } = useLoaderData();
-
+  const totalBrands = page?.listBrands?.references?.edges?.length || 0;
   return (
     <div className="page">
       <CouponBanners bannerCoupons={page.banner_coupons} />
@@ -118,6 +118,7 @@ export default function Page() {
           </div>
         </div>
       )}
+      
       {page.listBrands?.references?.edges?.length > 0 && (
         <div className="container 2xl:container mt-40">
           <div className="page-list-collections">
@@ -137,16 +138,16 @@ export default function Page() {
               slidesPerView={3}
               breakpoints={{
                 1440: {
-                  slidesPerView: 10,
+                  slidesPerView: totalBrands > 10 ? 10 : totalBrands,
                 },
                 1200: {
-                  slidesPerView: 1,
+                  slidesPerView: totalBrands > 8 ? 8 : totalBrands,
                 },
                 992: {
-                  slidesPerView: 1,
+                  slidesPerView: totalBrands > 6 ? 6 : totalBrands,
                 },
                 767: {
-                  slidesPerView: 1,
+                  slidesPerView: totalBrands > 3 ? 3 : totalBrands,
                 },
               }}
             >

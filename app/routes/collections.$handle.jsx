@@ -87,18 +87,24 @@ export default function Collection() {
 
   return (
     <>
-    <CouponBanners />
+   <CouponBanners bannerCoupons={collection.banner_coupons} />
 
-    <header className="2xl:container">
-        <div className='h-44 pt-3 pb-3 border-t border-grey-200'>
-       <div className='text-center pl-4 pr-4 max-w-[1170px] mx-auto text-base
- text-blue'>
-         <h1 className='text-40 pt-5 pb-5 block font-semibold'><span className=''>{collection.title}</span></h1>
-        <p>At Jerry's, we carry a large selection of specialty made and curated artist stretched canvas for painting on sale in any media from standard to high quality fine art canvas. More choices of the finest quality canvas and surface types for better results</p>
-          <a href="#">...Read More+</a>
-        </div>    
+   <header className="container 2xl:container">
+        <div className='h-44 pt-3 pb-3' style={collection.bannerImage?.reference?.image?.url
+          ? { backgroundImage: `url(${collection.bannerImage.reference.image.url})` }
+          : {}}>
+          <div className='text-center pl-4 pr-4 max-w-[1170px] mx-auto text-base
+ text-white'>
+            <h1 className='text-40 pt-5 pb-5 block font-semibold'><span className='' style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)' }}>{collection.title}</span></h1>
+            {collection.bannerContent?.value && <p className='pt-2 text-base
+!text-white'>{collection.bannerContent.value}</p>}
+            <a href="#faq">...Read More+</a>
+          </div>
         </div>
       </header>
+
+
+
        <div className='bg-themegray pl-0 pr-0 mb-5 h-11 flex items-center'>
             <div className="breadcrumb 2xl:container">
               <ul className=" flex">
@@ -110,7 +116,34 @@ export default function Collection() {
               </ul>
             </div>
         </div>
-        <CategorySlider />
+        
+
+        {collection.relatedCategories?.references?.edges?.length > 0 && (
+        <div className="page-list-collections">
+    
+
+          <div className="flex flex-wrap  custom-container">
+            {collection.relatedCategories.references.edges.map(({ node }) => (
+              <div key={node.id} className="w-1/5 p-5 text-center">
+                <a href={`/collections/${node.handle}`} className='text-center'>
+                  <div className="flex justify-center flex-wrap p-5">
+                    <figure className='h-52 mb-5 flex items-center'>
+                      {node.image?.url ? (
+                        <img src={node.image.url} alt={node.title} className="image-thumb" />
+                      ) : (
+                        <img src="/default-image.jpg" alt="Default" className="image-thumb" />
+                      )}
+                    </figure>
+                    <h6 className="text-blue font-[500] text-lg hover:underline">{node.title}</h6>
+                  </div>
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
     <div className='2xl:container '>
       <div className='flex gap-5 border-t border-grey-200 '>
     <div className='w-1/5 border-r border-grey-200 pt-7 pr-7 sticky top-0'>
@@ -119,11 +152,7 @@ export default function Collection() {
             <div className='flex justify-between text-base font-semibold uppercase' >Category 
             <button className="relative after:content-[''] after:w-2.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-black after:border-b-gray-500 after:absolute after:right-3 after:top-1/2 after:transform after:-translate-y-1/2 after:rotate-45"></button>
               </div>
-              <ul className="mt-5 [&>li]:leading-7 [&>li>a]:text-black hover:[&>li>a]:text-brand hover:[&>li>a]:underline">
-               <li><Link to="">Stretched Cotton Canvas</Link></li>
-               <li><Link to="">Stretched Linen Canvas</Link></li>
-              <li><Link to="">Stretched Decorative Canvas</Link></li>
-          </ul>
+           
         </div>
         <div class="flter-link border-b border-grey-200 py-4">
           <div className='flex justify-between text-xl font-semibold uppercase'>Shop By</div>
@@ -176,7 +205,6 @@ export default function Collection() {
         <div className='relative text-center pb-10'>
             <h1 className='custom-h2 text-center text-blue text-3xl'>{collection.title}</h1>
       </div>
-      <p className="collection-description">{collection.description}</p>
 
       <PaginatedResourceSection
         connection={collection.products}
@@ -207,31 +235,7 @@ export default function Collection() {
 
     </div>
 
-    <section className='mt-10 p-10 bg-themegray'>
-     <div className="faqs custom-container">
-      <ul className="bg-white border border-gray-200">
-        {Array(4)
-          .fill()
-          .map((_, index) => {
-            return (
-              <li key={index}>
-                <div className="title relative pl-7 pt-5 pb-5 pb-10 border-b border-gray-200 text-blue text-xl font-500 justify-between flex">
-                  <h2 className="mb-3">Title</h2>
-                  <button
-                    className="btn right-4 absolute text-3xl"
-                    onClick={() => handleToggle(index)}>
-                    +
-                  </button>
-                </div>
-                <div className="hidden p-7 pb-14 text-base a:text-blue text-base [&>p>a]:underline [&>p>a]:font-bold [&>p>a]:text-blue hover:[&>p>a]:text-brand [&>p]:pb-4">
-                     dddfd 
-                  </div> 
-              </li>
-            );
-          })}
-      </ul>
-      </div>
-      </section>
+    <Accordion page={collection} faqs={collection.faqs.references.edges} />
 
     </>
   );
@@ -336,6 +340,74 @@ const COLLECTION_QUERY = `#graphql
           hasNextPage
           endCursor
           startCursor
+        }
+      }
+      bannerContent: metafield(namespace: "custom", key: "banner_content") { value }
+    bannerImage: metafield(namespace: "custom", key: "banner_image") {
+      reference {
+        ... on MediaImage {
+          image {
+            url
+            altText
+          }
+        }
+      }
+    }
+    faqs: metafield(namespace: "custom", key: "faqs") {
+      references(first: 10) {
+        edges {
+          node {
+            ... on Metaobject {
+              id
+              handle
+              fields {
+                key
+                value
+              }
+            }
+          }
+        }
+      }
+    }
+    relatedCategories: metafield(namespace: "custom", key: "sub_categories") {
+      references(first: 20) {
+        edges {
+          node {
+            ... on Collection {
+              id
+              title
+              handle
+              
+              image {
+                url
+                altText
+              }
+            }
+          }
+        }
+      }
+    }
+      banner_coupons: metafield(namespace: "custom", key: "banner_coupons") {
+        references(first: 3) {
+          edges {
+            node {
+              ... on Metaobject {
+                id
+                handle
+                fields {
+                  key
+                  value
+                  reference {
+                    ... on MediaImage {
+                      image {
+                        url
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
         }
       }
     }
