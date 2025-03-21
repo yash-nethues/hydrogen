@@ -8,8 +8,8 @@ function Accordion({ page, faqs }) {
   };
 
   return (
-    <section className="mt-10 xl:p-10 bg-grey-100" id="faq">
-      <div className="faqs custom-container">
+    <section className="mt-10 xl:pt-10 xl:pb-10 bg-grey-100" id="faq">
+      <div className="faqs container 2xl:container">
         <ul className="bg-white border border-gray-200">
           <li>
             <div

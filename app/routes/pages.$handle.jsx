@@ -103,14 +103,14 @@ export default function Page() {
               <div key={node.id} className="w-1/5 p-5 text-center">
                 <a href={`/collections/${node.handle}`} className='text-center'>
                   <div className="flex justify-center flex-wrap p-5">
-                    <figure className='h-52 mb-5 flex items-center'>
+                    <figure className='h-52 xl:mb-5 flex items-center'>
                       {node.image?.url ? (
                         <img src={node.image.url} alt={node.title} className="image-thumb" />
                       ) : (
                         <img src="/default-image.jpg" alt="Default" className="image-thumb" />
                       )}
                     </figure>
-                    <h6 className="text-blue font-[500] text-lg hover:underline">{node.title}</h6>
+                    <h6 className="xl:mt-4 text-blue font-[500] text-lg hover:underline">{node.title}</h6>
                   </div>
                 </a>
               </div>
