@@ -4,16 +4,21 @@
 
 @layer components {
     .btn-secondary {
-      @apply py-3 px-j7 bg-pink-gradient text-white font-semibold 
-       shadow-md inline-block
- 
+      @apply py-3 px-10 min-h-9 leading-none  text-15 bg-pink-gradient text-white font-medium 
     }
     .btn-secondary:hover {
       background-size: 200% 100%; /* Desired background size on hover */
     }
 
+    .btn-secondary-small {
+      @apply py-4 px-9   min-h-12 leading-none  text-15 bg-pink-gradient text-white font-medium 
+    }
+    .btn-secondary-small:hover {
+      background-size: 200% 100%; /* Desired background size on hover */
+    }
+
     .btn-primary {
-      @apply py-3 px-10 bg-blue text-white font-[500] text-sm
+      @apply py-3 px-10 bg-blue text-white font-medium text-sm
        shadow-md inline-block  min-h-9 leading-none relative
        before:content-[""] before:absolute before:left-0 before:top-0  before:w-0 z-[0] before:h-full
        before:transition-all before:duration-300 ease-linear before:delay-0 

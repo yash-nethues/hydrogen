@@ -14,8 +14,8 @@ function BetterMaterials({ collectionData, title }) {
     const products = collectionData.products?.edges || [];
     return (
       <div className="container 2xl:container text-center pt-16">
-        <div className="text-center pb-20">
-          <h2 className="text-blue text-48 font-bold custom-h2 relative pb-8">{title}</h2>
+        <div className="text-center pb-10">
+          <h2 className="text-blue text-4xl font-semibold custom-h2 relative pb-8">{title}</h2>
         </div>
         <div className="flex gap-x-10">
           <div className="hidden md:block md:w-1/4">
@@ -30,8 +30,7 @@ function BetterMaterials({ collectionData, title }) {
             <div className='relative pl-10 pr-10'>
               <Swiper
                       modules={[Navigation, Pagination, Scrollbar, A11y]}
-                      spaceBetween={30}
-                      navigation
+                      spaceBetween={30}                      
                       navigation={{ nextEl: ".arrow-right", prevEl: ".arrow-left" }}
                       pagination={{ clickable: true, dynamicBullets: true }}
                       scrollbar={{ draggable: true }}

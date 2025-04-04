@@ -60,9 +60,9 @@ function loadDeferredData({ context }) {
   return {};
 }
 export default function Page() {
-  /** @type {LoaderReturnData} */
+  /* @type {LoaderReturnData} */
   const { page } = useLoaderData();
-
+  const totalBrands = page?.listBrands?.references?.edges?.length || 0;
   return (
     <div className="page">
       <CouponBanners bannerCoupons={page.banner_coupons} />
@@ -76,15 +76,15 @@ export default function Page() {
             <h1 className='text-40 pt-5 pb-5 block font-semibold'><span className='' style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)' }}>{page.title}</span></h1>
             {page.bannerContent?.value && <p className='pt-2 text-base
 !text-white'>{page.bannerContent.value}</p>}
-            <a href="#">...Read More+</a>
+            <a href="#faq">...Read More+</a>
           </div>
         </div>
       </header>
       <div className=' bg-grey-100 pl-0 pr-0 mb-5 h-11 flex items-center'>
         <div className="container breadcrumb 2xl:container">
           <ul className="flex">
-            <li className="!text-gay-500 text-sm underline hover:no-underline hover:!text-brand"><a href="/">Home&nbsp; </a></li>
-            <li className="text-10 top-1 relative !text-gay-500 ">/ </li>
+            <li className="!text-grey-500 text-sm underline hover:no-underline hover:!text-brand"><a href="/">Home&nbsp; </a></li>
+            <li className="text-10 top-1 relative !text-grey-500 ">/ </li>
             <li className="active text-sm !text-brand ">&nbsp; {page.title}</li>
           </ul>
         </div>
@@ -103,14 +103,14 @@ export default function Page() {
               <div key={node.id} className="w-1/5 p-5 text-center">
                 <a href={`/collections/${node.handle}`} className='text-center'>
                   <div className="flex justify-center flex-wrap p-5">
-                    <figure className='h-52 mb-5 flex items-center'>
+                    <figure className='h-52 xl:mb-5 flex items-center'>
                       {node.image?.url ? (
                         <img src={node.image.url} alt={node.title} className="image-thumb" />
                       ) : (
                         <img src="/default-image.jpg" alt="Default" className="image-thumb" />
                       )}
                     </figure>
-                    <h6 className="text-blue font-[500] text-lg hover:underline">{node.title}</h6>
+                    <h6 className="xl:mt-4 text-blue font-[500] text-lg hover:underline">{node.title}</h6>
                   </div>
                 </a>
               </div>
@@ -118,6 +118,7 @@ export default function Page() {
           </div>
         </div>
       )}
+      
       {page.listBrands?.references?.edges?.length > 0 && (
         <div className="container 2xl:container mt-40">
           <div className="page-list-collections">
@@ -137,16 +138,16 @@ export default function Page() {
               slidesPerView={3}
               breakpoints={{
                 1440: {
-                  slidesPerView: 10,
+                  slidesPerView: totalBrands > 10 ? 10 : totalBrands,
                 },
                 1200: {
-                  slidesPerView: 1,
+                  slidesPerView: totalBrands > 8 ? 8 : totalBrands,
                 },
                 992: {
-                  slidesPerView: 1,
+                  slidesPerView: totalBrands > 6 ? 6 : totalBrands,
                 },
                 767: {
-                  slidesPerView: 1,
+                  slidesPerView: totalBrands > 3 ? 3 : totalBrands,
                 },
               }}
             >
@@ -227,7 +228,7 @@ query Page(
       }
     }
     listCollections: metafield(namespace: "custom", key: "list_collections") {
-      references(first: 10) {
+      references(first: 20) {
         edges {
           node {
             ... on Collection {
@@ -244,7 +245,7 @@ query Page(
       }
     }
     listBrands: metafield(namespace: "custom", key: "list_brands") {
-      references(first: 10) {
+      references(first: 20) {
         edges {
           node {
             ... on Collection {
@@ -306,6 +307,6 @@ query Page(
 
 `;
 
-/** @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
+/**  @typedef {import('@shopify/remix-oxygen').LoaderFunctionArgs} LoaderFunctionArgs */
 /** @template T @typedef {import('@remix-run/react').MetaFunction<T>} MetaFunction */
 /** @typedef {import('@shopify/remix-oxygen').SerializeFrom<typeof loader>} LoaderReturnData */

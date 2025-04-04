@@ -42,8 +42,10 @@ export default {
           '50' : '50px',
           'j2' : '2px',
           'j3' : '3px',
+          'j5' : '5px',
           'j10' : '10px',
           'j7' : '29.72px',
+          'j30' : '30px',
              
         },
        backgroundImage: {
@@ -54,6 +56,8 @@ export default {
        width: {
         '30': '30%',
         '70': '70%',
+        'j25': '300px',
+        'j75': 'calc(100% - 300px)',
         '420': '420px' 
       },
 

@@ -8,12 +8,12 @@
   --color-dark: #000;
   --color-light: #fff;
 }
-
-
-
-img {
-  border-radius: 4px;
+html {
+  scroll-behavior: smooth;
 }
+
+
+
 
 
 /*
@@ -167,7 +167,6 @@ button.reset:hover:not(:has(> *)) {
   align-items: center;
   background: #fff;
   display: flex;
-  height: var(--header-height);
   padding: 0 1rem;
 
   top: 0;
@@ -284,10 +283,7 @@ button.reset:hover:not(:has(> *)) {
 }
 /*
 * --------------------------------------------------
-* components/Search
-* --------------------------------------------------
-*/
-.predictive-search {
+* components/Searchva
   height: calc(100vh - var(--header-height) - 40px);
   overflow-y: auto;
 }

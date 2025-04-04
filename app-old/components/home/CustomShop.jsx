@@ -52,7 +52,7 @@ function CustomShop() {
                             </div>
                         </div>
                         <div className='flex w-full-m-10 text-center absolute bottom-5 pt-5 border-t border-grey-200 justify-center '>
-                        <Link to="" className="btn-primary">Custom Stretched Canvas</Link>
+                        <Link to="" className="btn-primary uppercase">Custom Stretched Canvas</Link>
                         </div>
                     </div>
                     </div>
@@ -69,7 +69,7 @@ function CustomShop() {
                             </div>
                         </div>
                         <div className='flex w-full-m-10 text-center absolute bottom-5 pt-5 border-t border-grey-200 justify-center'>
-                          <Link to="" className="btn-primary">Custom Frames Online</Link>
+                          <Link to="" className="btn-primary uppercase">Custom Frames Online</Link>
                         </div>
                     </div>
                     </div>
