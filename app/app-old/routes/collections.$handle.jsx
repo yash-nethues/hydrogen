@@ -104,6 +104,8 @@ async function loadCriticalData({context, params, request}) {
     }
   });
 
+
+  console.log('filters_check check:', JSON.stringify(filters, null, 2));
   const { collection } = await storefront.query(COLLECTION_QUERY, {
     variables: { 
       handle, 
@@ -111,6 +113,8 @@ async function loadCriticalData({context, params, request}) {
       ...paginationVariables 
     },
   });
+  // console.log('collection check:', JSON.stringify(COLLECTION_QUERY, null, 2));
+
 
   if (!collection) {
     throw new Response(`Collection ${handle} not found`, {
@@ -150,6 +154,8 @@ export default function Collection() {
   const filters = useFilters();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+
+  console.log('filters',filters);
  
   const createFilterUrl = (filterType, filterName, value) => {
     const newSearchParams = new URLSearchParams(searchParams);
@@ -180,19 +186,10 @@ export default function Collection() {
   };
   
 
-  const [openIndex, setOpenIndex] = useState([]); 
+  const [openIndex, setOpenIndex] = useState(false); 
   const handleToggle = (index) => {
-    setOpenIndex((prevIndexes) => {
-      if (prevIndexes.includes(index)) {
-        // If index is already open, remove it (close)
-        return prevIndexes.filter(i => i !== index);
-      } else {
-        // Otherwise, add it to openIndexes (open)
-        return [...prevIndexes, index];
-      }
-    });
+    setOpenIndex(openIndex === index ? null : index);
   };
-  
   const [toggleView, setToggleView] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const handleToggleDescription = () => {
@@ -269,7 +266,7 @@ export default function Collection() {
         
       {collection.relatedCategories?.references?.edges?.length > 0 && (
           <div className="flex flex-wrap container 2xl:container">
-            {collection.relatedCategories.references.edges.map(({node }) => (
+            {collection.relatedCategories.references.edges.map(({ node }) => (
               <div key={node.id} className="w-1/5 p-5 pb-1 text-center">
                 <Link to={`/collections/${node.handle}`} className='text-center'>
                   <div className="flex justify-center flex-wrap p-5">
@@ -280,7 +277,7 @@ export default function Collection() {
                         <img src="/default-image.jpg" alt="Default" className="w-32" />
                       )}
                     </figure>
-                    <h6 className="text-blue font-semibold text-sm  hover:text-brand ">{node.title}</h6>
+                    <h6 className="text-blue font-semibold text-sm  hover:underline hover:text-brand">{node.title}</h6>
                   </div>
                 </Link>
               </div>
@@ -293,115 +290,114 @@ export default function Collection() {
         <div className='w-1/5 border-r border-grey-200 pt-7 pr-7 '>
             <div className='relative sticky top-0'>
             {collection.products.filters.map((filter, index) => {
-            // Determine if this is a variant filter or product property filter
-            const isVariantFilter = filter.id !== 'product_type' && filter.id !== 'vendor';
-            const filterType = isVariantFilter ? 'v' : 'p';
-            const filterKey = filter.id;
-              return (
-                <>
-                {filters.length > 0 && index === 0 && (
-                  <div className="mainbox">
-                    <h3 className='font-semibold bg-gray-100 py-2 pl-5 mb-5'>Now Shopping by</h3>
-                    <div className="applied-filters">
-                      {filters.map((filter) => {
-                        let filterValue;
-                        if (filter.key === 'filter.v.filter.p.tag') {
-                          const tagFilter = JSON.parse(filter.value);
-                          filterValue = (
-                            <span>
-                              <span className="font-semibold">Category: </span>
-                              {tagFilter.tag}
-                            </span>
-                          );
-                        } else if (filter.key === 'filter.v.filter.p.vendor') {
-                          const brandFilter = JSON.parse(filter.value);
-                          filterValue = (
-                            <span>
-                              <span className="font-semibold">Brand: </span>
-                              {brandFilter.productVendor}
-                            </span>
-                          );
-                        } else if (filter.key === 'filter.v.filter.v.option.color') {
-                          const colorFilter = JSON.parse(filter.value);
-                          filterValue = (
-                            <span>
-                              <span className="font-semibold">Color: </span>
-                              {colorFilter.variantOption.value}
-                            </span>
-                          );
-                        } else if (filter.key === 'filter.v.filter.v.option.size') {
-                          const sizeFilter = JSON.parse(filter.value);
-                          filterValue = (
-                            <span>
-                              <span className="font-semibold">Size: </span>
-                              {sizeFilter.variantOption.value}
-                            </span>
-                          );
-                        } else if (filter.key === 'filter.v.filter.p.m.custom.more_ways_to_shop') {
-                          const wayShopFilter = JSON.parse(filter.value);
-                          filterValue = (
-                            <span>
-                              <span className="font-semibold">{wayShopFilter.productMetafield.value}:</span> Yes
-                            </span>
-                          );
-                        }
+  // Determine if this is a variant filter or product property filter
+  const isVariantFilter = filter.id !== 'product_type' && filter.id !== 'vendor';
+  const filterType = isVariantFilter ? 'v' : 'p';
+  const filterKey = filter.id;
 
-                        return (
-                          <div key={filter.key} className="filter-tag hover:text-gray-600 mt-2">
-                            <button
-                              onClick={() => {
-                                const newUrl = removeFilter(filter.key);
-                                window.location.assign(newUrl);
-                              }}
-                              className="remove-filter-btn text-gray-400 hover:text-gray-600 mr-1"
-                            >X </button>
-                            {filterValue}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {filters.length > 0 && index === 0 && (
-                  <button className='mt-4 mb-5 text-sky-700' onClick={handleClearFilters}>Clear All</button>
-                )}
-
-                {index === 1 && <div className='flter-link border-b last:border-0 border-grey-200 py-4 text-xl font-semibold'>SHOP BY:</div>} 
-            
-                <div key={filter.id} className="flter-link border-b last:border-0 border-grey-200 py-4" 
-                onClick={() => handleToggle(index)}>
-                  
-                  <div className="flex justify-between text-base font-semibold uppercase cursor-pointer">
-                    {filter.label}
-                    <button
-                      className={`relative after:content-[''] after:w-2.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-black after:border-b-gray-500 after:absolute after:right-3 after:top-1/2 after:transform after:-translate-y-1/2 transition-transform duration-300 ${openIndex === index ? 'after:rotate-[-135deg] after:mt-1' : 'after:rotate-45'}`}
-                    ></button>
-                  </div>
-                  {openIndex.includes(index) && (
-                    <ul className="mt-5 fdffdf [&>li]:leading-7 [&>li>a]:text-black hover:[&>li>a]:text-brand hover:[&>li>a]:underline">
-                      {filter.values.map((value) => (
-                          <li key={value.id}>
-                            <Link
-                              to={createFilterUrl(
-                                isVariantFilter ? 'v' : 'p',
-                                filterKey,
-                                value.input
-                              )}
-                              className={filters.some(f => 
-                                f.key === `filter.${isVariantFilter ? 'v' : 'p'}.${filterKey}` && 
-                                f.value === value.input
-                              ) ? 'font-bold text-brand' : `text-${value.label.toLowerCase().replace(/\s+/g, '')}`}
-                            >
-                              {value.label}
-                            </Link>
-                          </li>
-                        ))}
-                    </ul>
-                  )}
-                </div>
-                </>
+  return (
+    <>
+    {filters.length > 0 && index === 0 && (
+      <div>
+        <h3 className='font-semibold bg-gray-100 py-2 pl-5 mb-5'>Now Shopping by</h3>
+        <div className="applied-filters">
+          {filters.map((filter) => {
+            let filterValue;
+            if (filter.key === 'filter.v.filter.p.tag') {
+              const tagFilter = JSON.parse(filter.value);
+              filterValue = (
+                <span>
+                  <span className="font-semibold">Category: </span>
+                  {tagFilter.tag}
+                </span>
               );
+            } else if (filter.key === 'filter.v.filter.p.vendor') {
+              const brandFilter = JSON.parse(filter.value);
+              filterValue = (
+                <span>
+                  <span className="font-semibold">Brand: </span>
+                  {brandFilter.productVendor}
+                </span>
+              );
+            } else if (filter.key === 'filter.v.filter.v.option.color') {
+              const colorFilter = JSON.parse(filter.value);
+              filterValue = (
+                <span>
+                  <span className="font-semibold">Color: </span>
+                  {colorFilter.variantOption.value}
+                </span>
+              );
+            } else if (filter.key === 'filter.v.filter.v.option.size') {
+              const sizeFilter = JSON.parse(filter.value);
+              filterValue = (
+                <span>
+                  <span className="font-semibold">Size: </span>
+                  {sizeFilter.variantOption.value}
+                </span>
+              );
+            } else if (filter.key === 'filter.v.filter.p.m.custom.more_ways_to_shop') {
+              const wayShopFilter = JSON.parse(filter.value);
+              filterValue = (
+                <span>
+                  <span className="font-semibold">{wayShopFilter.productMetafield.value}:</span> Yes
+                </span>
+              );
+            }
+
+            return (
+              <div key={filter.key} className="filter-tag hover:text-gray-600 mt-2">
+                <button
+                  onClick={() => {
+                    const newUrl = removeFilter(filter.key);
+                    window.location.assign(newUrl);
+                  }}
+                  className="remove-filter-btn text-gray-400 hover:text-gray-600 mr-1"
+                >X </button>
+                {filterValue}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
+
+    {filters.length > 0 && index === 0 && (
+      <button className='mt-4 mb-5 text-sky-700' onClick={handleClearFilters}>Clear All</button>
+    )}
+
+    {index === 1 && <div className='flter-link border-b last:border-0 border-grey-200 py-4 text-xl font-semibold'>SHOP BY:</div>} 
+    <div key={filter.id} className="flter-link border-b last:border-0 border-grey-200 py-4 " onClick={() => handleToggle(index)}>
+      
+      <div className="flex justify-between text-base font-semibold uppercase cursor-pointer">
+        {filter.label}
+        <button
+          className={`relative after:content-[''] after:w-2.5 after:h-2.5 after:border-r-2 after:border-b-2 after:border-black after:border-b-gray-500 after:absolute after:right-3 after:top-1/2 after:transform after:-translate-y-1/2 transition-transform duration-300 ${openIndex === index ? 'after:rotate-[-135deg] after:mt-1' : 'after:rotate-45'}`}
+        ></button>
+      </div>
+      {openIndex === index && (
+        <ul className="mt-5 [&>li]:leading-7 [&>li>a]:text-black hover:[&>li>a]:text-brand hover:[&>li>a]:underline">
+          {filter.values.map((value) => (
+              <li key={value.id}>
+                <Link
+                  to={createFilterUrl(
+                    isVariantFilter ? 'v' : 'p',
+                    filterKey,
+                    value.input
+                  )}
+                  className={filters.some(f => 
+                    f.key === `filter.${isVariantFilter ? 'v' : 'p'}.${filterKey}` && 
+                    f.value === value.input
+                  ) ? 'font-bold text-brand' : `text-${value.label.toLowerCase().replace(/\s+/g, '')}`}
+                >
+                  {value.label}
+                </Link>
+              </li>
+            ))}
+        </ul>
+      )}
+    </div>
+    </>
+  );
 })}
             </div>
           </div>
@@ -465,7 +461,7 @@ export default function Collection() {
  */
 function ProductItem({product, loading, toggleView, iframeContent, isExpanded, handleToggleDescription, openPopup, isPopupOpen, closePopup, content  }) {
   const variantUrl = useVariantUrl(product.handle);
-  //console.log('product data:- ', product);
+  console.log('product data:- ', product);
   //const metafields = data.data.productByHandle.metafields.edges;
   //const moreWaysToShop = metafields.find(m => m.node.key === "more_ways_to_shop");
   
@@ -492,11 +488,7 @@ function ProductItem({product, loading, toggleView, iframeContent, isExpanded, h
               sizes="(min-width: 45em) 400px, 100vw"
               style={{ width: '75%' }}
             />
-            <button type="button" className='flex  group text-[28px] absolute right-7 top-0  text-gray-600 h-12 w-12 items-center justify-center '>
-            <IoMdHeartEmpty className='group-hover:hidden' />
-            <IoMdHeart className='fill-red-500 hidden group-hover:block '/>
-              
-              </button>
+            <button type="button" className='flex text-[28px] absolute right-7 top-0  text-gray-600 h-12 w-12 items-center justify-center '><IoMdHeartEmpty className='hover:[& > svg]:fill-red-500' />{/*<IoMdHeart />*/}</button>
           </div>
         )}
         <div className='text-center pt-5'>
@@ -579,11 +571,7 @@ function ProductItem({product, loading, toggleView, iframeContent, isExpanded, h
            <Link to={variantUrl} className='btn-secondary-small  '>
               Shop Now
           </Link>
-          <button type="button" className='flex group text-3xl border text-grey-300 border-grey-200 h-12 w-12 items-center justify-center
-          '>
-          <IoMdHeartEmpty className='group-hover:hidden' />
-          <IoMdHeart className='fill-red-500 hidden group-hover:block '/>
-          </button>
+          <button type="button" className='flex text-3xl border text-grey-300 border-grey-200 h-12 w-12 items-center justify-center '><IoMdHeartEmpty className='hover:[& > svg]:fill-red-500' />{/*<IoMdHeart />*/}</button>
           <button onClick={openPopup} type="button" className='flex text-2xl border text-grey-300 hover:bg-grey-100 border-grey-200 h-12 w-12 items-center justify-center'><CiPlay1 /></button>
           <Popup isOpen={isPopupOpen}  closePopup={closePopup} content={content} iframeContent={iframeContent} />
           </div> 

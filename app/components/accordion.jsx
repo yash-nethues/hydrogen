@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function Accordion({ page, faqs, type }) {
+function Accordion({ page, faqs }) {
   const [openIndex, setOpenIndex] = useState(0); // Default: Open first item
 
   const handleToggle = (index) => {
@@ -21,18 +21,11 @@ function Accordion({ page, faqs, type }) {
               </button>
             </div>
             {openIndex === 0 && (
-                type === 'page' ? (
-                  <div
-                    className="border-t border-gray-200 p-7 pb-14 text-base [&>p]:pb-4"
-                    dangerouslySetInnerHTML={{ __html: page?.body || '' }}
-                  />
-                ) : (
-                  <div
-      className="border-t border-gray-200 p-7 pb-14 text-base [&>p]:pb-4"
-      dangerouslySetInnerHTML={{ __html: page?.descriptionHtml || page?.description || '' }}
-    />
-                )
-              )}
+              <div
+                className="border-t border-gray-200 p-7 pb-14 text-base [&>p]:pb-4"
+                dangerouslySetInnerHTML={{ __html: page.body }}
+              />
+            )}
           </li>
 
         

@@ -374,7 +374,7 @@ export default function Homepage() {
       <AdvertisementBanner ads={data.adsData} type="home_ads_with_link" />
       <CustomShop />
       <FeaturedCollections collections={data.featuredCollections} title="Shop By Categories" />
-      <HomeBlog posts={data.blogPosts} title='Latest Blog Articles <span className="block w-full text-[60%] mt-2.5">Know more about the latest updates</span>' />
+      <HomeBlog posts={data.blogPosts} title='Latest Blog Articles  <div class="block w-full text-sm mt-2.5">Know more about the latest updates</div>' />
       <ShopSupplies supplyList={data.supplyData} type="before_footer_supplies" title="Shop Our Artists Supplies" />
     </div>
   );
@@ -438,13 +438,41 @@ function HomeBannerCaraousel({ banner, type }) {
         <div id="carousel" className="relative pb-8">
           <div className="relative overflow-hidden">
             <div className="carousel-slides flex transition-transform duration-500">
+
+
+
               {banner && banner.length > 0 ? (
                 banner.map((image, index) => (
-                 <a key={index} href="#" className='w-full flex-shrink-0'> <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
+                  <>
+                  <div className='relative w-full flex-shrink-0'>
+
+                  {index === 0 ? (
+                    <>
+                <a key={index} href="#" className=''> <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
+                <div className='absolute z-10 top-2/4 left-2/4 bg-white w-j600 -translate-x-2/4  h-56 -translate-y-2/4'>
+                <div className="p-5 text-center">
+                    <h2 className='text-34 leading-tight font-medium  text-blue mb-4'>Elegant Plein Aire Frames<br />with Timeless Style</h2>
+                    <p className='mb-5 text-base !text-blue'>Our Most Popular Ready-Made Frame Style</p>
+                    <a className="btn-secondary py-2 rounded-sm shadow-lg" href="#" >Shop Now</a>
+                   </div>
+                </div>
+            </>
+            ) : (
+             <>
+              <a key={index} href="#" className=''> <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
+              <a href="#" className='btn-secondary absolute bottom-7 left-12 rounded-sm shadow-lg'>
+                Shop Now
+              </a>
+              </>
+            )}
+                      </div>
+                 </>
                 ))
               ) : (
                 <div>No Banner Images Available</div>
               )}
+
+
             </div>
             <button id="prev" className="absolute top-1/2 left-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl transition-all text-blue w-10 h-10 rounded-full">
               &#8249;
@@ -553,16 +581,16 @@ function FeaturedCollections({ collections, title }) {
       <div className='text-center pb-20'>
         <h2 className='text-blue text-4xl font-semibold custom-h2 relative pb-8'>{title}</h2>
       </div>
-      <div className="featured-collectionShop By Categoriesons-grid flex flex-wrap">
+      <div className="featured-collections ons-grid flex flex-wrap">
         {collections.map((collection) => (
-          <div className=" pl-2 pr-2 w-1/6 " key={collection.id}>
+          <div className=" pl-2 pr-2 w-1/6 mb-9" key={collection.id}>
             <Link key={collection.id} className="featured-collection group " to={`/collections/${collection.handle}`} >
               {collection.image && (
                 <div className="featured-collection-image">
                   <Image data={collection.image} sizes="100vw" />
                 </div>
               )}
-              <h3 className='pt-2 text-base text-blue text-center group-hover:text-brand'>{collection.title}</h3>
+              <h3 className='pt-2 mt-6 text-base text-blue text-center group-hover:text-brand font-semibold'>{collection.title}</h3>
             </Link>
           </div>
         ))}
@@ -874,6 +902,9 @@ const GET_COLLECTION_BY_ID_QUERY = `#graphql
               minVariantPrice {
                 amount
                 currencyCode
+              }
+              maxVariantPrice {
+                amount
               }
             }
           }

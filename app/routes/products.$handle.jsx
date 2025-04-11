@@ -103,28 +103,125 @@ export default function Product() {
   const {title, descriptionHtml} = product;
 
   return (
+    <>
+    <div className="container 2xl:container mt-5 mb-5">
+      <ul className="flex border border-grey-200 justify-between">
+            <li className="w-1/3">
+              <a href="#">
+                <img
+                  className="w-full"
+                  src={"../image/top-0310-canvas-super-sale-soon_02-min.jpg"} 
+                 
+                />
+              </a>
+              
+              </li>
+              <li className="w-1/3">
+              <a href="#">
+                <img
+                  className="w-full"
+                  src={"../image/top-0310-canvas-super-sale-soon_02-min.jpg"} 
+                 
+                />
+              </a>
+              
+              </li>
+              <li className="w-1/3">
+              <a href="#">
+                <img
+                  className="w-full"
+                  src={"../image/top-0310-canvas-super-sale-soon_02-min.jpg"} 
+                 
+                />
+              </a>
+              
+              </li>
+       
+      </ul>
+    </div>
+    <div className='bg-themegray pl-0 pr-0 mb-10 h-11 flex items-center'>
+        <div className="breadcrumb container 2xl:container">
+          <ul className=" flex">
+            <li className="!text-grey-500  text-sm underline hover:no-underline hover:!text-brand"><a href="/">Home&nbsp; </a></li>
+            <li className="text-10 top-1 relative !text-grey-500 ">/ </li>
+            <li className="!text-grey-500 text-sm underline hover:no-underline hover:!text-brand">&nbsp;<a href="/">Collection&nbsp; </a></li>
+            <li className="text-10 top-1 relative !text-grey-500 ">/ </li>
+            <li className="active text-sm !text-brand ">&nbsp; </li>
+          </ul>
+        </div>
+      </div>
+    <div className='container 2xl:container'>
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
-      <div className="product-main">
-        <h1>{title}</h1>
-        <ProductPrice
+       <div className="product-main">
+        <h1 className='text-blue text-4xl font-semibold'>{title}</h1>
+        <div className="flex gap-10 mt-1 items-center">
+        <div className="uppercase text-10 text-center leading-none bg-blue text-white w-16 p-1">Only AT <br/> Jerry's</div>
+        <div className="">Ratting section</div>
+        </div>
+        <div className="flex flex-wrap gap-4 w-full mt-4">
+          <div className="text-26 text-blue text-26 font-semibold mt-5 ">
+          <ProductPrice
+            price={selectedVariant?.price}
+            compareAtPrice={selectedVariant?.compareAtPrice}
+          />
+          </div>
+        <div className="text-sm bg-gray-100 py-1.5 px-3 text-blue text-sm">
+          Save
+          <div className="text-26 text-blue text-26 font-semibold flex mt-1  ">
+          <ProductPrice
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
-        />
-        <br />
+        />&nbsp; <span className='text-17'>off </span>&nbsp;  <small class="text-sm relative font-normal">  Reg. Price*  </small>
+        </div>
+        </div>
+        </div>
+
+        
+        {/*<div className="text-26 text-blue text-2xl">
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
         />
-        <br />
-        <br />
-        <p>
-          <strong>Description</strong>
-        </p>
-        <br />
-        <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-        <br />
+        </div*/  }
+        <div className=''>
+          <span className='text-xl font-semibold pt-4 pb-4 block'>Description</span>
+          <div className='text-15 [&>ul>li]:relative [&>ul>li]:pb-1 [&>ul>li]:before:content-[""]' dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+        </div>
+
+        <div class="flex gap-3 items-center mt-4">
+                <a href="#" className='bg-blue text-white px-4 py-2 hover:bg-brand'>
+                    See Full Description &gt; 
+                </a>
+                <a href="#" className='btn-outer rounded h-8 flex flex-none pl-2 pr-2'>
+                    Shop All Supplies Below &gt; 
+                </a>
+        </div>
+
+        <div className="mt-8 pt-5  border-t border-grey-200 ">
+            Related To- See Also  
+            <ul className='flex gap-10 mt-5'>
+              <li><img src="../image/mezzo-artist-organizer-storage-racks.jpg" /></li>
+              <li><img src="../image/mezzo-artist-organizer-storage-racks.jpg" /></li>
+              <li><img src="../image/mezzo-artist-organizer-storage-racks.jpg" /></li>
+              <li><img src="../image/mezzo-artist-organizer-storage-racks.jpg" /></li>
+              <li><img src="../image/mezzo-artist-organizer-storage-racks.jpg" /></li>
+            </ul>
+        </div>   
+
+        <div className="">
+          <ul className='flex gap-10 justify-between [&>li]'>
+            <li>Email</li>
+            <li>Add to Favorites</li>
+            <li>Need Help ? Chat With An Expert	</li>
+          </ul>
+          </div> 
+
+
+
       </div>
+      </div>
+      
       <Analytics.ProductView
         data={{
           products: [
@@ -141,6 +238,8 @@ export default function Product() {
         }}
       />
     </div>
+    
+    </>
   );
 }
 

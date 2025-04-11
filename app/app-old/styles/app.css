@@ -571,3 +571,48 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .home-page-tab{ padding:1px;}
+
+
+/* Popup overlay */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color:#fff; /* Semi-transparent background */
+  padding: 44px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Popup content box */
+.popup-content {
+  background-color: #000;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 80%;
+  height:calc(100% - 0px);
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+.popup-content  iframe{ width:100%; height:calc(100vh - 128px)}
+
+/* Close button styling */
+.close-btn {
+  background-color: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 16px;
+  position: absolute;
+  right:0; top:0;
+  border-radius: 0px;
+}
+
+.close-btn:hover {
+  background-color: rgba(0, 0, 0, 0.5);
+}

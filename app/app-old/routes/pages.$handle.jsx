@@ -196,7 +196,7 @@ export default function Page() {
 
       )}
 
-      <Accordion page={page} faqs={page.faqs.references.edges} />
+      <Accordion page={page} faqs={page.faqs.references.edges}  type='page'/>
 
     </div>
   );

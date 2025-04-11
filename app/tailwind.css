@@ -57,13 +57,13 @@
       margin-left: 37px;
       bottom: 11px;
     }
-
-   
   } 
   @layer components {
     .custom-container {
       @apply container w-full; 
       max-width: 1860px; 
     }
+    a.text-onsale{color:#ef2456!important;}
+    a.text-onsupersale{color:#289798!important;}
   }
   

@@ -18,7 +18,7 @@ function CustomShop() {
                     <div className='p-5 flex gap-4'>
                     <div className='p-5 w-full flex'>
                     <div className='p-5 w-2/4 bg-white w-full text-center pb-4 relative h-full'>
-                        <h3 className='text-25 text-blue pb-4 font-700'>Jerry's Custom Stretched <br/> Canvas Department</h3>
+                        <h3 className='text-25 text-blue pb-4 font-medium leading-tight'>Jerry's Custom Stretched <br/> Canvas Department</h3>
                         <h6 className='text-lg text-blue pb-8'><strong>Create Your Professional Custom Canvas Today</strong></h6>
                         <div className='flex pb-28'>
                             <div className='customShopImg w-2/6'>
@@ -58,7 +58,7 @@ function CustomShop() {
                     </div>
                     <div className='p-5 w-full'>
                     <div className='p-5 w-2/4 bg-white w-full text-center relative h-full'>
-                        <h3 className='text-25 text-blue pb-4 font-700'>Jerry's Custom Framing - <br/> Expert Frames </h3>
+                        <h3 className='text-25 text-blue pb-4 font-medium leading-tight'>Jerry's Custom Framing - <br/> Expert Frames </h3>
                         <h6 className='text-lg text-blue pb-8'><b>Large Selection of Custom Frames Online</b></h6>
                         <div className='flex pb-28'>
                             <div className='customShopImg w-2/6'>

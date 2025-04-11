@@ -19,17 +19,16 @@ export function PaginatedResourceSection({
 
         return (
           <div>
-            <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
-            </PreviousLink>
             {resourcesClassName ? (
               <div className={resourcesClassName}>{resourcesMarkup}</div>
             ) : (
               resourcesMarkup
             )}
-            <NextLink>
-              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
-            </NextLink>
+            <div className='flex flex-wrap justify-center mt-12'>
+              <NextLink className='btn-secondary'>
+                {isLoading ? 'Loading...' : <span>Load more</span>}
+              </NextLink>
+            </div>
           </div>
         );
       }}

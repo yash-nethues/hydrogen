@@ -3,6 +3,7 @@ import {Await, NavLink, useAsyncValue, Link} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {Form, useLoaderData, useNavigate} from '@remix-run/react';
+import Stricyheader from "../components/Stricyheader";
 
 /**
  * @param {HeaderProps}
@@ -10,7 +11,7 @@ import {Form, useLoaderData, useNavigate} from '@remix-run/react';
 export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
   const {shop, menu} = header;
   return (
-    <header className="header pr-0 pl-0">
+    <header className="header flex-wrap pr-0 pl-0">
       <HeaderMainMenus
         menu={menu}
         viewport="desktop"
@@ -18,20 +19,19 @@ export function Header({header, isLoggedIn, cart, publicStoreDomain}) {
         publicStoreDomain={publicStoreDomain}
       />
       {/* <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} /> */}
+      <Stricyheader isLoggedIn={isLoggedIn} cart={cart} NavLink={NavLink}  />
     </header>
   );
 }
-
 export function HeaderTop({isLoggedIn, cart}) {
   const dataMenu = useLoaderData();
   const topMenus = Array.isArray(dataMenu) ? dataMenu : dataMenu?.topMenus; 
   return (
-    <div className="">
-      {/* Top Bar with Navigation */}
-      <div className='custom-container pt-j3 pb-j3'>
+    <div>
+      <div className='contianer lg:custom-container pt-j3 pb-j3'>
       <div className="flex items-center justify-between ps-lg-48">
         <span>
-          <Link tabIndex="0" href="" className="text-brand text-15 font-bold outline-none">Free Shipping $69+</Link>
+          <Link tabIndex="0" href="" className="text-brand text-sm xl:text-15 font-bold outline-none">Free Shipping $69+</Link>
         </span>
         <div>
           <ul className="flex text-xs -mx-3.5">
@@ -57,10 +57,11 @@ export function HeaderTop({isLoggedIn, cart}) {
                    </ul>
             </li>
             
-                 {topMenus?.slice().reverse().map((menu, index) => (
+                 {topMenus?.slice().map((menu, index) => (
                   <li key={index}>
                   <Link
-                    className="flex items-center py-1.5 px-2 lg:px-3.5 gap-x-2.5 transition-all hover:text-brand text-0 lg:text-90 xl:text-97"
+                    className="flex items-center py-1.5 px-2 lg:px-3 gap-x-2 tracking-[0.5px]
+     transition-all hover:text-brand text-0 lg:text-90 xl:text-97"
                     href={menu.link}
                   >
                     {menu.icon && (
@@ -78,15 +79,17 @@ export function HeaderTop({isLoggedIn, cart}) {
       </div>
 
       {/* Main Header Section */}
-      <div className="bg-grey-100 pt-8 pb-12 border-y relative border-grey-200 custom-container">
-        <div className="">
+      <div className="bg-grey-100 pt-8 pb-12 border-y relative border-grey-200 ">
+        <div className="custom-container">
           <div className="flex items-center gap-x-10">
             <Link href="/" className="flex-none -mt-j2">
                <img src="/image/logo-red.svg" className='w-44 sm:w-56 lg:w-72 xl:w-420'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
             </Link>
             <SearchBar />
             <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
+         
           </div>
+         
           {/* Footer Bar with Links */}
           <div className="absolute start-0 end-0 bottom-0 custom-container">
             <div className="">
@@ -94,13 +97,12 @@ export function HeaderTop({isLoggedIn, cart}) {
                 <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 ps-4 pe-6 leading-j18">Special Sale</Link></li>
                 <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6 leading-j18">Enter Contest</Link></li>
                 <li><Link href="" className="block rounded-full bg-white text-brand border border-grey-200 hover:bg-brand hover:text-white hover:border-brand transition-all py-0.5 -ms-4 ps-4 pe-6 leading-j18">Deals/offers</Link></li>
-
               </ul>
-
             </div>
           </div>
         </div>
       </div>
+     
     </div>
   );
 }
@@ -118,8 +120,8 @@ function SearchBar() {
         <button className="absolute right-2 top-1"><img src="/image/search-icon.png" width="30" height="31" alt="search" /></button>
       </Form>
       <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden lg:block">
-                <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
-              </div>
+        <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
+      </div>
     </div>
   );
 }
@@ -138,9 +140,8 @@ export function HeaderMainMenus({
   viewport,
   publicStoreDomain,
 }) {
-  const className = `header-menu-${viewport}`;
-
-  function closeAside(event) {
+const className = `header-menu-${viewport}`;
+function closeAside(event) {
     if (viewport === 'mobile') {
       event.preventDefault();
       window.location.href = event.currentTarget.href;
@@ -148,8 +149,9 @@ export function HeaderMainMenus({
   }
 
   return (
-    <div className="bg-white border-b border-grey-200 w-full custom-container hidden lg:block">
-      <div className=" 3xl:px-5 m-auto">
+    <>
+    <div className="bg-white border-b border-grey-200 w-full  hidden lg:block">
+      <div className=" 3xl:px-5 m-auto custom-container">
         <ul className="flex text-base font-semibold justify-between">
           {viewport === 'mobile' && (
             <NavLink
@@ -189,8 +191,11 @@ export function HeaderMainMenus({
         </ul>
       </div>
     </div>
+  
+     </>
   );
 }
+
 /**
  * @param {{
  *   menu: HeaderProps['header']['menu'];
@@ -202,12 +207,12 @@ export function HeaderMainMenus({
 export function HeaderMenu() {
   const menuItems = [];
   return (
-    <div className="bg-white border-b border-grey-200 w-full ">
+    <div className="bg-white border-b border-grey-200 w-full">
       <div className="container file:2xl:container 3xl:px-5 m-auto">
         <ul className="flex text-base font-semibold justify-between">
           {menuItems.map((item, index) => (
             <li key={index}>
-              <a href="#" className="p-2.5 block transition-all text-blue hover:bg-blue min-h-14 flex items-center hover:text-white">
+               <a href="#" className="p-2.5 block transition-all text-blue hover:bg-blue min-h-14 flex items-center hover:text-white">
                 {item}
               </a>
             </li>
@@ -225,15 +230,27 @@ function HeaderCtas({isLoggedIn, cart}) {
   return (
     <div className="flex-none flex gap-x-10 -mt-4 m-j2">
       <div className="flex items-center gap-x-2.5 relative w-36">
-        <span><img src="/image/my-account.png" width="31" height="31" alt="My Account" /></span>
-        <span className="font-semibold text-base uppercase text-blue hidden lg:block">Account</span>
-        <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden lg:block absolute text-xs top-full font-medium whitespace-nowrap  text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyle}>
-          <Suspense fallback="Sign in">
-            <Await resolve={isLoggedIn} errorElement="Sign in">
-              {(isLoggedIn) => (isLoggedIn ? 'Hello, Sign In' : 'Account')}
-            </Await>
-          </Suspense>
-        </NavLink>
+        <button className='flex items-center gap-x-2.5' type="button"><span><img src="/image/my-account.png" width="31" height="31" alt="My Account" /></span>
+        <span className="font-semibold text-base uppercase text-blue hidden lg:block">Account</span></button>
+          <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden lg:block absolute text-xs top-full font-medium whitespace-nowrap  text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyle}>
+              <Suspense fallback="Sign in">
+                <Await resolve={isLoggedIn} errorElement="Sign in">
+                  {(isLoggedIn) => (isLoggedIn ? 'Hello, Sign In' : 'Account')}
+                </Await>
+              </Suspense>
+          </NavLink>
+          <div className="absolute hidden top-full  bg-white p-5 w-60 border border-b-grey-600 shadow-md  -left-2/4  -ml-8 mt-2">
+            <ul className='[&>li]:p-2 [&>li>a]:text-blue'>
+              <li className='text-center mb-2'><a className="" href="#" className="btn-secondary !text-white py-1.5 leading-0 rounded-sm">Log In</a></li>
+              <li className='text-center'><a href="#" className='text-19 uppercase transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Create Account</a></li>
+              <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>View/Track Orders</a></li>
+              <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Buy Again/Re-Order</a></li>
+              <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Recently Viewed</a></li>
+              <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>My Recent Favorites</a></li>
+              <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Teacher List/Cart </a></li>
+              <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Favorite List(s)</a></li>
+              </ul>
+            </div>
       </div>
       <div className="flex items-center gap-x-2.5 relative w-32">
         <CartToggle cart={cart} />
@@ -364,7 +381,7 @@ function activeLinkStyle({isActive, isPending}) {
     color: isPending ? 'grey' : 'text-blue',
   };
 }
-
+<Stricyheader />
 /** @typedef {'desktop' | 'mobile'} Viewport */
 /**
  * @typedef {Object} HeaderProps

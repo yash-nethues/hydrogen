@@ -11,8 +11,8 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
       <Await resolve={footerPromise}>
         {/* <ShippingMethod /> */}
           <footer className="mt-10 pt-10 border-t border-b-50 border-t-grey-200 border-b-blue-100">
-              <FooterMenu />
-              <FooterSecond />
+               <FooterMenu />
+              <FooterSecond /> 
           </footer>
       </Await>
     </Suspense>
@@ -36,6 +36,7 @@ function FooterMenu() {
   return (
     <div className="container 2xl:container">
       <div className="flex flex-wrap pb-10 -mx-4">
+      
       <Suspense fallback={<div>Loading...</div>}>
           <FooterColumn title="Need Help">
           {helpMenus[0].menu.items && helpMenus[0].menu.items.map((menu) => (

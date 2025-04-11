@@ -12,6 +12,7 @@ function BetterMaterials({ collectionData, title }) {
       return <div>Loading...</div>;
     }
     const products = collectionData.products?.edges || [];
+    
     return (
       <div className="container 2xl:container text-center pt-16">
         <div className="text-center pb-10">
@@ -51,7 +52,6 @@ function BetterMaterials({ collectionData, title }) {
                       }}
                     >
                  {products.map(({ node: product }) => (
-                 
                   <SwiperSlide key={product.id}>
                     <div className="swiper-slide h-auto" >
                       <div className="flex flex-col min-h-full">
@@ -67,10 +67,11 @@ function BetterMaterials({ collectionData, title }) {
                         <div className="flex-grow flex flex-col mt-4">
                           <div className="text-brand pb-2.5 pt-4">
                             <span className="text-xs md:text-sm lg:text-15 !leading-none">
-                              Now Only From
+                              Now Only 
                             </span>
                             <p className="block font-bold text-lg md:text-xl lg:text-2xl !leading-none">
-                              {product.priceRange.minVariantPrice.amount} {product.priceRange.minVariantPrice.currencyCode}
+                           {product.priceRange.minVariantPrice.amount}  {product.priceRange.minVariantPrice.currencyCode}
+                             
                             </p>
                           </div>
                           <Link

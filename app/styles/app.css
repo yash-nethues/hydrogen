@@ -616,3 +616,7 @@ button.reset:hover:not(:has(> *)) {
 .close-btn:hover {
   background-color: rgba(0, 0, 0, 0.5);
 }
+
+.text-newarrivals{ color:#334f67 !important}
+.text-onsale{ color:#ef2456 !important}
+.text-onsupersale{ color:#289798 !important}

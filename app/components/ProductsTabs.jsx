@@ -32,7 +32,7 @@ const tabContent = [
   },
 ];
   return (
-    <div className="container 2xl:container pt-20">
+    <div className="container 2xl:container pt-5">
     <div className="w-full mx-auto mt-10 justify-center">
       <div className="flex border-b border-gray-200 justify-center pb-5">
         <ul className="flex justify-center rounded-5xl border border-blue-900 mb-50 home-page-tab">

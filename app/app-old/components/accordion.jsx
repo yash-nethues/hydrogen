@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 
-function Accordion({ page, faqs }) {
+function Accordion({ page, faqs, type }) {
   const [openIndex, setOpenIndex] = useState(0); // Default: Open first item
 
   const handleToggle = (index) => {
     setOpenIndex(openIndex === index ? null : index);
   };
-
   return (
     <section className="mt-10 xl:pt-10 xl:pb-10 bg-grey-100" id="faq">
       <div className="faqs container 2xl:container">
@@ -22,11 +21,18 @@ function Accordion({ page, faqs }) {
               </button>
             </div>
             {openIndex === 0 && (
-              <div
-                className="border-t border-gray-200 p-7 pb-14 text-base [&>p]:pb-4"
-                dangerouslySetInnerHTML={{ __html: page.body }}
-              />
-            )}
+                type === 'page' ? (
+                  <div
+                    className="border-t border-gray-200 p-7 pb-14 text-base [&>p]:pb-4"
+                    dangerouslySetInnerHTML={{ __html: page?.body || '' }}
+                  />
+                ) : (
+                  <div
+      className="border-t border-gray-200 p-7 pb-14 text-base [&>p]:pb-4"
+      dangerouslySetInnerHTML={{ __html: page?.descriptionHtml || page?.description || '' }}
+    />
+                )
+              )}
           </li>
 
         
