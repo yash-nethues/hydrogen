@@ -4,7 +4,6 @@ import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
 import {Form, useLoaderData, useNavigate} from '@remix-run/react';
 import Stricyheader from "../components/Stricyheader";
-
 /**
  * @param {HeaderProps}
  */

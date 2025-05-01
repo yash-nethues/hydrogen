@@ -751,7 +751,7 @@ function ShopSupplies({ supplyList = [], type, title }) {
 
 function FinestSupplies() {
   return (
-    <div className='container 2xl:container pt-20'>
+    <div className='container 2xl:container pt-20 hidden'>
 
     </div>
   );

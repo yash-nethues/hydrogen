@@ -18,7 +18,7 @@
     }
 
     .btn-primary {
-      @apply py-3 px-10 bg-blue text-white font-medium text-sm
+      @apply py-3 px-5 bg-blue text-white font-medium text-sm
        shadow-md inline-block  min-h-9 leading-none relative
        before:content-[""] before:absolute before:left-0 before:top-0  before:w-0 z-[0] before:h-full
        before:transition-all before:duration-300 ease-linear before:delay-0 

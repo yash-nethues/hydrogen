@@ -76,7 +76,7 @@ export default function Page() {
             <h1 className='text-40 pt-5 pb-5 block font-semibold'><span className='' style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)' }}>{page.title}</span></h1>
             {page.bannerContent?.value && <p className='pt-2 text-base
 !text-white'>{page.bannerContent.value}</p>}
-            <a href="#faq">...Read More+</a>
+            <a href="#faq" className='hover:underline'>...Read More+</a>
           </div>
         </div>
       </header>

@@ -50,7 +50,7 @@ const [isVisible, setIsVisible] = useState(false);
     padding: '10px 0px',
     boxShadow: '0 0px 10px rgba(0, 0, 0, 0.2)', // Optional shadow effect
     transition: 'top 0.3s ease', // Smooth transition
-    top: isVisible ? '0' : '-55px', // Only show header after scrolling 200px
+    top: isVisible ? '0' : '-85px', // Only show header after scrolling 200px
   };
 
   function CartBadge({count}) {
@@ -59,7 +59,7 @@ const [isVisible, setIsVisible] = useState(false);
     return (
       <div className="flex items-center gap-x-2.5 relative min-w-lg-32">
         <span className="relative">
-          <img src="/image/cart.png" width="35" height="33" alt="Cart" />
+        <img src="/image/cart.png" width="35" height="33" alt="Cart" />
           <span className="bg-brand text-white absolute start-5 flex items-center justify-center text-sm font-semibold -top-2.5 min-w-6 h-6 rounded-full">{count === null ? <span>&nbsp;</span> : count}</span>
         </span>
         <a href="/cart"
@@ -117,7 +117,7 @@ const [isVisible, setIsVisible] = useState(false);
             </NavLink> */}
             <div className="absolute hidden top-full  bg-white p-5 w-60 border border-b-grey-600 shadow-md  -left-2/4  -ml-8 mt-2">
               <ul className='[&>li]:p-2 [&>li>a]:text-blue'>
-                <li className='text-center mb-2'><a className="" href="#" className="btn-secondary !text-white py-1.5 leading-0 rounded-sm">Log In</a></li>
+                <li className='text-center mb-2'><a  href="#" className="btn-secondary !text-white py-1.5 leading-0 rounded-sm">Log In</a></li>
                 <li className='text-center'><a href="#" className='text-19 uppercase transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Create Account</a></li>
                 <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>View/Track Orders</a></li>
                 <li><a href="#" className='text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left'>Buy Again/Re-Order</a></li>

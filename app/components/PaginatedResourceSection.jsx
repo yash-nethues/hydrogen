@@ -61,7 +61,7 @@ export function PaginatedResourceSection({
               resourcesMarkup
             )}
 
-            {/* <div className="flex flex-wrap justify-center mt-12">
+            <div className="flex flex-wrap justify-center mt-12">
               <div className="flex space-x-2">
                 {Array.from({ length: totalPages }, (_, index) => {
                   const pageNum = index + 1;
@@ -79,7 +79,7 @@ export function PaginatedResourceSection({
                   );
                 })}
               </div>
-            </div> */ }
+            </div>
           </div>
         );
       }}

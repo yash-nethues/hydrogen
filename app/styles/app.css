@@ -566,6 +566,66 @@ button.reset:hover:not(:has(> *)) {
 }
 
 
+.swiperv-button-prev {
+  width: 25px;
+  height: 34px;
+  position: absolute;
+  top: 0%;
+  left:50%;
+  cursor: pointer;
+  z-index: 9;
+  margin-top:-20px;
+  margin-left: -12px;
+}
+.swiperv-button-next {
+  width: 25px;
+  height: 34px;
+  position: absolute;
+  top: 630px;
+  left: 50%;
+  margin-left:-12px;
+  margin-top:0px;
+  cursor: pointer;
+
+  z-index: 9;
+}
+.swiperv-button-prev::before{
+  content: "";
+    width: 25px;
+    height: 25px;
+    border-top: #334f67 solid 2px;
+    border-left: #334f67 solid 2px;
+    display: inline-block;
+    transform: rotate(45deg);
+    position: absolute;
+    transform-origin: right center;
+    left: 1px;
+    margin: 1px 0 0;
+
+    top: 50%;
+    z-index: 99;
+ }
+ .swiperv-button-next::before {
+  content: "";
+  width: 25px;
+  height: 25px;
+  border-right: #334f67 solid 2px;
+  border-bottom: #334f67 solid 2px;
+  display: inline-block;
+  transform: rotate(45deg);
+  position: absolute;
+  transform-origin: right center;
+  right: 12px;
+  margin: 1px 0 0;
+ 
+  top: 50%;
+  z-index: 99;
+}
+
+
+
+
+
 .w-full-m-10 {
   width: calc(100% - 40px);
 }
@@ -613,6 +673,8 @@ button.reset:hover:not(:has(> *)) {
   border-radius: 0px;
 }
 
+.product{ grid-template-columns: 50% 50%;}
+
 .close-btn:hover {
   background-color: rgba(0, 0, 0, 0.5);
 }
@@ -620,3 +682,6 @@ button.reset:hover:not(:has(> *)) {
 .text-newarrivals{ color:#334f67 !important}
 .text-onsale{ color:#ef2456 !important}
 .text-onsupersale{ color:#289798 !important}
+
+
+  

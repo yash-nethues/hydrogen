@@ -102,9 +102,9 @@ const tabContent = [
                     </ul>
                 </div>
                 <div className="w-full lg:w-70 bg-grey-100 p-5">
-                <div className="tab-container">
+                  <div className="tab-container">
                     {tabContent[activeTab].content}
-                    </div>   
+                  </div>   
                 </div>
             </div>
     </div>

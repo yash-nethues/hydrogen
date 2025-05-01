@@ -249,7 +249,7 @@ export default function Collection() {
           <div className='text-center pl-4 pr-4 max-w-[1170px] mx-auto text-base text-white'>
             <h1 className='text-40 pt-5 pb-5 block text-blue font-semibold'><span className=''>{collection.title}</span></h1>
             {collection.bannerContent?.value && <p className='pt-2 text-base !text-blue'>{collection.bannerContent.value}</p>}
-            <a href="#faq" className='text-blue'>...Read More+</a>
+            <a href="#faq" className='text-blue hover:underline'>...Read More+</a>
           </div>
         </div>
       </header>
