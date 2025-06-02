@@ -10,10 +10,10 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
     <Suspense>
       <Await resolve={footerPromise}>
         {/* <ShippingMethod /> */}
-          <footer className="mt-10 pt-10 border-t border-b-50 border-t-grey-200 border-b-blue-100">
-               <FooterMenu />
-              <FooterSecond /> 
-          </footer>
+        <footer className="mt-10 pt-10 border-t border-b-50 border-t-grey-200 border-b-blue-100">
+          <FooterMenu />
+          <FooterSecond />
+        </footer>
       </Await>
     </Suspense>
   );
@@ -28,7 +28,7 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
  */
 function FooterMenu() {
   const footerData = useLoaderData();
-  console.log('footerData',footerData);
+  //console.log('footerData',footerData);
   const helpMenus = footerData.footer_help_menus; 
   const resourcesMenus = footerData.footer_resources_menus; 
   const shoppingMenus = footerData.footer_shopping_menus; 

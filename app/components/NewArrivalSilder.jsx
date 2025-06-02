@@ -1,39 +1,42 @@
 import React from 'react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';    
-import { Image, Money } from '@shopify/hydrogen';
 
-function ProductSlider({professionalCollection}) {
+import { Swiper, SwiperSlide } from 'swiper/react';
+import 'swiper/css';
+import { Image, Money } from '@shopify/hydrogen';
+//import 'swiper/css/navigation';
+
+
+function Newarrivalsilder({arrivalsCollection}) {
+   
     return (
         <div className="tab-container">
             <div className="tab_slider flex gap-10 pl-10 pr-10 relative">
-                <Swiper
-                className="mySwiper"
+          
+              <Swiper
                 modules={[Navigation, Pagination, Scrollbar, A11y]}
                 spaceBetween={30}
-                navigation={{ nextEl: ".p_arrow-right", prevEl: ".p_arrow-left" }}
+                navigation={{ nextEl: ".n_arrow-right", prevEl: ".n_arrow-left" }}
                 pagination={{ clickable: true }}
-                scrollbar={{ draggable: true }}
+                scrollbar={{ draggable: false }}
                 slidesPerView={5} 
                 breakpoints={{
-                    1440: {
-                        slidesPerView: 5,
-                    },
-                    1200: {
-                    slidesPerView: 4, 
-                    },
-                    992: {
-                        slidesPerView: 3, 
-                    },
-                    767: {
-                        slidesPerView: 2, 
-                    },
-                }}
-                >
-                
-                return (
-                    {professionalCollection?.products?.edges?.map((product, index) => (
+                                1440: {
+                                   slidesPerView: 5,
+                                 },
+                                 1200: {
+                                  slidesPerView: 4, 
+                                },
+                                 992: {
+                                   slidesPerView: 3, 
+                                 },
+                                 767: {
+                                   slidesPerView: 2, 
+                                 },
+                               }}
+                             >
+                    return (
+                    {arrivalsCollection?.products?.edges?.map((product, index) => (
                         <SwiperSlide key={index}>
                             <div className="slider-item">
                                 <figure>
@@ -45,7 +48,7 @@ function ProductSlider({professionalCollection}) {
                                 </figure>
                                 <div className="info text-center">
                                     <div className="savinBox">
-                                    <div className="saveTxt text-brand text-center font-bold text-15 pt-4">Now Only</div>
+                                        <div className="saveTxt text-brand text-center font-bold text-15 pt-4">Now Only</div>
                                         <div className="amount-text text-brand text-center text-22 font-bold !leading-none">
                                             <Money data={product.node.priceRange.minVariantPrice} />
                                         </div>
@@ -64,11 +67,13 @@ function ProductSlider({professionalCollection}) {
                     ))}
 
                     );
-                </Swiper>    
-                <button className="p_arrow-left arrow swiper-button-prev"></button>
-                <button className="p_arrow-right arrow swiper-button-next "></button> 
-            </div> 
+
+                </Swiper>
+                <button className="n_arrow-left arrow swiper-button-prev"></button>
+                <button className="n_arrow-right arrow swiper-button-next "></button>
+      
+            </div>
         </div>
     )
 }
-export default ProductSlider
+export default Newarrivalsilder

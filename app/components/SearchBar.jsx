@@ -12,6 +12,9 @@ function SearchBar() {
         />
         <button className="absolute right-2 top-1"><img src="/image/search-icon.png" width="30" height="31" alt="search" /></button>
       </Form>
+      <div className="absolute bottom-0 pb-2.5 pointer-events-none text-center inset-x-0 hidden">
+        <span className="mb-0 pointer-events-auto inline-block font-bold text-blue text-sm">Preferred Choice For Art Supplies & Framing at The Best Values!</span>
+      </div>
     </div> 
     )
 }

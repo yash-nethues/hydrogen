@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import ProductSlider from "~/components/ProductSlider";
-import Newarrivalsilder from "~/components/Newarrivalsilder";
+import NewArrivalSilder from "~/components/NewArrivalSilder";
 import ArtistCollection from "~/components/ArtistCollection";
 
 const ProductsTabs = ({arrivals,professional,artist}) => {
@@ -12,7 +12,7 @@ const tabContent = [
   {
     content: (
       <>
-      <Newarrivalsilder arrivalsCollection={arrivals}/>
+      <NewArrivalSilder arrivalsCollection={arrivals}/>
       </> 
     ),
   },
