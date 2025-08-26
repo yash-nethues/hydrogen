@@ -1,4 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import {useFetcher} from '@remix-run/react';
+import {CartForm} from '@shopify/hydrogen';
+import {AddToCartButton} from '~/components/AddToCartButton';
 import {ProductTabs} from '~/components/ProductTabs';
 import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
@@ -10,6 +13,13 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   // State management for filter visibility and grid/list view toggle
   const [isFilterVisible, setFilterVisible] = useState(true);
   const [isGridView, setIsGridView] = useState(true); // Default to Grid view
+  const [selectedVariant, setSelectedVariant] = useState(null);
+  const [filters, setFilters] = useState({
+    color: [],
+    size: [],
+    format: []
+  });
+  const [sizeFilters, setSizeFilters] = useState([]);
 
   // Toggle filter section visibility
   const toggleFilter = () => {
@@ -25,6 +35,88 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   const switchToGridView = () => {
     setIsGridView(true);
   };
+  
+  // Filter handling functions
+  const handleFilterChange = (filterType, value, checked) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: checked 
+        ? [...prev[filterType], value]
+        : prev[filterType].filter(item => item !== value)
+    }));
+  };
+  
+  const handleSizeFilterChange = (size, checked) => {
+    setSizeFilters(prev => 
+      checked 
+        ? [...prev, size]
+        : prev.filter(item => item !== size)
+    );
+  };
+  
+  const clearAllFilters = () => {
+    setFilters({
+      color: [],
+      size: [],
+      format: []
+    });
+    setSizeFilters([]);
+  };
+  
+  const clearFilterType = (filterType) => {
+    if (filterType === 'sizeButtons') {
+      setSizeFilters([]);
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [filterType]: []
+      }));
+    }
+  };
+  
+  // Filter variants based on selected filters
+  const filteredVariants = productVariants.filter(variant => {
+    const color = variant.selectedOptions.find(opt => opt.name.toLowerCase() === 'color')?.value;
+    const size = variant.selectedOptions.find(opt => opt.name.toLowerCase() === 'size')?.value;
+    const format = variant.selectedOptions.find(opt => opt.name.toLowerCase() === 'format')?.value;
+    
+    // Check color filter
+    if (filters.color.length > 0 && !filters.color.includes(color)) {
+      return false;
+    }
+    
+    // Check size filter
+    if (filters.size.length > 0 && !filters.size.includes(size)) {
+      return false;
+    }
+    
+    // Check format filter
+    if (filters.format.length > 0 && !filters.format.includes(format)) {
+      return false;
+    }
+    
+    // Check size filter (from size buttons)
+    if (sizeFilters.length > 0 && !sizeFilters.includes(size)) {
+      return false;
+    }
+    
+    return true;
+  });
+
+  // Set first variant as selected by default when filtered variants change
+  useEffect(() => {
+    if (filteredVariants.length > 0 && !selectedVariant) {
+      setSelectedVariant(filteredVariants[0]);
+    } else if (filteredVariants.length > 0 && selectedVariant) {
+      // Check if current selected variant is still in filtered results
+      const isStillAvailable = filteredVariants.some(variant => variant.id === selectedVariant.id);
+      if (!isStillAvailable) {
+        setSelectedVariant(filteredVariants[0]);
+      }
+    } else if (filteredVariants.length === 0) {
+      setSelectedVariant(null);
+    }
+  }, [filteredVariants, selectedVariant]);
 
   // const [showDetails, setShowDetails] = useState(false);
   const [expandedVariantId, setExpandedVariantId] = useState(null);
@@ -54,8 +146,110 @@ export function ProductVariations({ images, productVariants, productVideos, prod
     });
   };
   const [isOpen, setIsOpen] = useState(false);
+  const [cartPopupOpen, setCartPopupOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
+  const [cartMessage, setCartMessage] = useState('');
+  const cartFetcher = useFetcher();
+  const [cartLineByVariantId, setCartLineByVariantId] = useState({});
+
+  // Build mapping from Variant GID -> Cart Line ID when cart data is available
+  useEffect(() => {
+    const data = cartFetcher?.data;
+    const nodes = data?.cart?.lines?.nodes;
+    if (Array.isArray(nodes)) {
+      const map = {};
+      for (const line of nodes) {
+        const variantId = line?.merchandise?.id;
+        if (variantId && line?.id) {
+          map[variantId] = line.id;
+        }
+      }
+      setCartLineByVariantId(map);
+    }
+  }, [cartFetcher?.data]);
   {/* qty inc - dec */}
   const [quantity, setQuantity] = useState(1);
+  const increaseQty = () => {
+    setQuantity((prevQuantity) => prevQuantity + 1);
+  };
+  const decreaseQty = () => {
+    setQuantity((prevQuantity) => Math.max(1, prevQuantity - 1));
+  };
+
+  // Update cart item quantity (popup +/-) and sync to real cart when possible
+  const updateCartItemQuantity = (index, newQuantity) => {
+    if (newQuantity < 1) return; // Don't allow quantity less than 1
+    
+    setCartItems(prevItems => {
+      const updatedItems = [...prevItems];
+      updatedItems[index] = {
+        ...updatedItems[index],
+        quantity: newQuantity
+      };
+      // If this variant exists in the cart already, submit a LinesUpdate for that line id
+      const variantGid = updatedItems[index]?.variant?.id;
+      const lineId = variantGid ? cartLineByVariantId[variantGid] : undefined;
+      if (lineId) {
+        const formData = new FormData();
+        formData.append('action', CartForm.ACTIONS.LinesUpdate);
+        formData.append('inputs', JSON.stringify({lines: [{id: lineId, quantity: newQuantity}]}));
+        cartFetcher.submit(formData, {method: 'post', action: '/cart'});
+      }
+      return updatedItems;
+    });
+  };
+
+  // Add to Cart functionality
+  const addToCart = () => {
+    const itemsToAdd = [];
+    let hasAnyQuantity = false;
+
+    if (isGridView) {
+      // Grid view: add only selected product
+      if (selectedVariant) {
+        // In grid view, use the quantity state variable
+        if (quantity > 0) {
+          itemsToAdd.push({
+            variant: selectedVariant,
+            quantity: quantity
+          });
+          hasAnyQuantity = true;
+        }
+      }
+    } else {
+      // List view: add all products with quantity > 0
+      filteredVariants.forEach(variant => {
+        const variantId = variant.id.split('/').pop();
+        const variantQuantity = quantities[variantId] || 0;
+        
+        if (variantQuantity > 0) {
+          itemsToAdd.push({
+            variant: variant,
+            quantity: variantQuantity
+          });
+          hasAnyQuantity = true;
+        }
+      });
+    }
+
+    // Add items to cart if we have any items to add
+    if (itemsToAdd.length > 0) {
+      // Show popup with items
+      setCartItems(itemsToAdd);
+      setCartMessage(`Successfully added ${itemsToAdd.length} item${itemsToAdd.length > 1 ? 's' : ''} to cart!`);
+      setCartPopupOpen(true);
+
+      // Add to real cart in a single LinesAdd call
+      const lines = itemsToAdd.map((i) => ({merchandiseId: i.variant.id, quantity: i.quantity}));
+      const formData = new FormData();
+      formData.append('action', CartForm.ACTIONS.LinesAdd);
+      formData.append('inputs', JSON.stringify({lines}));
+      cartFetcher.submit(formData, {method: 'post', action: '/cart'});
+    } else if (!hasAnyQuantity) {
+      // Show alert only when no products have any quantity specified
+      alert('Please specify product(s) quantity!');
+    }
+  };
 
   return (
     <div className="bg-gray-100 border-t border-t-grey-200 pt-5 pb-8 mt-20">
@@ -112,7 +306,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                   onClick={toggleFilter}
                 >Filter By</div>
 
-                <button type="button" title="Add To Cart" onClick={() => setIsOpen(true)} className="bg-green outline-none w-36 text-white">
+                <button type="button" title="Add To Cart" onClick={addToCart} className="bg-green outline-none w-36 text-white">
                   <span>Add To Cart</span>
                 </button>
               </div>
@@ -156,16 +350,31 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       return (
                         <li>
                           <label className='p-0 pl-6 leading-6 relative' style={{ 'background': colorCode }}>
-                              <input className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' type="checkbox"  value={name} /> <span className='ps-j5 pe-2.5 bg-white'>{name}</span>
+                              <input 
+                                className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
+                                type="checkbox"  
+                                value={name}
+                                checked={filters.color.includes(name)}
+                                onChange={(e) => handleFilterChange('color', name, e.target.checked)}
+                              /> 
+                              <span className='ps-j5 pe-2.5 bg-white'>{name}</span>
                               <span className='absolute w-[22px] h-[21px] opacity-0 peer-checked:opacity-100 bg-white left-px top-px after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b after:border-blue'></span>
                           </label>
                         </li>
                       )
                     }else{
+                      const filterType = option.name.toLowerCase();
                       return (
                         <li>
                           <label className='p-0 pl-6 leading-6 relative'>
-                            <input className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' type="checkbox"  value={name} /> <span className='ps-j5 pe-2.5 bg-white'>{name}</span>
+                            <input 
+                              className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
+                              type="checkbox"  
+                              value={name}
+                              checked={filters[filterType]?.includes(name)}
+                              onChange={(e) => handleFilterChange(filterType, name, e.target.checked)}
+                            /> 
+                            <span className='ps-j5 pe-2.5 bg-white'>{name}</span>
                             <span className='absolute w-6 h-6 peer-checked:bg-brand bg-white left-0 top-0 border after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b border-brand after:opacity-0 after:border-white peer-checked:after:opacity-100'></span>
                           </label>
                         </li>
@@ -173,7 +382,30 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                     }
                 })}
               </ul>
-              <button className='border border-brand-100 px-6 py-1 text-16 font-medium text-brand-100 hidden'>Clear All</button>
+              {option.name === 'Color' && filters.color.length > 0 && (
+                <button 
+                  className='border border-brand-100 px-6 py-1 text-16 font-medium text-brand-100 hover:bg-brand-100 hover:text-white transition-colors' 
+                  onClick={() => clearFilterType('color')}
+                >
+                  Clear All
+                </button>
+              )}
+              {option.name === 'Size' && filters.size.length > 0 && (
+                <button 
+                  className='border border-brand-100 px-6 py-1 text-16 font-medium text-brand-100 hover:bg-brand-100 hover:text-white transition-colors' 
+                  onClick={() => clearFilterType('size')}
+                >
+                  Clear All
+                </button>
+              )}
+              {option.name === 'Format' && filters.format.length > 0 && (
+                <button 
+                  className='border border-brand-100 px-6 py-1 text-16 font-medium text-brand-100 hover:bg-brand-100 hover:text-white transition-colors' 
+                  onClick={() => clearFilterType('format')}
+                >
+                  Clear All
+                </button>
+              )}
             </div>
           </div>
           );
@@ -183,14 +415,37 @@ export function ProductVariations({ images, productVariants, productVideos, prod
         <div className='flex mt-5 group-[.childProduct]/product:hidden'>
           <span className='w-24 font-bold text-lg/none'>Shop By Size</span>
           <div className='flex flex-wrap gap-2.5'>
-            {Array.from({ length: 7 }, (_, index) => (
-              <label className='relative isolate cursor-pointer'>
-                <input type="radio" name="filter-size" value="" className='absolute peer left-0 top-0 opacity-0 pointer-events-none' />
-                <span className='py-2 px-5 text-27 block border border-brand peer-checked:bg-brand peer-checked:text-white transition-all bg-white text-brand'>{2*index || 1} oz</span>
-              </label>
-            ))}
+            {Array.from({ length: 7 }, (_, index) => {
+              const size = `${2*index || 1} oz`;
+              const isSelected = sizeFilters.includes(size);
+              return (
+                <label key={index} className='relative isolate cursor-pointer'>
+                  <input 
+                    type="checkbox" 
+                    name="filter-size" 
+                    value={size} 
+                    className='absolute peer left-0 top-0 opacity-0 pointer-events-none'
+                    checked={isSelected}
+                    onChange={(e) => handleSizeFilterChange(size, e.target.checked)}
+                  />
+                  <span className={`py-2 px-5 text-27 block border border-brand transition-all bg-white text-brand ${isSelected ? 'bg-brand text-white' : ''}`}>
+                    {size}
+                  </span>
+                </label>
+              );
+            })}
           </div>
+          {sizeFilters.length > 0 && (
+            <button 
+              className='border border-brand-100 px-6 py-1 text-16 font-medium text-brand-100 hover:bg-brand-100 hover:text-white transition-colors ml-4' 
+              onClick={() => clearFilterType('sizeButtons')}
+            >
+              Clear All
+            </button>
+          )}
         </div>
+
+
 
         {/* Product Grid/List Views */}
         <div className=" variationsProList group-[.childProduct]/product:hidden mt-10">
@@ -198,7 +453,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
             <div className="variationsGridView">
               <div className='flex flex-wrap w-full items-start'>
                 <div className='w-3/5 flex-grow flex flex-wrap gap-2.5 items-start justify-between md:justify-start pe-j30'>
-                  {productVariants.map((variant) => {
+                  {filteredVariants.map((variant) => {
                     const color = variant.selectedOptions.find(
                       (opt) => opt.name.toLowerCase() === 'color'
                     )?.value;
@@ -211,12 +466,37 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       (opt) => opt.name.toLowerCase() === 'format'
                     )?.value;
 
+                    const variantName = variant.metafield?.value || variant.title;
+                    const variantPrice = variant.price.amount;
+
                     const variantId = variant.id.split('/').pop();
+
+                    const quantity = quantities[variantId] || 0;
+
+                    const increaseQty = () => {
+                      setQuantities((prev) => ({
+                        ...prev,
+                        [variantId]: quantity + 1
+                      }));
+                    };
+
+                    const decreaseQty = () => {
+                      if (quantity > 0) {
+                        setQuantities((prev) => ({
+                          ...prev,
+                          [variantId]: quantity - 1
+                        }));
+                      }
+                    };
                     
                     const variantURL = '/products/' + variant.product.handle + '?Color=' + color + '&Size=' + size + '&Format=' + format;
 
                     return (
-                      <div className='relative group/gridItem [&.active]:scale-125 [&.active]:translate-y-4 hover:scale-125 hover:translate-y-4 hover:shadow-text [&.active]:-mb-9 hover:-mb-9 [&.active]:shadow-text w-[120px] hover:z-10 [&.active]:z-10 text-14/4 text-center bg-white border border-grey-200 p-j5 rounded-sm flex flex-col gap-y-1'>
+                      <div 
+                        key={variant.id} 
+                        onClick={() => setSelectedVariant(variant)} 
+                        className={`relative group/gridItem [&.active]:scale-125 [&.active]:translate-y-4 hover:scale-125 hover:translate-y-4 hover:shadow-text [&.active]:-mb-9 hover:-mb-9 [&.active]:shadow-text w-[120px] hover:z-10 [&.active]:z-10 text-14/4 text-center bg-white border border-grey-200 p-j5 rounded-sm flex flex-col gap-y-1 ${selectedVariant?.id === variant.id ? 'active' : ''}`}
+                      >
                         <img src={variant.image.url} alt={variant.metafield?.value || variant.title} className="w-full aspect-square object-cover" />
                         <div className='flex flex-col'>
                           <p className="text-inherit mb-0">{variant.metafield?.value || variant.title}</p>
@@ -246,10 +526,11 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                   })}
                 
                 </div>
+                {selectedVariant ? (
                 <div className='w-2/5 flex-none md:sticky md:top-10 max-w-[430px] bg-white rounded-sm border border-grey-200 p-5'>
                   <div className='mt-4'>
                     <strong className='block'>Name</strong>
-                    <span data-blink="Click Here" className="relative before:pointer-events-none before:animate-blink1 before:content-[attr(data-blink)] before:inline-block before:opacity-0  before:px-2.5 before:py-j5 before:text-white before:bg-brand before:absolute before:top-full before:text-10/3 before:uppercase after:pointer-events-none after:absolute after:left-[4px] after:top-full after:w-1.5 after:aspect-square after:bg-brand after:rotate-45 after:-translate-y-1/2 after:opacity-0 after:animate-blink1"><a href="">GOLDEN Heavy Body Acrylics - Alizarin Crimson Hue, 2oz Tube</a></span>
+                    <span data-blink="Click Here" className="relative before:pointer-events-none before:animate-blink1 before:content-[attr(data-blink)] before:inline-block before:opacity-0  before:px-2.5 before:py-j5 before:text-white before:bg-brand before:absolute before:top-full before:text-10/3 before:uppercase after:pointer-events-none after:absolute after:left-[4px] after:top-full after:w-1.5 after:aspect-square after:bg-brand after:rotate-45 after:-translate-y-1/2 after:opacity-0 after:animate-blink1"><a href="">{selectedVariant.metafield?.value || selectedVariant.title}</a></span>
                   </div>
                   <div className="mt-4 flex gap-x-4">
                     <div className='flex w-2/3 gap-x-4'>
@@ -332,14 +613,14 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                             </span>
                           </span>
                         </strong>
-                        <span className='text-18 group-[.reg]/price:line-through'>$51.30</span>
+                        <span className='text-18 group-[.reg]/price:line-through'>${selectedVariant.price?.amount}</span>
                       </div>
                     </div>
                     
                   </div>
                   <div className="mt-4 text-blue-600 group/price [&.sale]:text-brand">
                     <strong className="block group-[.sale]/price:uppercase">Reg. Price</strong>
-                    <strong className='text-22 '>$23.89</strong>
+                    <strong className='text-22 '>${selectedVariant.price?.amount}</strong>
                   </div>
                   <div className="mt-4 flex md:flex-wrap xl:flex-nowrap gap-2.5">
                     <div className='flex flex-none w-full xl:w-[188px] gap-x-2.5'>
@@ -347,7 +628,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                         <input
                           type="button"
                           value="-"
-                          onClick=""
+                          onClick={decreaseQty}
                           className="absolute left-0 cursor-pointer top-0 bottom-0 w-7"
                         />
                         <input
@@ -355,20 +636,22 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                           maxLength="3"
                           size="3"
                           className="text-center w-full h-full px-5 text-xl font-medium"
-                          value="0"
+                          value={quantity}
                           readOnly
                         />
                         <input
                           type="button"
                           value="+"
-                          onClick=""
+                          onClick={increaseQty}
                           className="absolute right-0 cursor-pointer top-0 bottom-0 w-7"
                         />
                         <span className='absolute top-full min-w-max left-0 mt-1.5 text-13/none text-brand'>Hurry Only 2 left</span>
                       </div>
-                      <button type="button" title="Add" className="bg-green outline-none w-1/2 px-2 py-2.5 text-white text-xl text-center">
-                        <span>Add</span>
-                      </button>              
+                      <VariantAddCartBtn
+                        productOptions={productOptions}
+                        selectedVariant={selectedVariant}
+                        quantity={quantity}
+                      />             
                     </div>
                     <div className="w-full group/addList relative" role="button">
                       <span className="border border-grey-200 text-grey flex hover:text-green hover:border-green group-[.active]/addList:text-green group-[.active]/addList:border-green transition-all  items-center justify-center ps-2.5 pe-10 py-1 w-full h-full relative">
@@ -405,8 +688,8 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       <li>
                         <img
                           className="w-auto inline-block aspect-square object-contain max-w-full max-h-[85%] h-auto"
-                          src="../image/mezzo-artist-organizer-storage-racks.jpg"
-                          alt=""
+                          src={selectedVariant?.image?.url}
+                          alt={selectedVariant?.metafield?.value || selectedVariant?.title || 'Selected product'}
                         />
                       </li>
                     </ul>
@@ -432,6 +715,9 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                     </div>
                   </div>
                 </div>
+                ) : (
+                  <p>Click a variant to see details.</p>
+                )}
               </div>
             </div>
           ) : (
@@ -478,7 +764,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                   </tr>
                 </thead>
                 <tbody className="border border-gray-100 w-full">
-                 {productVariants.map((variant) => {
+                 {filteredVariants.map((variant) => {
                   const color = variant.selectedOptions.find(
                     (opt) => opt.name.toLowerCase() === 'color'
                   )?.value;
@@ -637,14 +923,33 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                               </div>  
                               <div className="flex w-full mt-j15 justify-end">
                                 <div className="border relative border-grey-200 w-[30%]">
-                                  <input type="button" value="-" className="absolute left-0 top-0 cursor-pointer bottom-0 w-7" />
-                                  <input type="text" maxLength="3" size="3" className="text-center w-full h-full px-5 text-xl font-medium" defaultValue="0" />
-                                  <input type="button" value="+" className="absolute right-0 top-0 cursor-pointer bottom-0 w-7" />
+                                  <input
+                                    type="button"
+                                    value="-"
+                                    onClick={decreaseQty}
+                                    className="absolute left-0 cursor-pointer top-0 bottom-0 w-7"
+                                  />
+                                  <input
+                                    type="text"
+                                    maxLength="3"
+                                    size="3"
+                                    className="text-center w-full h-full px-5 text-xl font-medium"
+                                    value={quantity}
+                                    readOnly
+                                  />
+                                  <input
+                                    type="button"
+                                    value="+"
+                                    onClick={increaseQty}
+                                    className="absolute right-0 cursor-pointer top-0 bottom-0 w-7"
+                                  />
                                 </div>
                                 <div className="pl-2 w-[70%]">
-                                  <button type="button" title="Add" className=" bg-green outline-none px-10 w-full py-2 text-white text-center">
-                                    <span>Add</span>
-                                  </button>
+                                <VariantAddCartBtn
+                                  productOptions={productOptions}
+                                  selectedVariant={variant}
+                                  quantity={quantity}
+                                />             
                                 </div>
                               </div>
                               <div className='mt-5'>
@@ -828,6 +1133,71 @@ export function ProductVariations({ images, productVariants, productVideos, prod
           )}
         </div>
       </div>
+
+      {/* Cart Popup Modal */}
+      <Modal 
+        show={cartPopupOpen} 
+        onClose={() => setCartPopupOpen(false)} 
+        width="w-3/4 max-w-[462px]"
+        footerContent={
+          <div className="flex flex-wrap justify-center gap-2">
+            <button className="btn w-[48%]" onClick={() => setCartPopupOpen(false)}><span>Continue</span></button>
+            <button className="btn w-[48%]"><span>View Cart</span></button>
+            <button className="btn btn-link w-[48%]"><span>Go to Checkout</span></button>
+          </div>
+        }
+      >
+        <div className='text-center'>
+          <p className='mb-10'>{cartMessage}</p>
+          {cartItems.length > 0 && (
+            <>
+              <a href="">
+                <img 
+                  src={cartItems[0].variant.image.url} 
+                  width={165} 
+                  height={165} 
+                  className='inline-block' 
+                  alt={cartItems[0].variant.metafield?.value || cartItems[0].variant.title}
+                />
+              </a>
+              <p className='mb-2.5'>There are <span className='text-brand'>{cartItems.reduce((sum, item) => sum + item.quantity, 0)} items</span> in your cart.</p>
+              <p className='mb-2.5'>Cart Subtotal: <span>${cartItems.reduce((sum, item) => sum + (parseFloat(item.variant.price.amount) * item.quantity), 0).toFixed(2)}</span></p>
+              <ul className='mb-5'>
+                {cartItems.map((item, index) => (
+                  <li key={index} className='flex -mb-px items-center p-2.5 border border-grey-200'>
+                    <span className='flex-auto max-w-[50%]'>Item #: {item.variant.id.split('/').pop()}</span>
+                    <div className='flex-auto max-w-[50%] flex gap-2 items-center'>
+                      <span className='flex-none'>Qty #:</span>
+                      <div className="border relative border-grey w-20">
+                        <input
+                          type="button"
+                          value="-"
+                          onClick={() => updateCartItemQuantity(index, item.quantity - 1)}
+                          className="absolute left-0 cursor-pointer top-0 bottom-0 w-5"
+                        />
+                        <input
+                          type="text"
+                          maxLength="3"
+                          size="3"
+                          className="text-center w-full h-full px-5 text-sm font-medium"
+                          value={item.quantity}
+                          readOnly
+                        />
+                        <input
+                          type="button"
+                          value="+"
+                          onClick={() => updateCartItemQuantity(index, item.quantity + 1)}
+                          className="absolute right-0 cursor-pointer top-0 bottom-0 w-5"
+                        />
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+      </Modal>
 
       <Modal show={isOpen} onClose={() => setIsOpen(false)}  width="w-3/4 max-w-[462px]"
       // headerContent={<h2 className="text-xl font-bold">Size Guide</h2>}
