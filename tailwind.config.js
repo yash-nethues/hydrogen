@@ -12,7 +12,8 @@ export default {
           '400' : '#c1d5e7',
           '500' : '#386489',
           '600' : '#0a5074',
-          '700': '#425b71',
+          '700' : '#425b71',
+          '800' : '#195486',
         },
         green: {
           DEFAULT: '#289798',
@@ -33,7 +34,8 @@ export default {
         onsale: {
           DEFAULT: '#ef2456',
           '100': '#ff4052',
-          '200': '#dc4654'
+          '200': '#dc4654',
+          '300': '#ed143d'
         },
         grey: {
           DEFAULT: '#9a9a9a',
@@ -131,16 +133,22 @@ export default {
       },
       screens: {
         'tb' : '992px',
+        'jlg' : '1200px',
+        'jxl' : '1301px',
+        '2xl' : '1501px',
+        'j2xl': '1600px',
+        '3xl': '1800px',
       }
     },
     container: {
       center: true,
       padding: {
         DEFAULT: '20px',
-        '2xl': '50px'
+        j2xl: '50px',
       },
       screens: {
-        '2xl': '1800px'
+        j2xl: '1600px',  // only define this one breakpoint
+        '3xl': '1800px',
       },
     },
     plugins: [],

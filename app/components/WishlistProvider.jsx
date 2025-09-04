@@ -1,18 +1,22 @@
 import {createContext, useContext, useState, useEffect} from 'react';
+import {useIsClient} from '~/hooks/useIsClient';
 
 const WishlistContext = createContext();
 
 export function WishlistProvider({children}) {
   const [wishlist, setWishlist] = useState([]);
+  const isClient = useIsClient();
 
   console.log('wishlist data:- ', wishlist);
 
   useEffect(() => {
-    const stored = localStorage.getItem('wishlist');
-    if (stored) {
-        setWishlist(JSON.parse(stored)); // ✅ no reassignment of `const`
+    if (isClient) {
+      const stored = localStorage.getItem('wishlist');
+      if (stored) {
+          setWishlist(JSON.parse(stored)); // ✅ no reassignment of `const`
+      }
     }
-    }, []);
+    }, [isClient]);
 
 
   useEffect(() => {
@@ -29,7 +33,7 @@ export function WishlistProvider({children}) {
     setWishlist(wishlist.filter((id) => id !== productId));
   };
 
-  const isInWishlist = (productId) => wishlist.includes(productId);
+  const isInWishlist = (productId) => isClient && wishlist.includes(productId);
 
   return (
     <WishlistContext.Provider

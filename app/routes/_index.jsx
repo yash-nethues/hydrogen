@@ -374,7 +374,7 @@ export default function Homepage() {
       <AdvertisementBanner ads={data.adsData} type="home_ads_with_link" />
       <CustomShop />
       <FeaturedCollections collections={data.featuredCollections} title="Shop By Categories" />
-      <HomeBlog posts={data.blogPosts} title='Latest Blog Articles  <div class="block w-full text-sm mt-2.5">Know more about the latest updates</div>' />
+      <HomeBlog posts={data.blogPosts} title='Latest Blog Articles  <div className="block w-full text-sm mt-2.5">Know more about the latest updates</div>' />
       <ShopSupplies supplyList={data.supplyData} type="before_footer_supplies" title="Shop Our Artists Supplies" />
     </div>
   );
@@ -448,7 +448,7 @@ function HomeBannerCaraousel({ banner, type }) {
 
                   {index === 0 ? (
                     <>
-                <a key={index} href="#" className=''> <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
+                <a key={`${index}-1`} href="#" className=''> <img key={`${index}-img-1`} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
                 <div className='absolute z-10 top-2/4 left-2/4 bg-white w-j600 -translate-x-2/4  h-56 -translate-y-2/4'>
                 <div className="p-5 text-center">
                     <h2 className='text-34 leading-tight font-medium  text-blue mb-4'>Elegant Plein Aire Frames<br />with Timeless Style</h2>
@@ -459,7 +459,7 @@ function HomeBannerCaraousel({ banner, type }) {
             </>
             ) : (
              <>
-              <a key={index} href="#" className=''> <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
+              <a key={`${index}-2`} href="#" className=''> <img key={`${index}-img-2`} src={image} alt={`Slide ${index + 1}`} className="w-full" /></a>
               <a href="#" className='btn-secondary absolute bottom-7 left-12 rounded-sm shadow-lg'>
                 Shop Now
               </a>

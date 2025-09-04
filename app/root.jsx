@@ -260,7 +260,7 @@ function Layout({children}) {
         {/* <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
         </style> */}
-        <svg xmlns="http://www.w3.org/2000/svg" className='w-0 h-0 hidden'>
+        <svg xmlns="http://www.w3.org/2000/svg" style={{width: 0, height: 0, position: 'absolute', visibility: 'hidden'}}>
   <symbol id="icon-tech-notes" viewBox="0 0 75.62 94.21">
     <rect fill="currentColor" x="0" y="0" width="2.94" height="94.21" rx="1.47" ry="1.47"/>
     <rect fill="currentColor" x="25.31" y="17.18" width="2.94" height="35.03" rx="1.47" ry="1.47" transform="translate(61.47 7.91) rotate(90)"/>
@@ -273,7 +273,7 @@ function Layout({children}) {
     <rect fill="currentColor" x="36.35" y="54.94" width="2.94" height="75.61" rx="1.47" ry="1.47" transform="translate(130.56 54.93) rotate(90)"/>
     <rect fill="currentColor" x="23.3" y="48.3" width="2.94" height="31.01" rx="1.47" ry="1.47" transform="translate(88.57 39.03) rotate(90)"/>
     <rect fill="currentColor" x="72.68" y="21.04" width="2.94" height="73.17" rx="1.47" ry="1.47"/>
-    <path fill="none" stroke="currentColor" stroke-miterlimit="10" stroke-width="2.6px" d="M16.51,6.46h35.62v14.48H16.51c-4,0-7.24-3.24-7.24-7.24h0c0-4,3.24-7.24,7.24-7.24Z"/>
+    <path fill="none" stroke="currentColor" strokeMiterlimit="10" strokeWidth="2.6px" d="M16.51,6.46h35.62v14.48H16.51c-4,0-7.24-3.24-7.24-7.24h0c0-4,3.24-7.24,7.24-7.24Z"/>
   </symbol>
 
   <symbol id="icon-proprietary" viewBox="0 0 21.31 21.31">
@@ -377,7 +377,7 @@ function Layout({children}) {
   </symbol>
 
   <symbol id="icon-prop-65" viewBox="0 0 175.91 155.66">
-	  <path fill="#ffb000" stroke="#000000" stroke-width="7px" stroke-miterlimit="10" d="M160.54,150.85H14.4c-7.7,0-12.51-8.33-8.66-15L78.81,9.29c3.85-6.67,13.47-6.67,17.32,0l73.07,126.56c3.85,6.67-.96,15-8.66,15Z"/>
+	  <path fill="#ffb000" stroke="#000000" strokeWidth="7px" strokeMiterlimit="10" d="M160.54,150.85H14.4c-7.7,0-12.51-8.33-8.66-15L78.81,9.29c3.85-6.67,13.47-6.67,17.32,0l73.07,126.56c3.85,6.67-.96,15-8.66,15Z"/>
 	  <polygon fill="#000000" points="97.69 49.42 91.66 112.2 83.45 113 78.23 53.93 97.69 49.42"/>
 	  <path fill="#000000" d="M86.27,119.13c13.36-1.82,14.35,20.18-.21,18.57-10.06-1.11-10.73-17.08.21-18.57Z"/>
   </symbol>
@@ -445,7 +445,7 @@ function Layout({children}) {
   </symbol>
   
   <symbol id="icon-wishlistEmpty" viewBox="0 0 472.7 415.7">
-  	<path fill="currentColor" stroke="currentColor" stroke-miterlimit="10" d="M433.6,67a130.61,130.61,0,0,0-184.7.1L236,80,222.9,66.9a130.49,130.49,0,0,0-184.7-.2,130.49,130.49,0,0,0,.2,184.7L226.2,439.2a13.4,13.4,0,0,0,19,.1L433.4,251.8A130.85,130.85,0,0,0,433.6,67ZM414.4,232.7l-178.7,178L57.4,232.4A103.52,103.52,0,1,1,203.8,86l22.6,22.6a13.46,13.46,0,0,0,19.1,0l22.4-22.4A103.59,103.59,0,0,1,414.4,232.7Z" transform="translate(0.5 -28)"/>
+  	<path fill="currentColor" stroke="currentColor" strokeMiterlimit="10" d="M433.6,67a130.61,130.61,0,0,0-184.7.1L236,80,222.9,66.9a130.49,130.49,0,0,0-184.7-.2,130.49,130.49,0,0,0,.2,184.7L226.2,439.2a13.4,13.4,0,0,0,19,.1L433.4,251.8A130.85,130.85,0,0,0,433.6,67ZM414.4,232.7l-178.7,178L57.4,232.4A103.52,103.52,0,1,1,203.8,86l22.6,22.6a13.46,13.46,0,0,0,19.1,0l22.4-22.4A103.59,103.59,0,0,1,414.4,232.7Z" transform="translate(0.5 -28)"/>
   </symbol>
   <symbol id="icon-wishlistFill" viewBox="0 0 471.7 414.7">
   	<path fill="currentColor" d="M433.6,67a130.61,130.61,0,0,0-184.7.1L236,80,222.9,66.9a130.49,130.49,0,0,0-184.7-.2,130.49,130.49,0,0,0,.2,184.7L226.2,439.2a13.4,13.4,0,0,0,19,.1L433.4,251.8A130.85,130.85,0,0,0,433.6,67Z" transform="translate(0 -28.5)"/>
@@ -467,7 +467,7 @@ function Layout({children}) {
 	  <path fill="currentColor" d="M290.47,140.77c34.27-4.49,39.47,48.22,5.38,50.88-32.46,2.53-37.68-46.65-5.38-50.88Z"/>
   </symbol>  
   <symbol id="icon-longArrow" viewBox="0 0 14.45 8.66">
-  	<line fill="none" stroke="currentColor" stroke-miterlimit="10" y1="4.34" x2="13" y2="4.34"/>
+  	<line fill="none" stroke="currentColor" strokeMiterlimit="10" y1="4.34" x2="13" y2="4.34"/>
   	<polyline fill="none" stroke="currentColor" points="9.77 8.3 13.74 4.33 9.77 0.35"/>
   </symbol>
   <symbol id="icon-check" viewBox="0 0 17.21 15.1">

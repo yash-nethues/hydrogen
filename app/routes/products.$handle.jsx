@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import {useIsClient} from '~/hooks/useIsClient';
 import {defer} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
@@ -30,6 +31,7 @@ import BoughtTogetherSilder from "~/components/BoughtTogetherSilder";
 import RelatedSet from "~/components/RelatedSet";
 import RelatedToSee from '~/components/RelatedToSee';
 import ArtistsViewedPDSlider from '~/components/ArtistsViewedPDSlider';
+import {ProductTabs} from '~/components/ProductTabs';
 
 /**
  * @type {MetaFunction<typeof loader>}
@@ -77,8 +79,83 @@ async function loadCriticalData({context, params, request}) {
     },
   });
 
-  const rawMeta = product?.metafields[0]?.value;
-  const metaobjectIds = rawMeta ? JSON.parse(rawMeta) : [];
+  const metafieldsList = (product?.metafields || []).filter(Boolean);
+  const parseIdArray = (raw) => {
+    const isGid = (v) => typeof v === 'string' && /^gid:\/\/shopify\//.test(v.trim());
+    if (!raw) return [];
+
+    // If array already
+    if (Array.isArray(raw)) {
+      return raw
+        .map((v) => (typeof v === 'object' && v && v.id ? v.id : v))
+        .filter((v) => isGid(v));
+    }
+
+    if (typeof raw === 'string') {
+      // Normalize common encodings/variants
+      let trimmed = raw.trim()
+        .replace(/&quot;/g, '"')
+        .replace(/&#34;/g, '"');
+      // If wrapped in quotes, unwrap
+      if ((trimmed.startsWith('"') && trimmed.endsWith('"')) || (trimmed.startsWith("'") && trimmed.endsWith("'"))) {
+        trimmed = trimmed.slice(1, -1);
+      }
+
+      // Try JSON.parse first
+      try {
+        // Try JSON as-is
+        let parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((v) => (typeof v === 'object' && v && v.id ? v.id : v))
+            .filter((v) => isGid(v));
+        }
+        if (parsed && parsed.id && isGid(parsed.id)) return [parsed.id];
+      } catch {}
+      // Try single-quote array: ['gid://...','gid://...']
+      try {
+        const sq = trimmed.replace(/'/g, '"');
+        const parsedSq = JSON.parse(sq);
+        if (Array.isArray(parsedSq)) {
+          return parsedSq
+            .map((v) => (typeof v === 'object' && v && v.id ? v.id : v))
+            .filter((v) => isGid(v));
+        }
+        if (parsedSq && parsedSq.id && isGid(parsedSq.id)) return [parsedSq.id];
+      } catch {}
+
+      // Single gid string
+      if (isGid(trimmed)) return [trimmed];
+
+      // Handle bracketed but unquoted list: [gid://..., gid://...]
+      const bracketMatch = trimmed.replace(/^\[|\]$/g, '');
+      const splitCandidates = bracketMatch.split(/\s*,\s*|\s+/).filter(Boolean);
+      const fromSplit = splitCandidates.filter((v) => isGid(v));
+      if (fromSplit.length) return fromSplit;
+
+      // Fallback: regex extraction of any gid substrings
+      const regexMatches = trimmed.match(/gid:\/\/shopify\/[A-Za-z]+\/[0-9]+/g);
+      if (regexMatches && regexMatches.length) return regexMatches;
+
+      return [];
+    }
+
+    // If object with id
+    if (typeof raw === 'object' && raw.id && isGid(raw.id)) return [raw.id];
+    return [];
+  };
+  const rawViscosity = metafieldsList.find((m) => m?.key === 'select_viscosity')?.value;
+  const viscosityIds = parseIdArray(rawViscosity);
+
+  const {nodes: viscosityObjects} = await storefront.query(PRODUCT_VIDEOS_QUERY, {
+    variables: {
+      ids: viscosityIds,
+    },
+  });
+
+
+  const rawMeta = metafieldsList.find((m) => m?.key === 'select_product_videos')?.value;
+  const metaobjectIds = parseIdArray(rawMeta);
 
   const {nodes: videoObjects} = await storefront.query(PRODUCT_VIDEOS_QUERY, {
     variables: {
@@ -86,14 +163,23 @@ async function loadCriticalData({context, params, request}) {
     },
   });
 
-  const rawMeta1 = product?.metafields[1]?.value;
-  const pdfobjectIds = rawMeta1 ? JSON.parse(rawMeta1) : [];
+  const rawMeta1 = metafieldsList.find((m) => m?.key === 'product_charts_pdf')?.value;
+  const pdfobjectIds = parseIdArray(rawMeta1);
+
+  const rawPaintsAttr = metafieldsList.find((m) => m?.key === 'paints_mediums_multiselect_attribute')?.value;
+  const paintsAttrIds = parseIdArray(rawPaintsAttr);
+
 
   const {nodes: pdfObjects} = await storefront.query(PRODUCT_VIDEOS_QUERY, {
     variables: {
       ids: pdfobjectIds,
     },
   });
+
+  const paintsNodesResp = paintsAttrIds.length
+    ? await storefront.query(PRODUCT_VIDEOS_QUERY, { variables: { ids: paintsAttrIds } })
+    : null;
+  const paintsMetaobjects = paintsNodesResp?.nodes?.filter(Boolean) || [];
 
 
 
@@ -124,7 +210,11 @@ async function loadCriticalData({context, params, request}) {
   return {
     product,
     videoObjects,
+    viscosityObjects,
     pdfObjects,
+    pdfobjectIds,
+    rawMeta1,
+    paintsMetaobjects,
     metaobjects,
     arrivalcollectionData,
     professionalcollectionData
@@ -173,7 +263,7 @@ export function WishlistButton({productId}) {
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product, videoObjects, pdfObjects, collection, arrivalcollectionData, professionalcollectionData} = useLoaderData();
+  const {product, videoObjects, viscosityObjects, pdfobjectIds, pdfObjects, rawMeta1, paintsMetaobjects, collection, arrivalcollectionData, professionalcollectionData} = useLoaderData();
   
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -194,29 +284,42 @@ export default function Product() {
   const {title, descriptionHtml, images, options} = product;
 
   const [urlOptions, setUrlOptions] = useState({});
+  const isClient = useIsClient();
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    if (isClient) {
+      const params = new URLSearchParams(window.location.search);
 
-    const selectedColor = params.get('Color');
-    const selectedSize = params.get('Size');
-    const selectedFormat = params.get('Format');
+      const selectedColor = params.get('Color');
+      const selectedSize = params.get('Size');
+      const selectedFormat = params.get('Format');
 
-    setUrlOptions({
-      color: selectedColor,
-      size: selectedSize,
-      format: selectedFormat
-    });
-  }, []);
+      setUrlOptions({
+        color: selectedColor,
+        size: selectedSize,
+        format: selectedFormat
+      });
+    }
+  }, [isClient]);
+
+  const safeMetafields = (product.metafields || []).filter(Boolean);
+  const shortDes = safeMetafields.find((m) => m?.key === 'short_description')?.value;
+  const catalogItemNumber = safeMetafields.find((m) => m?.key === 'catalog_item_number')?.value;
+  const colorDescription = safeMetafields.find((m) => m?.key === 'reference_color_description')?.value;
+  const paintsMediumsAttribute = safeMetafields.find((m) => m?.key === 'paints_mediums_multiselect_attribute')?.value;
+  const productType = safeMetafields.find((m) => m?.key === 'select_product_type')?.value;
+  console.log('productType', productType);
 
   const mainPVC = options?.[0]?.optionValues?.[0]?.name;
   const mainPVS = options?.[1]?.optionValues?.[0]?.name;
   const mainPVF = options?.[2]?.optionValues?.[0]?.name;
 
-  let match =
+  /*let match = isClient &&
     mainPVC === urlOptions.color &&
     mainPVS === urlOptions.size &&
-    mainPVF === urlOptions.format;
+    mainPVF === urlOptions.format;*/
+
+  let match = isClient && productType === 'Grouped Product';
 
   const handleOpenVideoGallery = () => {
     const galleryItems = videoObjects.map((meta) => {
@@ -243,18 +346,24 @@ export default function Product() {
 
   useSmoothScroll();
 
-  const [clicked, setClicked] = useState(false);
 
-  const handleFDBtnClick = () => {
-    if (clicked) {
-      console.log('Already clicked, ignoring.');
+
+  const handleFDBtnClick = (e) => {
+    e.preventDefault();
+    if (!isClient) {
+      console.log('Not client, ignoring.');
       return;
     }
-
-    const element = document.querySelector('.fullDetails');
-    if (element) {
-      element.click();
-      setClicked(true);
+    // Scroll to the description tab and ensure it's open
+    const tabElement = document.querySelector('#tab-description');
+    if (tabElement) {
+      // Click the tab to open it (this will toggle, so we need to check if it's closed first)
+      const isCurrentlyOpen = tabElement.classList.contains('bg-blue');
+      if (!isCurrentlyOpen) {
+        tabElement.click();
+      }
+      // Scroll to the tab
+      tabElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -262,6 +371,7 @@ export default function Product() {
 
   const [quantity, setQuantity] = useState(1);
   const [filterModal, setFilterModal] = useState(false);
+  const [unit, setUnit] = useState('oz');
 
   const color = selectedVariant.selectedOptions.find(
     (opt) => opt.name.toLowerCase() === 'color'
@@ -275,7 +385,125 @@ export default function Product() {
     (opt) => opt.name.toLowerCase() === 'format'
   )?.value;
 
-  const shortDes = product.metafields[2]?.value;
+  
+  const paintsAttributes = (paintsMetaobjects || [])
+    .filter((n) => n && (n.fields || n.__typename === 'Metaobject'))
+    .map((node) => {
+      const findField = (key) => node?.fields?.find((f) => f.key === key);
+      const get = (key) => {
+        const f = findField(key);
+        if (!f) return '';
+        if (f.reference && f.reference.__typename === 'Metaobject') {
+          // Try to read meaningful value from referenced metaobject
+          const baseKey = key.replace(/_(attribute|atrribute)$/i, '');
+          const candidates = [baseKey, 'value', 'text', 'name', 'title'];
+          for (const c of candidates) {
+            const v = f.reference.fields?.find((rf) => rf.key === c)?.value;
+            if (v) return v;
+          }
+        }
+        return f.value || '';
+      };
+      return {
+        color: get('color_name'),
+        size: get('size'),
+        format: get('format'),
+        media: get('media_type'),
+        type: get('type_atrribute'),
+        series: get('series_name'),
+        pigment: get('pigment'),
+      };
+    })
+    .filter(Boolean);
+
+  // Merge sparse attribute objects into a single, consolidated attributes object
+  const mergedPaintsAttributes = paintsAttributes.reduce((acc, cur) => {
+    if (!cur) return acc;
+    for (const [k, v] of Object.entries(cur)) {
+      if (v) {
+        // For all fields, collect all values as arrays
+        if (!acc[k]) acc[k] = [];
+        if (!acc[k].includes(v)) acc[k].push(v);
+      }
+    }
+    return acc;
+  }, { color: [], size: [], format: [], media: [], type: [], series: [], pigment: [] });
+
+  // Process viscosity data similar to paints attributes
+  const viscosityAttributes = (viscosityObjects || [])
+    .filter((n) => n && (n.fields || n.__typename === 'Metaobject'))
+    .map((node) => {
+      const findField = (key) => node?.fields?.find((f) => f.key === key);
+      const get = (key) => {
+        const f = findField(key);
+        if (!f) return '';
+        if (f.reference && f.reference.__typename === 'Metaobject') {
+          // Try to read meaningful value from referenced metaobject
+          const baseKey = key.replace(/_(attribute|atrribute)$/i, '');
+          const candidates = [baseKey, 'value', 'text', 'name', 'title'];
+          for (const c of candidates) {
+            const v = f.reference.fields?.find((rf) => rf.key === c)?.value;
+            if (v) return v;
+          }
+        }
+        return f.value || '';
+      };
+      return {
+        viscosity: get('viscosity_name'),
+      };
+    })
+    .filter(Boolean);
+
+  const mergedViscosity = viscosityAttributes.reduce((acc, cur) => {
+    if (!cur) return acc;
+    for (const [k, v] of Object.entries(cur)) {
+      if (v) {
+        if (!acc[k]) acc[k] = [];
+        if (!acc[k].includes(v)) acc[k].push(v);
+      }
+    }
+    return acc;
+  }, { viscosity: [] });
+
+  console.log('viscosityAttributes', viscosityAttributes);
+  console.log('mergedViscosity', mergedViscosity); 
+    
+  const referenceSize = Array.isArray(mergedPaintsAttributes.size) 
+    ? mergedPaintsAttributes.size[0] 
+    : mergedPaintsAttributes.size;
+
+  const getDisplayReferenceSize = () => {
+    if (!referenceSize) return '';
+    const base = referenceSize.trim();
+    const ozMatch = base.match(/([\d,.]+)\s*oz/i);
+    const mlMatch = base.match(/([\d,.]+)\s*ml/i);
+
+    if (unit === 'oz') {
+      if (ozMatch) {
+        const amount = ozMatch[1].replace(',', '');
+        return `${amount} OZ`;
+      }
+      if (mlMatch) {
+        const amount = mlMatch[1].replace(',', '');
+        return `${amount} ML`;
+      }
+      return base;
+    }
+
+    // unit === 'ml'
+    if (ozMatch) {
+      const ounces = parseFloat(ozMatch[1].replace(',', ''));
+      if (Number.isNaN(ounces)) return base;
+      const mlFixed = (ounces * 29.5735).toFixed(2);
+      return `${mlFixed} ML`;
+    }
+    if (mlMatch) {
+      const amount = mlMatch[1].replace(',', '');
+      return `${amount} ML`;
+    }
+    return base;
+  };
+
   return (
     <div className={`group/product ${match ? 'parrentProduct' : 'childProduct'}`}>
       <div className="container 2xl:container mt-5 mb-5">
@@ -335,7 +563,7 @@ export default function Product() {
               </div>
             </div>            
             <div className="flex gap-10 mt-1 items-center">
-              <div className="uppercase text-10 text-center leading-none bg-blue text-white w-16 p-1">Only AT <br/> Jerry's</div>
+              <div className="uppercase text-10 text-center leading-none bg-blue text-white w-16 p-1 hidden">Only AT <br/> Jerry's</div>
               <div className="">Ratting section</div>
             </div>
             <div className="flex flex-wrap gap-4 w-full mt-4 group-[.childProduct]/product:hidden">
@@ -354,21 +582,21 @@ export default function Product() {
             </div>
             <div className='clear-both  group-[.parrentProduct]/product:hidden'>
               <div>
-                <p className='text-[90%]'>Item # <span>{product.sku}</span></p>
+                <p className='text-[90%]'>Item # <span>{catalogItemNumber || product.sku}</span></p>
                 <div className='flex w-full items-center flex-wrap'>
                   <div className='flex flex-col w-64'>
-                    <div class="text-17 mb-0.5 font-medium">
+                    <div className="text-17 mb-0.5 font-medium">
                       <span>Color : </span>
-                      <span>{color}</span>
+                      <span>{colorDescription}</span>
                     </div>
-                    <div class="text-17 mb-0.5 font-medium">
+                    <div className="text-17 mb-0.5 font-medium">
                       <span>Size : </span>
-                      <span>{size}</span>
+                      <span>{getDisplayReferenceSize()}</span>
                     </div>
-                    <UnitSwitcher onUnitChange={(selectedUnit) => console.log('Selected:', selectedUnit)} />
-                    <div class="text-17 mb-0.5 font-medium">
+                    <UnitSwitcher value={unit} onUnitChange={(selectedUnit) => setUnit(selectedUnit)} />
+                    <div className="text-17 mb-0.5 font-medium">
                       <span>Format : </span>
-                      <span>{format}</span>
+                      <span>{mergedPaintsAttributes.format || format}</span>
                     </div>                  
                   </div>
                   <div>
@@ -441,13 +669,25 @@ export default function Product() {
               </div>
               <div className='flex mt-5 justify-between items-center gap-x-6 gap-y-2'>
                 <div className='flex flex-wrap gap-5'>
-                  <span className='text-green flex-none text-15 flex gap-1.5 items-center font-medium'>
-                    <svg width="16" height="16" aria-hidden="true">
-                      <use href="#icon-check" />
-                    </svg>
-                    <span>In Stock</span>
-                  </span>
-                  <span className='text-brand text-15'>Hurry Only 9 left</span>
+                  {selectedVariant?.availableForSale ? (
+                    <>
+                      <span className='text-green flex-none text-15 flex gap-1.5 items-center font-medium'>
+                        <svg width="16" height="16" aria-hidden="true">
+                          <use href="#icon-check" />
+                        </svg>
+                        <span>In Stock</span>
+                      </span>
+                      <span className='text-brand text-15'>Hurry Only 9 left</span>
+                    </>
+                  ) : (
+                    <span className='text-red flex-none text-15 flex gap-1.5 items-center font-medium'>
+                      <svg width="16" height="16" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                      <span>Out of Stock</span>
+                    </span>
+                  )}
                 </div>
                 <div className="w-full group/addList relative max-w-44" role="button">
                   <span className="border border-grey-200 text-xl text-grey flex group-hover/addList:text-green group-hover/addList:border-green  hover:text-green hover:border-green group-[.active]/addList:text-green group-[.active]/addList:border-green transition-all  items-center justify-center ps-2.5 pe-10 py-2 w-full h-full relative">
@@ -532,7 +772,7 @@ export default function Product() {
                 <div className='text-15 max-h-[450px] overflow-hidden text-base-100 font-medium [&>h2]:text-18 [&>h2]:2xl:text-xl [&>h2]:mb-4 [&>h2]:pt-4 [&>h2]:font-semibold [&>*]:mb-2.5 [&>div]:flex  [&>div]:gap-5 [&>div>div]:!max-w-[50%] [& ul li]:pl-2.5' dangerouslySetInnerHTML={{__html: descriptionHtml}} />
               </div>
               <div className="flex gap-3 items-center mt-4">
-                <a href="#"  className='bg-blue fullDescription text-white px-4 py-2 hover:bg-brand scroll-to-element-jq' data-scroll-to="#tab-description" data-delay="200" data-click="0" onClick={handleFDBtnClick}>
+                <a href="#"  className='bg-blue fullDescription text-white px-4 py-2 hover:bg-brand' onClick={handleFDBtnClick}>
                     See Full Description &gt; 
                 </a>
                 <a href="#" className='btn-outer rounded h-8 flex flex-none pl-2 pr-2 scroll-to-element-jq' data-scroll-to="#shop-all" data-delay="200" data-click="0">
@@ -581,9 +821,16 @@ export default function Product() {
         />
       </div>
 
-      {/* <ProductVariations images={images.nodes} productVariant={productVariant} /> */}
-        <ProductVariations images={images.nodes} productVariants={product.adjacentVariants} productVideos={videoObjects} productOptions={productOptions} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} />
+      <div className="bg-gray-100 border-t border-t-grey-200 pt-5 pb-8 mt-20">
+        <div className="container 2xl:container">
+          {/* Product Tabs */}
+          <ProductTabs images={images.nodes} productVideos={videoObjects} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} catalogItemNumber={catalogItemNumber} paintsAttributes={mergedPaintsAttributes} viscosity={mergedViscosity.viscosity} colorDescription={colorDescription} />
+
+          {/* <ProductVariations images={images.nodes} productVariant={productVariant} /> */}
+          <ProductVariations images={images.nodes} productVariants={product.adjacentVariants} productVideos={videoObjects} productOptions={productOptions} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} />
       
+        </div>
+      </div>
       {/* show bottom section */} 
       
       <div className='artists_sec pt-10 '>
@@ -628,7 +875,7 @@ export default function Product() {
                     } = value;
                     if (option.name == 'Color') {
                       return (
-                  <li>
+                  <li key={name}>
                     <label className='p-0 pl-6 leading-6 relative'  style={{ 'background': '#000000' }}>
                         <input className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' type="checkbox"  value={name} /> <span className='ps-j5 pe-2.5 bg-white'>{name}</span>
                         <span className='absolute w-[22px] h-[21px] mt-px ml-px opacity-0 peer-checked:opacity-100 bg-white left-0 top-0 border after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b after:border-blue'></span>
@@ -674,7 +921,7 @@ export default function Product() {
                 const variantURL = '/products/' + variant.product.handle + '?Color=' + color + '&Size=' + size + '&Format=' + format;
 
                 return (
-                <div className='relative group/gridItem [&.active]:scale-125 [&.active]:translate-y-4 hover:scale-125 hover:translate-y-4 hover:shadow-text [&.active]:-mb-[140px] hover:-mb-[140px] [&.active]:shadow-text w-[140px] hover:z-10 [&.active]:z-10 text-14/4 text-center bg-white border border-grey-200 p-j5 rounded-sm flex flex-col gap-y-1'>
+                <div key={variant.id} className='relative group/gridItem [&.active]:scale-125 [&.active]:translate-y-4 hover:scale-125 hover:translate-y-4 hover:shadow-text [&.active]:-mb-[140px] hover:-mb-[140px] [&.active]:shadow-text w-[140px] hover:z-10 [&.active]:z-10 text-14/4 text-center bg-white border border-grey-200 p-j5 rounded-sm flex flex-col gap-y-1'>
                   <img src={variant.image.url} alt={variant.metafield?.value || variant.title} className="w-full aspect-square object-cover" />
                   <div className='flex flex-col'>
                     <p className="text-inherit mb-0">{variant.metafield?.value || variant.title}</p>
@@ -713,7 +960,7 @@ export default function Product() {
                               </li>
                             </ul>
                           </div>
-                          <button class="btn-toCart ml-auto px-4 text-[11px] uppercase !min-h-0">Add</button>
+                          <button className="btn-toCart ml-auto px-4 text-[11px] uppercase !min-h-0">Add</button>
                         </div>
                       </div>                    
                     </div>
@@ -832,8 +1079,15 @@ const PRODUCT_QUERY = `#graphql
       metafields(identifiers: [
         {namespace: "custom", key: "select_product_videos"},
         {namespace: "custom", key: "product_charts_pdf"},
-        {namespace: "custom", key: "short_description"}
+        {namespace: "custom", key: "short_description"},
+        {namespace: "custom", key: "catalog_item_number"},
+        {namespace: "custom", key: "reference_color_description"},
+        {namespace: "custom", key: "paints_mediums_multiselect_attribute"},
+        {namespace: "custom", key: "reference_size"},
+        {namespace: "custom", key: "select_viscosity"}
+        {namespace: "custom", key: "select_product_type"}
         ]) {
+        key
         value
         type
       }
@@ -866,14 +1120,34 @@ query GetMetaobjects($ids: [ID!]!) {
 }`;
 
 const PRODUCT_PDF_QUERY = `#graphql
-query GetGenericFile($id: ID!) {
-  node(id: $id) {
+query GetPdfNodes($ids: [ID!]!) {
+  nodes(ids: $ids) {
     ... on GenericFile {
       id
       url
       filename
       mimeType
       createdAt
+    }
+    ... on Metaobject {
+      id
+      handle
+      type
+      fields {
+        key
+        value
+        reference {
+          ... on GenericFile {
+            id
+            url
+            filename
+            mimeType
+          }
+          ... on MediaImage {
+            image { url altText }
+          }
+        }
+      }
     }
   }
 }`;

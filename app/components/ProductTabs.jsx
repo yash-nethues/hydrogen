@@ -34,7 +34,7 @@ export function PdfLinks({ pdfObjects }) {
 }
 
 
-export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects }) {
+export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects, catalogItemNumber, paintsAttributes, viscosity, colorDescription }) {
   // Initialize state to track the active tab (default: Description)
   const [activeTab, setActiveTab] = useState('');
 
@@ -49,7 +49,7 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
   return (
     <div>
       <p className='text-blue flex flex-wrap gap-2 items-center group-[.parrentProduct]/product:hidden'>
-        <span>Item # 39153 Overview</span>
+        <span>Item # {catalogItemNumber} Overview</span>
         <span className='group/tooltip relative'>| Brand <a href="" className='font-bold text-base-100 hover:underline underline-offset-2'><span className='text-[200%]/none h-5 inline-block align-text-top'>®</span> Golden Artist Colors  &gt;</a>
           <div className="tooltip opacity-0 absolute bottom-3/4 mb-3 left-1/2 -translate-x-1/2 text-center p-3 rounded-sm shadow-md transition-all bg-white text-13/4 text-blue font-medium w-[215px] group-hover/tooltip:opacity-100 pointer-events-none group-hover/tooltip:bottom-full group-hover/tooltip:pointer-events-auto  group-[&.active]/gridItem:scale-75 group-hover/gridItem:scale-75 origin-bottom">
             <span>Click to see all supplies & full collection for Brand: ® GOLDEN ARTIST COLORS</span>
@@ -134,36 +134,50 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
               <table className="table-auto border border-grey-200 text-left text-gray-900">
                 <tbody>
                   <tr className='even:bg-base-400'>
+                    <th className='border border-grey-200 p-2.5 font-semibold'>Color</th>
+                    <td className="border border-grey-200 p-2.5" data-th="Color">
+                      {colorDescription}
+                    </td>
+                  </tr>
+                  <tr className='even:bg-base-400'>
                     <th className='border border-grey-200 p-2.5 font-semibold'>Series</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Series">Artist</td>
+                    <td className="border border-grey-200 p-2.5" data-th="Series">
+                      {Array.isArray(paintsAttributes.series) 
+                        ? paintsAttributes.series.join(', ') 
+                        : paintsAttributes.series}
+                    </td>
+                  </tr>
+                                      <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Viscosity</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Hair Type	">
+                        {Array.isArray(viscosity) 
+                          ? viscosity.join(', ') 
+                          : viscosity}
+                      </td>
+                    </tr>
+                  <tr className='even:bg-base-400'>
+                    <th className='border border-grey-200 p-2.5 font-semibold'>Format</th>
+                    <td className="border border-grey-200 p-2.5" data-th="Ferrule">
+                      {Array.isArray(paintsAttributes.format) 
+                        ? paintsAttributes.format.join(', ') 
+                        : paintsAttributes.format}
+                    </td>
                   </tr>
                   <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Shape</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Shape">Round</td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Hair Type	</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Hair Type	">Sable</td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Ferrule</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Ferrule">Brass Plated</td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Handle</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Handle">Short Handle</td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Length</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Length">23/64"</td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Width</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Width">3/64"</td>
+                    <th className='border border-grey-200 p-2.5 font-semibold'>Pigment</th>
+                    <td className="border border-grey-200 p-2.5" data-th="Handle">
+                      {Array.isArray(paintsAttributes.pigment) 
+                        ? paintsAttributes.pigment.join(', ') 
+                        : paintsAttributes.pigment}
+                    </td>
                   </tr>
                   <tr className='even:bg-base-400'>
                     <th className='border border-grey-200 p-2.5 font-semibold'>Size</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Series"># 2x0</td>
+                    <td className="border border-grey-200 p-2.5" data-th="Series">
+                      {Array.isArray(paintsAttributes.size) 
+                        ? paintsAttributes.size.join(', ') 
+                        : paintsAttributes.size}
+                    </td>
                   </tr>
                 </tbody>
               </table>

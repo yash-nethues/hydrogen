@@ -3,7 +3,31 @@
 @import "tailwindcss/utilities";
 @layer base {
   body {
-    @apply text-base;
+    @apply text-sm jxl:text-base;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply p-0 mb-j15 font-medium;
+  }
+  h2, h3, h4, h5, h6 {
+    @apply text-base-100 !leading-[1.3];
+  }
+  h1 {
+    @apply text-26 jlg:text-3xl jxl:text-4xl !leading-[1.1] text-blue;
+  }
+  h2 {
+    @apply text-26 jlg:text-3xl jxl:text-34; 
+  }
+  h3 {
+    @apply text-lg jlg:text-xl jxl:text-25;
+  }
+  h4 {
+    @apply text-base jlg:text-lg jxl:text-22;
+  }
+  h5 {
+    @apply text-15 jlg:text-base jxl:text-xl;
+  }
+  h6 {
+    @apply text-sm jxl:text-lg;
   }
 }
 @layer components {
@@ -65,8 +89,7 @@
     }
 
     .custom-container {
-      @apply container w-full; 
-      max-width: 1860px; 
+      @apply container j2xl:!max-w-[1860px];
     }
     a.text-onsale{color:#ef2456!important;}
     a.text-onsupersale{color:#289798!important;}

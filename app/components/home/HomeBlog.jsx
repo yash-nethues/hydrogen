@@ -9,7 +9,7 @@ const [activeTab, setActiveTab] = useState(0);
 const tabs = [
     title,
     '',
-    'Free Video Art Lessons <br/>  <div class="block w-full text-sm mt-2.5">Over 12,000 hours of Art Instruction!</div>'
+    'Free Video Art Lessons <br/>  <div className="block w-full text-sm mt-2.5">Over 12,000 hours of Art Instruction!</div>'
   ];
 
 const tabRefs = useRef([]); 

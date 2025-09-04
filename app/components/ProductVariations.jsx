@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import {useFetcher} from '@remix-run/react';
 import {CartForm} from '@shopify/hydrogen';
 import {AddToCartButton} from '~/components/AddToCartButton';
-import {ProductTabs} from '~/components/ProductTabs';
 import { Fancybox } from "@fancyapps/ui";
 import "@fancyapps/ui/dist/fancybox/fancybox.css";
 import Modal from '~/components/Modal';
@@ -252,11 +251,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   };
 
   return (
-    <div className="bg-gray-100 border-t border-t-grey-200 pt-5 pb-8 mt-20">
-      <div className="container 2xl:container">
-        {/* Product Tabs */}
-        <ProductTabs images={images} productVideos={productVideos} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} />
-
+    <>
         {/* View toggle buttons */}
         <div className="group-[.childProduct]/product:hidden flex mt-10 mb-0 gap-3" id="shop-all">
           <div className="flex">
@@ -348,7 +343,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       }
                       
                       return (
-                        <li>
+                        <li key={name}>
                           <label className='p-0 pl-6 leading-6 relative' style={{ 'background': colorCode }}>
                               <input 
                                 className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
@@ -365,7 +360,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                     }else{
                       const filterType = option.name.toLowerCase();
                       return (
-                        <li>
+                        <li key={name}>
                           <label className='p-0 pl-6 leading-6 relative'>
                             <input 
                               className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
@@ -708,7 +703,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                           <path d="M408.29,510.43c-2.78-1.27-4.98-3-6.6-5.18-1.62-2.19-2.48-4.63-2.59-7.33h9.56c.16,1.89,1.07,3.47,2.71,4.74,1.65,1.27,3.71,1.9,6.2,1.9s4.6-.5,6.03-1.5c1.43-1,2.15-2.28,2.15-3.85,0-1.67-.8-2.92-2.39-3.73-1.59-.81-4.12-1.7-7.57-2.67-3.35-.92-6.07-1.81-8.18-2.67-2.11-.86-3.93-2.19-5.47-3.97-1.54-1.78-2.31-4.13-2.31-7.05,0-2.38.7-4.55,2.11-6.52,1.4-1.97,3.41-3.52,6.03-4.66,2.62-1.13,5.63-1.7,9.03-1.7,5.07,0,9.17,1.28,12.27,3.85,3.1,2.57,4.76,6.06,4.98,10.49h-9.23c-.16-2-.97-3.59-2.43-4.78-1.46-1.19-3.43-1.78-5.91-1.78s-4.29.46-5.59,1.38c-1.3.92-1.94,2.13-1.94,3.64,0,1.19.43,2.19,1.3,3,.86.81,1.92,1.45,3.16,1.9,1.24.46,3.08,1.04,5.51,1.74,3.24.86,5.9,1.74,7.98,2.63,2.08.89,3.87,2.2,5.39,3.93,1.51,1.73,2.29,4.02,2.35,6.88,0,2.54-.7,4.81-2.11,6.8-1.4,2-3.39,3.56-5.95,4.7-2.56,1.13-5.58,1.7-9.03,1.7s-6.66-.63-9.44-1.9Z"/>
                         </g>
                         <g>
-                          <circle fill="none" stroke="currentColor" stroke-miterlimit="10" cx="300" cy="238.49" r="158.55"/>
+                          <circle fill="none" stroke="currentColor" strokeMiterlimit="10" cx="300" cy="238.49" r="158.55"/>
                           <path fill="currentColor" d="M248.87,158.6c2.13-.44,4.69-.44,6.73.41l126.3,73.56c2.54,3.54,2.69,7.86.29,11.46-41.37,25.83-84.61,49.03-126.6,74.01-5.02,1.73-10.7.33-12.55-5l-.71-146c.35-3.72,2.66-7.63,6.53-8.43Z"/>
                         </g>
                       </svg>
@@ -797,8 +792,6 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                     }
                   };
 
-                  console.log('Variation Data:- ', variant);
-
                   const variantURL = '/products/' + variant.product.handle + '?Color=' + color + '&Size=' + size + '&Format=' + format;
 
                   return (
@@ -828,7 +821,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                                     <path d="M408.29,510.43c-2.78-1.27-4.98-3-6.6-5.18-1.62-2.19-2.48-4.63-2.59-7.33h9.56c.16,1.89,1.07,3.47,2.71,4.74,1.65,1.27,3.71,1.9,6.2,1.9s4.6-.5,6.03-1.5c1.43-1,2.15-2.28,2.15-3.85,0-1.67-.8-2.92-2.39-3.73-1.59-.81-4.12-1.7-7.57-2.67-3.35-.92-6.07-1.81-8.18-2.67-2.11-.86-3.93-2.19-5.47-3.97-1.54-1.78-2.31-4.13-2.31-7.05,0-2.38.7-4.55,2.11-6.52,1.4-1.97,3.41-3.52,6.03-4.66,2.62-1.13,5.63-1.7,9.03-1.7,5.07,0,9.17,1.28,12.27,3.85,3.1,2.57,4.76,6.06,4.98,10.49h-9.23c-.16-2-.97-3.59-2.43-4.78-1.46-1.19-3.43-1.78-5.91-1.78s-4.29.46-5.59,1.38c-1.3.92-1.94,2.13-1.94,3.64,0,1.19.43,2.19,1.3,3,.86.81,1.92,1.45,3.16,1.9,1.24.46,3.08,1.04,5.51,1.74,3.24.86,5.9,1.74,7.98,2.63,2.08.89,3.87,2.2,5.39,3.93,1.51,1.73,2.29,4.02,2.35,6.88,0,2.54-.7,4.81-2.11,6.8-1.4,2-3.39,3.56-5.95,4.7-2.56,1.13-5.58,1.7-9.03,1.7s-6.66-.63-9.44-1.9Z"/>
                                   </g>
                                   <g>
-                                    <circle fill="none" stroke="currentColor" stroke-miterlimit="10" cx="300" cy="238.49" r="158.55"/>
+                                    <circle fill="none" stroke="currentColor" strokeMiterlimit="10" cx="300" cy="238.49" r="158.55"/>
                                     <path fill="currentColor" d="M248.87,158.6c2.13-.44,4.69-.44,6.73.41l126.3,73.56c2.54,3.54,2.69,7.86.29,11.46-41.37,25.83-84.61,49.03-126.6,74.01-5.02,1.73-10.7.33-12.55-5l-.71-146c.35-3.72,2.66-7.63,6.53-8.43Z"/>
                                   </g>
                                 </svg>
@@ -1132,7 +1125,6 @@ export function ProductVariations({ images, productVariants, productVideos, prod
             </div>
           )}
         </div>
-      </div>
 
       {/* Cart Popup Modal */}
       <Modal 
@@ -1233,7 +1225,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
           </ul>
         </div>
       </Modal>
-    </div>
+    </>
   
     
   );

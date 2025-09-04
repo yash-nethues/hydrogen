@@ -1,7 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function UnitSwitcher({ onUnitChange }) {
-  const [unit, setUnit] = useState('oz');
+export default function UnitSwitcher({ onUnitChange, value }) {
+  const [unit, setUnit] = useState(value || 'oz');
+
+  useEffect(() => {
+    if (value && value !== unit) {
+      setUnit(value);
+    }
+  }, [value]);
 
   const toggleUnit = () => {
     const newUnit = unit === 'oz' ? 'ml' : 'oz';

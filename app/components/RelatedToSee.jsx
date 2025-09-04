@@ -40,12 +40,12 @@ function RelatedToSee({arrivalsCollection}) {
                     >
                     {arrivalsCollection?.products?.edges?.map((product, index) => (
                         <>
-                        <SwiperSlide key={index}>
+                        <SwiperSlide key={`${index}-1`}>
                         <div className="flex justify-center">
                             <img className="w-full aspect-square h-auto object-cover"  src={product.node.featuredImage.url} alt={product.node.title} />
                         </div>
                         </SwiperSlide>
-                        <SwiperSlide key={index}>
+                        <SwiperSlide key={`${index}-2`}>
                         <div className="flex justify-center">
                             <img className="w-full aspect-square h-auto object-cover"  src={product.node.featuredImage.url} alt={product.node.title} />
                         </div>

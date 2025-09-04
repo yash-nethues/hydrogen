@@ -77,6 +77,16 @@ const TOP_MENU_QUERY = gql`
           fields {
             key
             value
+            reference {
+              ... on MediaImage {
+                image {
+                  url
+                  width
+                  height
+                  altText
+                }
+              }
+            }
           }
         }
       }
