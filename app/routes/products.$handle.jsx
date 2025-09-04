@@ -201,6 +201,34 @@ async function loadCriticalData({context, params, request}) {
     variables: { id: `gid://shopify/Collection/${professionalID}` },
   });
 
+  // Fetch child products if they exist
+  const rawChildProducts = metafieldsList.find((m) => m?.key === 'child_products')?.value;
+  const childProductIds = parseIdArray(rawChildProducts);
+  
+  let childProducts = [];
+  if (childProductIds.length > 0) {
+    const {nodes: childProductsData} = await storefront.query(CHILD_PRODUCTS_QUERY, {
+      variables: {
+        productIds: childProductIds,
+      },
+    });
+    // Extract variants from child products to match adjacentVariants structure
+    childProducts = childProductsData
+      ?.filter(Boolean)
+      ?.map(product => {
+        const variant = product.selectedOrFirstAvailableVariant;
+        if (variant) {
+          // Add product title to variant for display purposes
+          return {
+            ...variant,
+            productTitle: product.title,
+            productHandle: product.handle
+          };
+        }
+        return null;
+      })
+      ?.filter(Boolean) || [];
+  }
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
@@ -217,7 +245,8 @@ async function loadCriticalData({context, params, request}) {
     paintsMetaobjects,
     metaobjects,
     arrivalcollectionData,
-    professionalcollectionData
+    professionalcollectionData,
+    childProducts
   };
 }
 
@@ -235,7 +264,6 @@ function loadDeferredData({context, params}) {
 }
 
 export function WishlistButton({productId}) {
-  console.log('productId', productId);
   const {
     addToWishlist,
     removeFromWishlist,
@@ -243,8 +271,6 @@ export function WishlistButton({productId}) {
   } = useWishlist();
 
   const inWishlist = isInWishlist(productId);
-
-  console.log('inWishlist', inWishlist);
 
   return (
     <button className='flex gap-2 items-center'
@@ -263,7 +289,7 @@ export function WishlistButton({productId}) {
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product, videoObjects, viscosityObjects, pdfobjectIds, pdfObjects, rawMeta1, paintsMetaobjects, collection, arrivalcollectionData, professionalcollectionData} = useLoaderData();
+  const {product, videoObjects, viscosityObjects, pdfobjectIds, pdfObjects, rawMeta1, paintsMetaobjects, collection, arrivalcollectionData, professionalcollectionData, childProducts} = useLoaderData();
   
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -308,7 +334,9 @@ export default function Product() {
   const colorDescription = safeMetafields.find((m) => m?.key === 'reference_color_description')?.value;
   const paintsMediumsAttribute = safeMetafields.find((m) => m?.key === 'paints_mediums_multiselect_attribute')?.value;
   const productType = safeMetafields.find((m) => m?.key === 'select_product_type')?.value;
-  console.log('productType', productType);
+  const rawChildProducts = safeMetafields.find((m) => m?.key === 'child_products')?.value;
+  console.log('rawChildProducts', rawChildProducts);
+  console.log('childProducts from loader', childProducts);
 
   const mainPVC = options?.[0]?.optionValues?.[0]?.name;
   const mainPVS = options?.[1]?.optionValues?.[0]?.name;
@@ -367,7 +395,7 @@ export default function Product() {
     }
   };
 
-  console.log('collection Data New:-', arrivalcollectionData);
+  console.log('product Data New:-', product);
 
   const [quantity, setQuantity] = useState(1);
   const [filterModal, setFilterModal] = useState(false);
@@ -464,9 +492,6 @@ export default function Product() {
     }
     return acc;
   }, { viscosity: [] });
-
-  console.log('viscosityAttributes', viscosityAttributes);
-  console.log('mergedViscosity', mergedViscosity); 
     
   const referenceSize = Array.isArray(mergedPaintsAttributes.size) 
     ? mergedPaintsAttributes.size[0] 
@@ -827,7 +852,7 @@ export default function Product() {
           <ProductTabs images={images.nodes} productVideos={videoObjects} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} catalogItemNumber={catalogItemNumber} paintsAttributes={mergedPaintsAttributes} viscosity={mergedViscosity.viscosity} colorDescription={colorDescription} />
 
           {/* <ProductVariations images={images.nodes} productVariant={productVariant} /> */}
-          <ProductVariations images={images.nodes} productVariants={product.adjacentVariants} productVideos={videoObjects} productOptions={productOptions} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} />
+          <ProductVariations images={images.nodes} productVariants={childProducts.length > 0 ? childProducts : product.adjacentVariants} productVideos={videoObjects} productOptions={productOptions} descriptionHtml={descriptionHtml} pdfObjects={pdfObjects} />
       
         </div>
       </div>
@@ -903,7 +928,7 @@ export default function Product() {
           <div className='w-full'>
             <p className='text-brand pl-10'>click on an image to see more</p>
             <div className='flex flex-wrap gap-2.5 items-start justify-between md:justify-start p-5 pl-10'>
-              {product.adjacentVariants.map((variant) => {
+              {(childProducts.length > 0 ? childProducts : product.adjacentVariants).map((variant) => {
                 const color = variant.selectedOptions.find(
                   (opt) => opt.name.toLowerCase() === 'color'
                 )?.value;
@@ -1084,7 +1109,8 @@ const PRODUCT_QUERY = `#graphql
         {namespace: "custom", key: "reference_color_description"},
         {namespace: "custom", key: "paints_mediums_multiselect_attribute"},
         {namespace: "custom", key: "reference_size"},
-        {namespace: "custom", key: "select_viscosity"}
+        {namespace: "custom", key: "select_viscosity"},
+        {namespace: "custom", key: "child_products"},
         {namespace: "custom", key: "select_product_type"}
         ]) {
         key
@@ -1094,6 +1120,26 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${PRODUCT_FRAGMENT}
+`;
+
+const CHILD_PRODUCTS_QUERY = `#graphql
+  query ChildProducts(
+    $country: CountryCode
+    $language: LanguageCode
+    $productIds: [ID!]!
+  ) @inContext(country: $country, language: $language) {
+    nodes(ids: $productIds) {
+      ... on Product {
+        id
+        title
+        handle
+        selectedOrFirstAvailableVariant {
+          ...ProductVariant
+        }
+      }
+    }
+  }
+  ${PRODUCT_VARIANT_FRAGMENT}
 `;
 
 const PRODUCT_VIDEOS_QUERY = `#graphql

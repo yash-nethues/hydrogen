@@ -253,7 +253,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   return (
     <>
         {/* View toggle buttons */}
-        <div className="group-[.childProduct]/product:hidden flex mt-10 mb-0 gap-3" id="shop-all">
+        <div className="flex mt-10 mb-0 gap-3" id="shop-all">
           <div className="flex">
             <div className="-mr-px"> 
               <span className="uppercase">Grid</span>
@@ -443,7 +443,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
 
 
         {/* Product Grid/List Views */}
-        <div className=" variationsProList group-[.childProduct]/product:hidden mt-10">
+        <div className=" variationsProList mt-10">
           {isGridView ? (
             <div className="variationsGridView">
               <div className='flex flex-wrap w-full items-start'>
@@ -461,7 +461,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       (opt) => opt.name.toLowerCase() === 'format'
                     )?.value;
 
-                    const variantName = variant.metafield?.value || variant.title;
+                    const variantName = variant.metafield?.value || variant.productTitle || variant.title;
                     const variantPrice = variant.price.amount;
 
                     const variantId = variant.id.split('/').pop();
@@ -492,9 +492,9 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                         onClick={() => setSelectedVariant(variant)} 
                         className={`relative group/gridItem [&.active]:scale-125 [&.active]:translate-y-4 hover:scale-125 hover:translate-y-4 hover:shadow-text [&.active]:-mb-9 hover:-mb-9 [&.active]:shadow-text w-[120px] hover:z-10 [&.active]:z-10 text-14/4 text-center bg-white border border-grey-200 p-j5 rounded-sm flex flex-col gap-y-1 ${selectedVariant?.id === variant.id ? 'active' : ''}`}
                       >
-                        <img src={variant.image.url} alt={variant.metafield?.value || variant.title} className="w-full aspect-square object-cover" />
+                        <img src={variant.image.url} alt={variant.metafield?.value || variant.productTitle || variant.title} className="w-full aspect-square object-cover" />
                         <div className='flex flex-col'>
-                          <p className="text-inherit mb-0">{variant.metafield?.value || variant.title}</p>
+                          <p className="text-inherit mb-0">{variant.metafield?.value || variant.productTitle || variant.title}</p>
                           <span className='text-xs'>{size}</span>
                           <span className='text-xs text-blue flex flex-wrap justify-between group-[.active]/gridItem:flex-col group-hover/gridItem:flex-col group-[.active]/gridItem:justify-center group-hover/gridItem:justify-center'>
                             <span className='font-semibold group-[.active]/gridItem:text-[80%] group-hover/gridItem:text-[80%]'>Reg. Price</span>
@@ -525,7 +525,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                 <div className='w-2/5 flex-none md:sticky md:top-10 max-w-[430px] bg-white rounded-sm border border-grey-200 p-5'>
                   <div className='mt-4'>
                     <strong className='block'>Name</strong>
-                    <span data-blink="Click Here" className="relative before:pointer-events-none before:animate-blink1 before:content-[attr(data-blink)] before:inline-block before:opacity-0  before:px-2.5 before:py-j5 before:text-white before:bg-brand before:absolute before:top-full before:text-10/3 before:uppercase after:pointer-events-none after:absolute after:left-[4px] after:top-full after:w-1.5 after:aspect-square after:bg-brand after:rotate-45 after:-translate-y-1/2 after:opacity-0 after:animate-blink1"><a href="">{selectedVariant.metafield?.value || selectedVariant.title}</a></span>
+                    <span data-blink="Click Here" className="relative before:pointer-events-none before:animate-blink1 before:content-[attr(data-blink)] before:inline-block before:opacity-0  before:px-2.5 before:py-j5 before:text-white before:bg-brand before:absolute before:top-full before:text-10/3 before:uppercase after:pointer-events-none after:absolute after:left-[4px] after:top-full after:w-1.5 after:aspect-square after:bg-brand after:rotate-45 after:-translate-y-1/2 after:opacity-0 after:animate-blink1"><a href="">{selectedVariant.metafield?.value || selectedVariant.productTitle || selectedVariant.title}</a></span>
                   </div>
                   <div className="mt-4 flex gap-x-4">
                     <div className='flex w-2/3 gap-x-4'>
@@ -684,7 +684,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                         <img
                           className="w-auto inline-block aspect-square object-contain max-w-full max-h-[85%] h-auto"
                           src={selectedVariant?.image?.url}
-                          alt={selectedVariant?.metafield?.value || selectedVariant?.title || 'Selected product'}
+                          alt={selectedVariant?.metafield?.value || selectedVariant?.productTitle || selectedVariant?.title || 'Selected product'}
                         />
                       </li>
                     </ul>
@@ -801,7 +801,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                         <div onClick={() => setExpandedVariantId((prevId) => (prevId === variant.id ? null : variant.id))} className="relative w-[75px] aspect-square overflow-hidden cursor-pointer before:content-['+'] before:absolute before:bottom-0 before:left-0 before:bg-brand-100 before:w-5 before:h-5 before:text-white before:text-center">
                           <img
                             src={variant.image.url}
-                            alt={variant.metafield?.value || variant.title}
+                            alt={variant.metafield?.value || variant.productTitle || variant.title}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -831,7 +831,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                                   <img
                                     className="w-auto inline-block aspect-square object-contain max-w-[85%] max-h-[85%] h-auto"
                                     src={variant.image.url}
-                                    alt={variant.metafield?.value || variant.title}
+                                    alt={variant.metafield?.value || variant.productTitle || variant.title}
                                   />
                                 </li>
                               </ul>
@@ -839,7 +839,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                             </div>
                             <div className="w-[55%] bg-gray-100 p-2.5">
                               <span  onClick={() => setExpandedVariantId(null)} className="absolute top-0 right-0 bg-brand-100 text-sm flex items-center justify-center w-8 h-8 text-white text-center cursor-pointer">X</span>
-                              <h2 className="text-2xl font-normal pe-8 mb-2.5"><a href="" className="hover:text-brand">{variant.metafield?.value || variant.title}</a></h2>
+                              <h2 className="text-2xl font-normal pe-8 mb-2.5"><a href="" className="hover:text-brand">{variant.metafield?.value || variant.productTitle || variant.title}</a></h2>
                               <div className="flex flex-wrap flex-col gap-y-2">
                                 <div className="flex flex-wrap flex-col">
                                   <span className="prod-alert-label hidden">Product Badge:</span>
@@ -969,7 +969,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                     </td>
                     <td>
                       <div className="text-left">
-                        <span className="text-left">{variant.metafield?.value || variant.title}</span>
+                        <span className="text-left">{variant.metafield?.value || variant.productTitle || variant.title}</span>
                       </div>
                     </td>
                     <td>
