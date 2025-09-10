@@ -1,7 +1,35 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
-
+@layer base {
+  body {
+    @apply text-sm jxl:text-base;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply p-0 mb-j15 font-medium;
+  }
+  h2, h3, h4, h5, h6 {
+    @apply text-base-100 !leading-[1.3];
+  }
+  h1 {
+    @apply text-26 jlg:text-3xl jxl:text-4xl !leading-[1.1] text-blue;
+  }
+  h2 {
+    @apply text-26 jlg:text-3xl jxl:text-34; 
+  }
+  h3 {
+    @apply text-lg jlg:text-xl jxl:text-25;
+  }
+  h4 {
+    @apply text-base jlg:text-lg jxl:text-22;
+  }
+  h5 {
+    @apply text-15 jlg:text-base jxl:text-xl;
+  }
+  h6 {
+    @apply text-sm jxl:text-lg;
+  }
+}
 @layer components {
     .btn-secondary {
       @apply py-3 px-10 min-h-9 leading-none  text-15 bg-pink-gradient text-white font-medium 
@@ -32,10 +60,12 @@
       before:transition-all before:duration-300 ease-linear before:delay-0 
       hover:before:bg-pink-gradient hover:text-white hover:before:w-full hover:before:z-[-1]
     }
-   
-  }
-
-  @layer components {
+    .btn-toCart {
+      @apply  outline-none min-h-[48px] text-center bg-[linear-gradient(to_right,#2aa5a6_0%,#2aa5a6_50%,#289798_50%,#289798_100%)] bg-[length:200%_100%] text-white bg-[100%_100%]  hover:bg-[0_0] transition-all duration-500 bg-no-repeat p-j5
+    }
+    .btn-greenOutline {
+      @apply outline-none text-center bg-[linear-gradient(to_right,#2aa5a6_0%,#2aa5a6_50%,#ffffff_50%,#ffffff_100%)] bg-[length:200%_100%] text-green border border-green bg-[100%_100%] hover:text-white hover:bg-[0_0] transition-all duration-500 bg-no-repeat p-j5
+    }
     .custom-h2::before,
     .custom-h2::after {
       left: 50%;
@@ -57,13 +87,63 @@
       margin-left: 37px;
       bottom: 11px;
     }
-  } 
-  @layer components {
+
     .custom-container {
-      @apply container w-full; 
-      max-width: 1860px; 
+      @apply container j2xl:!max-w-[1860px] ;
     }
     a.text-onsale{color:#ef2456!important;}
     a.text-onsupersale{color:#289798!important;}
+
+    .variationsListView table thead th {
+      @apply py-2 px-j10 font-medium align-top;
+    }
+    .variationsListView table tbody td {
+      @apply p-j10 font-medium align-top text-15 border-b border-b-grey-200;
+    }
+    .badgesFlags .alert-item {
+      @apply aspect-square flex relative cursor-pointer items-center justify-center border bg-[#f8f8f8] transition-all shadow-[inset_0_0_0_1px_#707070] hover:bg-green hover:text-white hover:shadow-[inset_0_0_0_1px_#027879];
+    }
+    .no-display  {
+      @apply hidden;
+    }
+    .tab-main ul li {
+      @apply relative block pl-j30 before:absolute before:left-0 before:top-[7px] before:bg-ul-listItem before:bg-contain before:bg-no-repeat before:w-[13px] before:h-[11px];  
+    }
+    .tab-main ul li a {
+      @apply hover:text-brand hover:underline
+    }    
+    .tab-main p {
+      @apply mb-2.5;
+    }
+    .tab-main h2 {
+      @apply text-3xl font-semibold mb-4;
+    }
+    .shortDescription {
+      @apply relative after:absolute after:inset-0 after:top-auto after:h-14 after:bg-gradient-to-t after:from-white via-white;
+    }
+    .shortDescription ul li {
+      @apply relative mb-1 pl-3.5 before:left-0 before:top-[8px] before:absolute before:rounded-[2vw] before:w-1.5 before:h-1.5 before:bg-blue;
+    }
+    .overlay {
+      @apply z-50;
+    }
+    .carousel-nav {
+      @apply before:w-[25px] before:h-[3px] before:bg-blue before:rotate-45 before:scale-[0.6] before:absolute before:origin-right before:right-[13px] before:mt-px before:shadow-[2px_-2px_0px_rgba(255,255,255,1)] after:w-[25px] after:h-[3px] after:bg-blue after:-rotate-45 after:scale-[0.6] after:absolute after:origin-right after:right-[13px] after:shadow-[2px_2px_0px_rgba(255,255,255,1)];   
+    }
+    .swiper-button-prev,
+    .swiper-button-next {
+      @apply w-j30 h-[62px] origin-right mt-0 -translate-y-1/2 max-[767px]:before:w-[15px] max-[767px]:before:h-[15px];
+    }
+    
   }
-  
+
+@layer utilities {
+  .inputNumArrowHidden::-webkit-inner-spin-button,
+  .inputNumArrowHidden::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .inputNumArrowHidden {
+    -moz-appearance: textfield; /* Firefox */
+  }
+}

@@ -8,12 +8,12 @@ import {useAside} from './Aside';
  *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
  * }}
  */
-export function ProductForm({productOptions, selectedVariant}) {
+export function ProductForm({productOptions, selectedVariant, quantity}) {
   const navigate = useNavigate();
   const {open} = useAside();
   return (
     <div className="product-form">
-      {productOptions.map((option) => {
+      {/* productOptions.map((option) => {
         // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
@@ -94,7 +94,7 @@ export function ProductForm({productOptions, selectedVariant}) {
             <br />
           </div>
         );
-      })}
+      }) */}
       <AddToCartButton
         disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
@@ -105,7 +105,7 @@ export function ProductForm({productOptions, selectedVariant}) {
             ? [
                 {
                   merchandiseId: selectedVariant.id,
-                  quantity: 1,
+                  quantity: quantity,
                   selectedVariant,
                 },
               ]

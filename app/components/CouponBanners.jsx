@@ -3,7 +3,7 @@ function CouponBanners({ bannerCoupons }) {
   return (
     <div className="container 2xl:container mt-5 mb-5">
       <ul className="flex border border-grey-200 justify-between">
-        {bannerCoupons.references.edges.map(({ node }) => {
+        {bannerCoupons?.references?.edges?.map(({ node }) => {
           const fields = Object.fromEntries(node.fields.map(({ key, value, reference }) => [
             key,
             reference?.image?.url || value // Extract image URL if available

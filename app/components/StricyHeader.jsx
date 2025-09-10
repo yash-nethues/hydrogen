@@ -3,8 +3,8 @@ import {Await, NavLink, useAsyncValue, Link} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {Form, useLoaderData, useNavigate} from '@remix-run/react';
 import {useAside} from '~/components/Aside';
-import SearchBar from "../components/SearchBar";
-import Stricymenu from "../components/stricymenu";
+import SearchBar from "./SearchBar";
+import StricyMenu from "./StricyMenu";
 
 function Stricyheader({isLoggedIn, cart, CartBadge}) {
 const [stricyMenu, setstricyMenu] = useState(false); 
@@ -37,21 +37,7 @@ const [isVisible, setIsVisible] = useState(false);
     };
   }, []);
 
-  const divStyle = {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#fff',
-    padding: '20px',
-    width: '100%',
-    height: '55px',
-    zIndex: 1000,
-    padding: '10px 0px',
-    boxShadow: '0 0px 10px rgba(0, 0, 0, 0.2)', // Optional shadow effect
-    transition: 'top 0.3s ease', // Smooth transition
-    top: isVisible ? '0' : '-85px', // Only show header after scrolling 200px
-  };
+
 
   function CartBadge({count}) {
     const {open} = useAside();
@@ -136,7 +122,7 @@ const [isVisible, setIsVisible] = useState(false);
   }
 
   return (
-    <div style={divStyle}>
+    <div className={`headerSticky group/headerSticky hidden md:block fixed inset-x-0 bg-white py-2.5 h-14 -top-16 [&.fixed-header]:top-0 transition-all z-[105] shadow-text ${isVisible ? 'fixed-header' : ''}`} >
       <div className='container 2xl:container'>
         <div className='flex justify-between gap-8'>
           <div className='flex gap-5  align-middle items-center -top-1 relative '>
@@ -155,7 +141,7 @@ const [isVisible, setIsVisible] = useState(false);
       </div>
 
       {stricyMenu && (
-         <Stricymenu /> 
+         <StricyMenu /> 
       )}
     </div>
   );

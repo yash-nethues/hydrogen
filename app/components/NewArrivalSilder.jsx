@@ -1,8 +1,10 @@
 import React from 'react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
+
 import { Swiper, SwiperSlide } from 'swiper/react';
-import 'swiper/css';    
+import 'swiper/css';
 import { Image, Money } from '@shopify/hydrogen';
+//import 'swiper/css/navigation';
 
 // Utility function to check if a product is a group product
 function isGroupProduct(product) {
@@ -64,16 +66,18 @@ function GroupProductPrice({ product }) {
   );
 }
 
-function ProductSlider({filteredProducts}) {
+
+function Newarrivalsilder({filteredProducts}) {
+   
     return (
         <div className="tab_slider relative px-[25px] my-j30">
+        
             <Swiper
-            className="mySwiper"
             modules={[Navigation, Pagination, Scrollbar, A11y]}
             spaceBetween={10}
-            navigation={{ nextEl: ".p_arrow-right", prevEl: ".p_arrow-left" }}
+            navigation={{ nextEl: ".n_arrow-right", prevEl: ".n_arrow-left" }}
             pagination={{ clickable: true }}
-            scrollbar={{ draggable: true }}
+            scrollbar={{ draggable: false }}
             slidesPerView={2}
             slidesPerGroup={2} 
             breakpoints={{
@@ -91,44 +95,45 @@ function ProductSlider({filteredProducts}) {
                 spaceBetween: 30,  
                 },
             }}
-            >
-                {filteredProducts?.map((product, index) => (
-                    <SwiperSlide key={product.id} className='h-auto'>
-                        <div className="flex flex-col min-h-full pb-[50px] bg-white relative rounded-sm text-center">
-                            <a href={`/products/${product.handle}`}>
-                                <div className="w-full aspect-square">
-                                    <img
-                                        src={product.images?.nodes?.[0]?.url}
-                                        alt={product.images?.nodes?.[0]?.altText || product.title}
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                            </a>
-                            <div className="info flex-grow flex flex-col text-xs">
-                                <div className="savinBox text-brand py-2.5 text-sm jlg:text-15 max-[479px]:text-xs">
-                                    <span className="saveTxt font-medium block !leading-none">Now Only</span>
-                                    <div className="amount-text block font-bold text-[150%] !leading-none">
-                                        <GroupProductPrice product={product} />
+                            >
+                    {filteredProducts?.map((product, index) => (
+                        <SwiperSlide key={product.id} className='h-auto'>
+                            <div className="flex flex-col min-h-full pb-[50px] bg-white relative rounded-sm text-center">
+                                <a href={`/products/${product.handle}`}>
+                                    <div className="w-full aspect-square">
+                                        <img
+                                            src={product.images?.nodes?.[0]?.url}
+                                            alt={product.images?.nodes?.[0]?.altText || product.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    </div>
+                                </a>
+                                <div className="info flex-grow flex flex-col text-xs">
+                                    <div className="savinBox text-brand py-2.5 text-sm jlg:text-15 max-[479px]:text-xs">
+                                        <div className="saveTxt font-medium block !leading-none">Now Only</div>
+                                        <div className="amount-text block font-bold text-[150%] !leading-none">
+                                            <GroupProductPrice product={product} />
+                                        </div>
+                                    </div>
+                                    <div className="mb-j5 line-clamp-2 min-h-10">
+                                        <a className="text-base-500 leading-normal hover:underline" href={`/products/${product.handle}`}>
+                                            {product.title}
+                                        </a>
+                                    </div>
+                                    <div className='absolute inset-0 flex justify-center top-auto'>
+                                        <a href={`/products/${product.handle}`} className="btn-primary block w-full max-w-[150px]">
+                                            Shop Now
+                                        </a>
                                     </div>
                                 </div>
-                                <div className="mb-j5 line-clamp-2 min-h-10">
-                                    <a className="text-base-500 leading-normal hover:underline" href={`/products/${product.handle}`}>
-                                        {product.title}
-                                    </a>
-                                </div>
-                                <div className='absolute inset-0 flex justify-center top-auto'>
-                                    <a href={`/products/${product.handle}`} className="btn-primary block w-full max-w-[150px]">
-                                        Shop Now
-                                    </a>
-                                </div>
                             </div>
-                        </div>
-                    </SwiperSlide>
-                ))}
-            </Swiper>    
-            <button className="p_arrow-left arrow swiper-button-prev max-[767px]:-left-2.5"></button>
-            <button className="p_arrow-right arrow swiper-button-next max-[767px]:-right-2.5 before:-mr-j5"></button> 
-        </div> 
+                        </SwiperSlide>
+                    ))}
+
+            </Swiper>
+            <button className="n_arrow-left arrow swiper-button-prev max-[767px]:-left-2.5"></button>
+            <button className="n_arrow-right arrow swiper-button-next max-[767px]:-right-2.5 before:-mr-j5"></button>    
+        </div>
     )
 }
-export default ProductSlider
+export default Newarrivalsilder

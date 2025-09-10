@@ -2,6 +2,7 @@ import {useLoaderData, Link} from '@remix-run/react';
 import {defer} from '@shopify/remix-oxygen';
 import {getPaginationVariables, Image} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
+import React, { useState } from 'react';
 
 /**
  * @param {LoaderFunctionArgs} args
@@ -21,20 +22,18 @@ export async function loader(args) {
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  * @param {LoaderFunctionArgs}
  */
-async function loadCriticalData({context, request}) {
-  const paginationVariables = getPaginationVariables(request, {
-    pageBy: 4,
-  });
-
+async function loadCriticalData({context}) {
   const [{collections}] = await Promise.all([
     context.storefront.query(COLLECTIONS_QUERY, {
-      variables: paginationVariables,
+      variables: {
+        first: 100, // a large number to get all items (Shopify Storefront API limits this to 250)
+      },
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   return {collections};
 }
+
 
 /**
  * Load data for rendering content below the fold. This data is deferred and will be
@@ -47,15 +46,27 @@ function loadDeferredData({context}) {
 }
 
 export default function Collections() {
-  /** @type {LoaderReturnData} */
   const {collections} = useLoaderData();
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const itemsPerPage = 8;
+  const totalPages = Math.ceil(collections.nodes.length / itemsPerPage);
+
+  // Slice the collection data based on the current page
+  const paginatedNodes = collections.nodes.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="collections">
       <h1>Collections</h1>
       <PaginatedResourceSection
-        connection={collections}
+        connection={{ nodes: paginatedNodes }}
         resourcesClassName="collections-grid"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
       >
         {({node: collection, index}) => (
           <CollectionItem
@@ -68,6 +79,8 @@ export default function Collections() {
     </div>
   );
 }
+
+
 
 /**
  * @param {{

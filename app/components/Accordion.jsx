@@ -29,7 +29,7 @@ function Accordion({ page, faqs }) {
           </li>
 
         
-          {faqs.map(({ node }, index) => {
+          {faqs?.map(({ node }, index) => {
             const title = node.fields.find((field) => field.key === "faq_title")?.value;
             const content = node.fields.find((field) => field.key === "faq_content")?.value;
             const parsedContent = JSON.parse(content);

@@ -10,50 +10,42 @@ export function Footer({footer: footerPromise, header, publicStoreDomain}) {
     <Suspense>
       <Await resolve={footerPromise}>
         {/* <ShippingMethod /> */}
-          <footer className="mt-10 pt-10 border-t border-b-50 border-t-grey-200 border-b-blue-100">
-               <FooterMenu />
-              <FooterSecond /> 
-          </footer>
+        <footer className="mt-10 pt-10 border-t border-b-50 border-t-grey-200 border-b-blue-100">
+          <FooterMenu />
+          <FooterSecond />
+        </footer>
       </Await>
     </Suspense>
   );
 }
 
-/**
- * @param {{
- *   menu: FooterQuery['menu'];
- *   primaryDomainUrl: FooterProps['header']['shop']['primaryDomain']['url'];
- *   publicStoreDomain: string;
- * }}
- */
 function FooterMenu() {
   const footerData = useLoaderData();
-  console.log('footerData',footerData);
-  const helpMenus = footerData.footer_help_menus; 
-  const resourcesMenus = footerData.footer_resources_menus; 
-  const shoppingMenus = footerData.footer_shopping_menus; 
-
+  //console.log('footerData',footerData);
+  const helpMenus = footerData?.footer_help_menus || []; 
+  const resourcesMenus = footerData?.footer_resources_menus || []; 
+  const shoppingMenus = footerData?.footer_shopping_menus || [];
   return (
     <div className="container 2xl:container">
       <div className="flex flex-wrap pb-10 -mx-4">
       
       <Suspense fallback={<div>Loading...</div>}>
           <FooterColumn title="Need Help">
-          {helpMenus[0].menu.items && helpMenus[0].menu.items.map((menu) => (
-              <FooterLink label={menu.title} link={menu.url}/>
+          {helpMenus[0]?.menu?.items && helpMenus[0].menu.items.map((menu, index) => (
+              <FooterLink key={index} label={menu.title} link={menu.url}/>
           ))}
 
           </FooterColumn>
           </Suspense>
           <FooterColumn title="Artist Resources">
-          {resourcesMenus[0].menu.items && resourcesMenus[0].menu.items.map((menu) => (
-              <FooterLink label={menu.title} link={menu.url} />
+          {resourcesMenus[0]?.menu?.items && resourcesMenus[0].menu.items.map((menu, index) => (
+              <FooterLink key={index} label={menu.title} link={menu.url} />
           ))}              
           </FooterColumn>
 
           <FooterColumn title="More Shopping">
-          {shoppingMenus[0].menu.items && shoppingMenus[0].menu.items.map((menu) => (
-              <FooterLink label={menu.title} link={menu.url} />
+          {shoppingMenus[0]?.menu?.items && shoppingMenus[0].menu.items.map((menu, index) => (
+              <FooterLink key={index} label={menu.title} link={menu.url} />
           ))}  
           </FooterColumn>
 
@@ -205,9 +197,9 @@ const FooterColumn = ({ title, children }) => (
   </div>
 );
 
-const FooterLink = ({ label }) => (
+const FooterLink = ({ label, link }) => (
   <li className="pt-2.5">
-      <a href="" className="text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left">
+      <a href={link || '#'} className="text-base transition-all text-base-700 hover:text-brand relative before:absolute before:start-0 before:bottom-0 before:w-full before:h-px before:bg-brand before:origin-right before:scale-x-0 before:scale-y-100 hover:before:scale-x-100 before:transition-transform hover:before:origin-left">
           {label}
       </a>
   </li>

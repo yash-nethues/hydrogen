@@ -2,7 +2,7 @@ import { defer } from '@shopify/remix-oxygen';
 import { useLoaderData } from '@remix-run/react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import Accordion from "../components/accordion";
+import Accordion from "../components/Accordion";
 import CouponBanners from "../components/CouponBanners";
 import 'swiper/css';
 /**
@@ -83,9 +83,8 @@ export default function Page() {
       <div className=' bg-grey-100 pl-0 pr-0 mb-5 h-11 flex items-center'>
         <div className="container breadcrumb 2xl:container">
           <ul className="flex">
-            <li className="!text-grey-500 text-sm underline hover:no-underline hover:!text-brand"><a href="/">Home&nbsp; </a></li>
-            <li className="text-10 top-1 relative !text-grey-500 ">/ </li>
-            <li className="active text-sm !text-brand ">&nbsp; {page.title}</li>
+            <li className="!text-grey-500  text-sm underline hover:no-underline hover:!text-brand px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><a href="/">Home</a></li>
+            <li className="active text-sm !text-brand  px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"> </li>
           </ul>
         </div>
       </div>
