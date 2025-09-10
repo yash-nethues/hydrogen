@@ -1,5 +1,4 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import {useIsClient} from '~/hooks/useIsClient';
 import {Await, NavLink, useAsyncValue, Link} from '@remix-run/react';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {Form, useLoaderData, useNavigate} from '@remix-run/react';
@@ -14,11 +13,8 @@ const handleToggleMenu = () => {
 };
 const [scrollPosition, setScrollPosition] = useState(0);
 const [isVisible, setIsVisible] = useState(false); 
-const isClient = useIsClient();
-
   useEffect(() => {
-    if (isClient) {
-      let lastScrollY = window.scrollY;
+    let lastScrollY = window.scrollY;
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       if (currentScrollY > 300) {
@@ -39,8 +35,7 @@ const isClient = useIsClient();
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
-    }
-  }, [isClient]);
+  }, []);
 
 
 
@@ -127,7 +122,7 @@ const isClient = useIsClient();
   }
 
   return (
-    <div className={`headerSticky group/headerSticky hidden md:fixed inset-x-0 bg-white py-2.5 h-14 -top-16 [&.fixed-header]:top-0 transition-all z-[105] shadow-text ${isClient && isVisible ? 'fixed-header' : ''}`} >
+    <div className={`headerSticky group/headerSticky hidden md:block fixed inset-x-0 bg-white py-2.5 h-14 -top-16 [&.fixed-header]:top-0 transition-all z-[105] shadow-text ${isVisible ? 'fixed-header' : ''}`} >
       <div className='container 2xl:container'>
         <div className='flex justify-between gap-8'>
           <div className='flex gap-5  align-middle items-center -top-1 relative '>

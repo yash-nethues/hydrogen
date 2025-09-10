@@ -6,10 +6,10 @@ import {useAside} from '~/components/Aside';
 
 export default function HeaderCtas({isLoggedIn, cart}) {
   return (
-    <div className="flex-none items-center flex gap-x-1.5 pt-1.5 jlg:pt-0 jlg:gap-0">
+    <div className="flex-none  ml-auto md:ml-0 items-center flex gap-x-1.5 pt-1.5 jlg:pt-0 jlg:gap-0 -translate-y-0.5">
       <div className="hidden md:flex  gap-x-2.5 relative w-10 jlg:w-[180px]">
         <button className='flex items-center gap-x-2.5' type="button"><span><img src="/image/my-account.png" width="31" height="31" alt="My Account" /></span>
-        <span className="font-semibold text-sm jxl:text-base uppercase text-blue hidden jlg:block">Account</span></button>
+        <span className="font-semibold text-sm jxl:text-base uppercase !text-blue hidden jlg:block">Account</span></button>
           <NavLink className="{(isLoggedIn) => (isLoggedIn ? ' hidden jlg:block absolute text-xs top-full font-medium whitespace-nowrap  text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200')}" prefetch="intent" to="/account" style={activeLinkStyles}>
               <Suspense fallback="Sign in">
                 <Await resolve={isLoggedIn} errorElement="Sign in">
@@ -30,7 +30,7 @@ export default function HeaderCtas({isLoggedIn, cart}) {
               </ul>
             </div>
       </div>
-      <div className="flex ml-auto md:ml-0 items-center gap-x-2.5 relative ">
+      <div className="flex items-center gap-x-2.5 relative ">
         <CartToggle cart={cart} />
       </div>
     </div>
@@ -57,7 +57,7 @@ export function CartBadge({count}) {
             shop,
             url: window.location.href || '',
           });
-        }} className="font-semibold text-0 jlg:text-sm jxl:text-base pl-[50px] min-h-[30px] uppercase text-blue">Cart</a>
+        }} className="font-semibold text-0 jlg:text-sm jxl:text-base pl-[50px] min-h-[30px] uppercase !text-blue">Cart</a>
       <span className="text-xs/normal absolute top-full right-0 font-medium whitespace-nowrap text-brand py-0.5 px-2.5 mt-2.5 bg-white rounded-full border border-grey-200 hidden jlg:block">You saved * $0.00</span>
     </div>
   );

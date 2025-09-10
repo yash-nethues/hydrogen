@@ -180,6 +180,7 @@ async function loadCriticalData({context, params, request}) {
     ? await storefront.query(PRODUCT_VIDEOS_QUERY, { variables: { ids: paintsAttrIds } })
     : null;
   const paintsMetaobjects = paintsNodesResp?.nodes?.filter(Boolean) || [];
+  
 
 
 
@@ -212,22 +213,91 @@ async function loadCriticalData({context, params, request}) {
         productIds: childProductIds,
       },
     });
-    // Extract variants from child products to match adjacentVariants structure
-    childProducts = childProductsData
-      ?.filter(Boolean)
-      ?.map(product => {
-        const variant = product.selectedOrFirstAvailableVariant;
-        if (variant) {
-          // Add product title to variant for display purposes
+    
+    // Process child products and extract their metafield attributes
+    childProducts = await Promise.all(
+      childProductsData
+        ?.filter(Boolean)
+        ?.map(async (product) => {
+          const variant = product.selectedOrFirstAvailableVariant;
+          if (!variant) return null;
+          
+          // Parse paints_mediums_multiselect_attribute for this child product
+          const childPaintsAttr = product.metafields?.find(
+            (m) => m?.key === 'paints_mediums_multiselect_attribute'
+          )?.value;
+          const childPaintsAttrIds = parseIdArray(childPaintsAttr);
+          
+          
+          // Fetch metaobjects for this specific child product
+          let childPaintsMetaobjects = [];
+          if (childPaintsAttrIds.length > 0) {
+            const childPaintsNodesResp = await storefront.query(PRODUCT_VIDEOS_QUERY, { 
+              variables: { ids: childPaintsAttrIds } 
+            });
+            childPaintsMetaobjects = childPaintsNodesResp?.nodes?.filter(Boolean) || [];
+          }
+          
+          
+          // Extract attributes from child product's paints metaobjects
+          const childAttributes = childPaintsMetaobjects
+            .filter((n) => n && (n.fields || n.__typename === 'Metaobject'))
+            .map((node) => {
+              const findField = (key) => node?.fields?.find((f) => f.key === key);
+              const get = (key) => {
+                const f = findField(key);
+                if (!f) return '';
+                if (f.reference && f.reference.__typename === 'Metaobject') {
+                  const baseKey = key.replace(/_(attribute|atrribute)$/i, '');
+                  const candidates = [baseKey, 'value', 'text', 'name', 'title'];
+                  for (const c of candidates) {
+                    const v = f.reference.fields?.find((rf) => rf.key === c)?.value;
+                    if (v) return v;
+                  }
+                }
+                return f.value || '';
+              };
+              return {
+                color: get('color_name'),
+                size: get('size'),
+                format: get('format'),
+                media: get('media_type'),
+                type: get('type_atrribute'),
+                series: get('series_name'),
+                pigment: get('pigment'),
+              };
+            })
+            .filter(Boolean);
+
+          
+          // Merge attributes for this child product
+          const mergedChildAttributes = childAttributes.reduce((acc, cur) => {
+            if (!cur) return acc;
+            for (const [k, v] of Object.entries(cur)) {
+              if (v) {
+                if (!acc[k]) acc[k] = [];
+                if (!acc[k].includes(v)) acc[k].push(v);
+              }
+            }
+            return acc;
+          }, { color: [], size: [], format: [], media: [], type: [], series: [], pigment: [] });
+          
+
+          // Add product title and attributes to variant for display purposes
           return {
             ...variant,
             productTitle: product.title,
-            productHandle: product.handle
+            productHandle: product.handle,
+            childAttributes: mergedChildAttributes,
+            // Also store the raw metafield data for direct access
+            rawPaintsMetafield: childPaintsAttr,
+            paintsMetaobjects: childPaintsMetaobjects,
           };
-        }
-        return null;
-      })
-      ?.filter(Boolean) || [];
+        }) || []
+    );
+    
+    // Filter out null results
+    childProducts = childProducts.filter(Boolean);
   }
 
   if (!product?.id) {
@@ -378,20 +448,19 @@ export default function Product() {
 
   const handleFDBtnClick = (e) => {
     e.preventDefault();
-    if (!isClient) {
-      console.log('Not client, ignoring.');
-      return;
-    }
-    // Scroll to the description tab and ensure it's open
+    console.log('See Full Description button clicked');
+    
+    // Find the description tab element and click it
     const tabElement = document.querySelector('#tab-description');
     if (tabElement) {
-      // Click the tab to open it (this will toggle, so we need to check if it's closed first)
-      const isCurrentlyOpen = tabElement.classList.contains('bg-blue');
-      if (!isCurrentlyOpen) {
-        tabElement.click();
-      }
+      console.log('Found tab element, clicking it');
+      tabElement.click();
       // Scroll to the tab
-      tabElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => {
+        tabElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    } else {
+      console.log('Tab element not found');
     }
   };
 
@@ -744,7 +813,7 @@ export default function Product() {
                 </div>
               </div>
               <div className='mt-4 flex justify-between items-center gap-x-6 gap-y-2 border-b border-grey-200 pb-4'>
-                <a href="#"  className='btn-outer rounded h-8 uppercase text-14 font-bold inline-flex flex-none pl-2 pr-2 scroll-to-element-jq' data-scroll-to="#tab-description" data-delay="200" data-click="0">
+                <a href="#"  className='btn-outer rounded h-8 uppercase text-14 font-bold inline-flex flex-none pl-2 pr-2' onClick={handleFDBtnClick}>
                   See Full Description &gt; 
                 </a>
                 <ul className='flex gap-5 justify-between [&>li>a]:flex [&>li>a]:gap-2 [&>li>a]:items-center [&>li]:text-blue [&>li>a]:text-blue [&>li]:text-15 scale-[.8] origin-right [&>li]:font-medium'>
@@ -991,7 +1060,7 @@ export default function Product() {
                     </div>
                   </div>
                 </div> 
-                    )              
+                    );
               })}
             </div>
           </div>
@@ -1135,6 +1204,13 @@ const CHILD_PRODUCTS_QUERY = `#graphql
         handle
         selectedOrFirstAvailableVariant {
           ...ProductVariant
+        }
+        metafields(identifiers: [
+          {namespace: "custom", key: "paints_mediums_multiselect_attribute"}
+        ]) {
+          key
+          value
+          type
         }
       }
     }

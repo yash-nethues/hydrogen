@@ -89,7 +89,7 @@
     }
 
     .custom-container {
-      @apply container j2xl:!max-w-[1860px];
+      @apply container j2xl:!max-w-[1860px] ;
     }
     a.text-onsale{color:#ef2456!important;}
     a.text-onsupersale{color:#289798!important;}
@@ -127,6 +127,14 @@
     .overlay {
       @apply z-50;
     }
+    .carousel-nav {
+      @apply before:w-[25px] before:h-[3px] before:bg-blue before:rotate-45 before:scale-[0.6] before:absolute before:origin-right before:right-[13px] before:mt-px before:shadow-[2px_-2px_0px_rgba(255,255,255,1)] after:w-[25px] after:h-[3px] after:bg-blue after:-rotate-45 after:scale-[0.6] after:absolute after:origin-right after:right-[13px] after:shadow-[2px_2px_0px_rgba(255,255,255,1)];   
+    }
+    .swiper-button-prev,
+    .swiper-button-next {
+      @apply w-j30 h-[62px] origin-right mt-0 -translate-y-1/2 max-[767px]:before:w-[15px] max-[767px]:before:h-[15px];
+    }
+    
   }
 
 @layer utilities {

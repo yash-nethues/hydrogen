@@ -5,97 +5,201 @@ import 'swiper/css';
 //import 'swiper/css/navigation';
 //import 'swiper/css/pagination';
 //import 'swiper/css/scrollbar';
-import { Link } from '@remix-run/react';
+import { Link, Await } from '@remix-run/react';
+import { Suspense } from 'react';
 import { Image, Money } from '@shopify/hydrogen';
-function BetterMaterials({ collectionData, title }) {
-    if (!collectionData) {
-      return <div>Loading...</div>;
-    }
-    const products = collectionData.products?.edges || [];
-    
+
+// Utility function to check if a product is a group product
+function isGroupProduct(product) {
+  const productTypeMetafield = product.metafields?.find(metafield => 
+    metafield && metafield.key === 'select_product_type'
+  );
+  return productTypeMetafield?.value === 'Grouped Product';
+}
+
+// Utility function to format price range for group products
+function formatGroupProductPrice(product) {
+  if (!isGroupProduct(product)) {
+    return product.priceRange.minVariantPrice;
+  }
+  
+  const minPrice = parseFloat(product.priceRange.minVariantPrice.amount);
+  const maxPrice = parseFloat(product.priceRange.maxVariantPrice.amount);
+  const currencyCode = product.priceRange.minVariantPrice.currencyCode;
+  
+  if (minPrice === maxPrice) {
+    return {
+      amount: minPrice.toString(),
+      currencyCode
+    };
+  }
+  
+  return {
+    amount: `${minPrice} - ${maxPrice}`,
+    currencyCode
+  };
+}
+
+// Custom price display component for group products
+function GroupProductPrice({ product }) {
+  if (!isGroupProduct(product)) {
+    return <Money data={product.priceRange.minVariantPrice} />;
+  }
+  
+  const minPrice = parseFloat(product.priceRange.minVariantPrice.amount);
+  const maxPrice = parseFloat(product.priceRange.maxVariantPrice.amount);
+  const currencyCode = product.priceRange.minVariantPrice.currencyCode;
+  
+  if (minPrice === maxPrice) {
+    return <Money data={product.priceRange.minVariantPrice} />;
+  }
+  
+  // Format price range manually
+  const formatCurrency = (amount, currency) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency
+    }).format(amount);
+  };
+  
+  return (
+    <span>
+      {formatCurrency(minPrice, currencyCode)} - {formatCurrency(maxPrice, currencyCode)}
+    </span>
+  );
+}
+
+function BetterMaterials({ products, title }) {
     return (
-      <div className="container 2xl:container text-center pt-16">
-        <div className="text-center pb-10">
-          <h2 className="text-blue text-4xl font-semibold custom-h2 relative pb-8">{title}</h2>
-        </div>
-        <div className="flex gap-x-10">
-          <div className="hidden md:block md:w-1/4">
-            <Link href="/"><img
-                src="/image/mezzo-artist-organizer-storage-racks.jpg"
-                alt="Mezzo Artist Organizer Storage Racks"
-                className="w-full h-full object-cover"
-              />
-            </Link>
+      <div className="container mt-j30 md:mt-[50px] jlg:mt-[65px] md:px-10 2xl:px-[60px]">
+        <div className='-mx-5 md:mx-0'>
+          <div className="text-center mb-j30 md:mb-[51px] px-2.5">
+            <h2 className="text-blue text-xl md:text-26 jlg:text-3xl jxl:text-4xl font-semibold custom-h2 relative pb-6 mb-0">{title}</h2>
           </div>
-          <div className="w-full md:w-3/4 pl-5">
-            <div className='relative pl-10 pr-10'>
-              <Swiper
-                      modules={[Navigation, Pagination, Scrollbar, A11y]}
-                      spaceBetween={30}                      
-                      navigation={{ nextEl: ".arrow-right", prevEl: ".arrow-left" }}
-                      pagination={{ clickable: true, dynamicBullets: true }}
-                      scrollbar={{ draggable: true }}
-                      slidesPerView={5} 
-                      breakpoints={{
-                        1440: {
-                          slidesPerView: 4,
-                        },
-                        1200: {
-                          slidesPerView: 3, 
-                        },
-                        992: {
-                          slidesPerView: 3, 
-                        },
-                        767: {
-                          slidesPerView: 2, 
-                        },
-                      }}
-                    >
-                 {products.map(({ node: product }) => (
-                  <SwiperSlide key={product.id}>
-                    <div className="swiper-slide h-auto" >
-                      <div className="flex flex-col min-h-full">
-                        <Link to={`/products/${product.handle}`} className="grow-0">
-                          <div className="w-full aspect-square">
-                            <img
-                              src={product.featuredImage?.url}
-                              alt={product.featuredImage?.altText || product.title}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        </Link>
-                        <div className="flex-grow flex flex-col mt-4">
-                          <div className="text-brand pb-2.5 pt-4">
-                            <span className="text-xs md:text-sm lg:text-15 !leading-none">
-                              Now Only 
-                            </span>
-                            <p className="block font-bold text-lg md:text-xl lg:text-2xl !leading-none">
-                           {product.priceRange.minVariantPrice.amount}  {product.priceRange.minVariantPrice.currencyCode}
-                             
-                            </p>
-                          </div>
-                          <Link
-                            to={`/products/${product.handle}`}
-                            className="text-xs text-base-200 min-h-10 hover:underline"
-                          >
-                            {product.title}
-                          </Link>
-                          <div className="mt-auto">
-                            <Link
-                              to={`/products/${product.handle}`}
-                              className="btn-primary inline-block mt-4">Shop Now
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </SwiperSlide>
-                 
-                ))}
-              </Swiper>
-              <button className="arrow-left arrow swiper-button-prev"></button>
-              <button className="arrow-right arrow swiper-button-next "></button>
-              </div>
+          <div className="flex items-start">
+            <div className="hidden flex-auto md:block md:w-1/4 pr-5 j2xl:pr-[50px]">
+              <Link href="/"><img
+                  src="/image/mezzo-artist-organizer-storage-racks.jpg"
+                  alt="Mezzo Artist Organizer Storage Racks"
+                  className="w-full h-full object-cover"
+                />
+              </Link>
+            </div>
+            <div className="w-full flex-none md:w-3/4 px-5 pb-2.5 md:p-0 md:pl-10">
+              <div className='relative px-[25px] my-j30'>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <Await resolve={products}>
+                    {(response) => {
+                      // Filter products based on jtab metafield value
+                      const filteredProducts = response?.products?.nodes?.filter((product) => {
+                        if (!product.metafields || !Array.isArray(product.metafields)) {
+                          return false;
+                        }
+                        
+                        const jtabMetafield = product.metafields.find(metafield => 
+                          metafield && metafield.key === 'jtab'
+                        );
+                        
+                        if (!jtabMetafield) {
+                          return false;
+                        }
+                        
+                        // Handle JSON array format
+                        let jtabValues = [];
+                        try {
+                          // Try to parse as JSON array
+                          jtabValues = JSON.parse(jtabMetafield.value);
+                        } catch (e) {
+                          // If not JSON, treat as single string
+                          jtabValues = [jtabMetafield.value];
+                        }
+                        
+                        const matches = jtabValues.includes(title);
+                        return matches;
+                      }) || [];
+                      
+                      // Limit products to 12 for BetterMaterials
+                      const limitedProducts = filteredProducts.slice(0, 12);
+                      
+                      return (
+                        <>
+                          {limitedProducts.length > 0 ? (
+                            <>
+                              <Swiper
+                                      modules={[Navigation, Pagination, Scrollbar, A11y]}
+                                      spaceBetween={10}                      
+                                      navigation={{ nextEl: ".arrow-right", prevEl: ".arrow-left" }}
+                                      pagination={{ clickable: true, dynamicBullets: true }}
+                                      scrollbar={{ draggable: true }}
+                                      slidesPerView={2}
+                                      slidesPerGroup={2} 
+                                      breakpoints={{
+                                        460: {
+                                          spaceBetween: 20,                      
+                                        },
+                                        768: {
+                                          slidesPerView: 3, 
+                                          slidesPerGroup: 3,
+                                          spaceBetween: 10,
+                                        },
+                                        1024: {
+                                          slidesPerView: 4,
+                                          slidesPerGroup: 4,
+                                          spaceBetween: 30,  
+                                        },
+                                      }}
+                                    >
+                                {limitedProducts.map((product) => (
+                                <SwiperSlide key={product.id} className='h-auto'>
+                                  <div className="flex flex-col min-h-full pb-[50px] bg-white relative rounded-sm text-center">
+                                    <Link to={`/products/${product.handle}`} className="grow-0">
+                                      <div className="w-full aspect-square">
+                                        <img
+                                          src={product.images?.nodes?.[0]?.url}
+                                          alt={product.images?.nodes?.[0]?.altText || product.title}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                    </Link>
+                                    <div className="flex-grow flex flex-col text-xs">
+                                      <div className="text-brand py-2.5 text-sm jlg:text-15 max-[479px]:text-xs">
+                                        <span className=" font-medium block !leading-none">
+                                          Now Only 
+                                        </span>
+                                        <p className="block font-bold text-[150%] !leading-none">
+                                          <GroupProductPrice product={product} />
+                                        </p>
+                                      </div>
+                                      <div className='mb-j5 line-clamp-2 min-h-10'>
+                                        <Link to={`/products/${product.handle}`} className="text-base-500 leading-normal hover:underline">{product.title}</Link>
+                                      </div>
+                                      <div className="absolute inset-0 flex justify-center top-auto">
+                                        <Link
+                                          to={`/products/${product.handle}`}
+                                          className="btn-primary block w-full max-w-[150px]">Shop Now
+                                        </Link>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </SwiperSlide>
+                                  
+                                  ))}
+                                </Swiper>
+                                <button className="arrow-left arrow swiper-button-prev max-[767px]:-left-2.5"></button>
+                                <button className="arrow-right arrow swiper-button-next max-[767px]:-right-2.5 before:-mr-j5"></button>
+                            </>
+                          ) : (
+                            <div className="w-full text-center py-8">
+                              <p className="text-gray-500">No products found for this category.</p>
+                            </div>
+                          )}
+                        </>
+                      );
+                    }}
+                  </Await>
+                </Suspense>
+                </div>
+            </div>
           </div>
         </div>
       </div>

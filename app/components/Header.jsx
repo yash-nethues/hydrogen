@@ -34,7 +34,7 @@ export function HeaderTop({isLoggedIn, cart}) {
           </span>
           <div>
             <ul className="flex 2xl:gap-x-2.5 text-xs -me-2.5 md:-me-3.5 [&>li>a]:min-h-full [&>li]:flex [&>li>a>span]:tracking-normal [&>li.retail-stores]:hidden [&>li.retail-stores]:md:block [&>li.email-sign-up]:hidden [&>li.email-sign-up]:md:block [&>li:nth-last-child(2)>a]:jlg:!gap-x-[9px] [&>li:last-child>a]:jlg:!gap-x-[9px] [&>li:nth-last-child(2)>a]:jlg:!text-xs [&>li:last-child>a]:jlg:!text-xs [&>li:nth-last-child(2)>a]:2xl:!text-13 [&>li:last-child>a]:2xl:!text-13">
-              <li className='block md:hidden relative me-2.5  after:top-1/2 after:-translate-y-1/2 after:absolute after:w-[1px] after:h-4 after:bg-black after:right-0'><Link href="" className="flex items-center py-1.5 pe-[13px]"><img src="/image/my-account.png" width="18" height="18" alt="My Account" /></Link></li>
+              <li className='block md:!hidden relative me-2.5  after:top-1/2 after:-translate-y-1/2 after:absolute after:w-[1px] after:h-4 after:bg-black after:right-0'><Link href="" className="flex items-center py-1.5 pe-[13px]"><img src="/image/my-account.png" width="18" height="18" alt="My Account" /></Link></li>
               <li><Link className="flex items-center py-1.5 pe-[13px] md:pe-[18px] jlg:pe-3.5 jlg:gap-x-[9px] transition-all hover:text-brand jxl:text-xs 2xl:text-13" href="">
                 <img src="/image/chat.png" width="16" height="14" alt="Live Chat" /> <span className='hidden jlg:block'>Live Chat</span></Link></li>
               <li><a className="flex items-center py-1.5 pe-[13px] md:pe-[18px] jlg:pe-3.5 jlg:gap-x-[9px] transition-all hover:text-brand jxl:text-xs 2xl:text-13" href="tel:1-800-827-8478">
@@ -77,10 +77,10 @@ export function HeaderTop({isLoggedIn, cart}) {
       </div>
 
       {/* Main Header Section */}
-      <div className="bg-grey-100 py-4 min-h-[115px] md:pt-8 md:pb-[52px] border-b j2xl:border-t relative border-grey-200 ">
+      <div className="bg-grey-100 py-4 min-h-[115px] md:pt-8 md:pb-[50px] border-b j2xl:border-t relative border-grey-200 ">
         <div className="custom-container">
           <div className="flex items-center relative lg:items-start -mt-j2 gap-x-j30 min-[1401px]:gap-x-10 ">
-            <Link href="/" className="flex-none w-64 md:w-[31.5%] jlg:w-420">
+            <Link href="/" className="flex-none w-64 md:w-[31.5%] jlg:w-420 -translate-y-px">
                <img src="/image/logo-red.svg" className='w-full'  alt="Jerry's Art Supplies, Artist Materials & Framing" aria-label="store logo" />
             </Link>
             <SearchBar />
@@ -121,7 +121,7 @@ function closeAside(event) {
 
   return (
     <>
-    <div className="bg-white border-b border-grey-200 w-full hidden lg:block">
+    <div className="bg-white border-b border-grey-200 w-full hidden md:block">
       <div className="  m-auto custom-container">
         <ul className="flex j2xl:-mx-7 font-semibold justify-around">
           {viewport === 'mobile' && (
@@ -152,7 +152,7 @@ function closeAside(event) {
                 
 
                 <NavLink className=
-                  {`${count === 9 || count === 10 ? 'font-bold p-2 md:p-2.5 md:text-[.99vw] min-[1800px]:text-lg [&.new]:hover:bg-blue-800 [&.new]:hover:text-white [&.sale]:hover:bg-onsale-300 [&.sale]:hover:text-white transition-all !text-blue hover:bg-blue min-h-[55px] flex items-center hover:!text-white ' : 'p-2 md:p-2.5 md:text-[.88vw]  min-[1800px]:text-base transition-all !text-blue hover:bg-blue min-h-[55px] flex items-center hover:!text-white'} ${navMenuClass} leading-tight` }
+                  {`${count === 9 || count === 10 ? 'font-bold py-2.5 px-j5 lg:p-2.5 text-[1.4vw] lg:text-[.99vw] min-[1800px]:text-lg [&.new]:hover:bg-blue-800 [&.new]:hover:text-white [&.sale]:hover:bg-onsale-300 [&.sale]:hover:text-white transition-all !text-blue hover:bg-blue min-h-[55px] flex items-center hover:!text-white ' : 'font-bold py-2.5 px-j5 lg:p-2.5 text-[1.2vw] lg:text-[.88vw]  min-[1800px]:text-base transition-all !text-blue hover:bg-blue min-h-[55px] flex items-center hover:!text-white'} ${navMenuClass} leading-tight` }
                   end
                   key={item.id}
                   onClick={closeAside}

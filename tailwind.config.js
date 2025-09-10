@@ -21,15 +21,17 @@ export default {
         base: {
           DEFAULT: '#1d1d1d',
           '100': '#292929',
-          '700': '#757575',
           '200': '#757575',
           '300': '#545454',
-          '400': '#f2f2f2', 
+          '400': '#f2f2f2',
+          '500': '#333333',
+          '700': '#757575', 
         },
         brand: {
           DEFAULT: '#ef2456',
           '100': '#ff4052',
-          '200': '#dc4654'
+          '200': '#dc4654',
+          '300': '#df395e',
         },
         onsale: {
           DEFAULT: '#ef2456',
@@ -101,7 +103,6 @@ export default {
         '34': '34px',
         '38': '38px',
         '40': '40px',
-        '48': '2.5vw',          
       },
       fontFamily: {
         Poppins: ['Poppins']
@@ -132,6 +133,7 @@ export default {
         blink1 : 'blink1 5s linear'
       },
       screens: {
+        'sm' : '480px',
         'tb' : '992px',
         'jlg' : '1200px',
         'jxl' : '1301px',

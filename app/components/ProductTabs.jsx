@@ -35,12 +35,11 @@ export function PdfLinks({ pdfObjects }) {
 
 
 export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects, catalogItemNumber, paintsAttributes, viscosity, colorDescription }) {
-  // Initialize state to track the active tab (default: Description)
+  // Initialize state to track the active tab (default: closed)
   const [activeTab, setActiveTab] = useState('');
 
   // Tab click handler
   const handleTabClick = (tab) => {
-    //setActiveTab(tab);
     setActiveTab((prevTab) => (prevTab === tab ? null : tab));
   };
 
@@ -114,13 +113,16 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
         >
           Reviews
         </li>
-        <li role="tab" className={`${
-            activeTab === 'msds' ? 'bg-blue text-white before:content-["-"] after:border-white after:rotate-45 after:top-1/3' : 'bg-white text-black before:content-["+"] hover:bg-blue hover:text-white after:-rotate-45 after:border-blue hover:after:border-white after:top-1/2 after:-translate-y-1/2'
-          } text-19 font-bold pl-8 pr-10 py-3 border border-grey-200 inline-block relative cursor-pointer transition-all before:absolute before:left-3 before:text-[120%] after:absolute  after:right-5 after:w-2.5 after:rounded-br-sm after:h-2.5 after:border-l-0 after:border-t-0 after:border-2 after:transition-all`}
-          onClick={() => handleTabClick('msds')}
-        >
-          Msds, Charts or Pdf
-        </li>
+        {/* Only show MSDS tab if pdfObjects has data */}
+        {Array.isArray(pdfObjects) && pdfObjects.length > 0 && (
+          <li role="tab" className={`${
+              activeTab === 'msds' ? 'bg-blue text-white before:content-["-"] after:border-white after:rotate-45 after:top-1/3' : 'bg-white text-black before:content-["+"] hover:bg-blue hover:text-white after:-rotate-45 after:border-blue hover:after:border-white after:top-1/2 after:-translate-y-1/2'
+            } text-19 font-bold pl-8 pr-10 py-3 border border-grey-200 inline-block relative cursor-pointer transition-all before:absolute before:left-3 before:text-[120%] after:absolute  after:right-5 after:w-2.5 after:rounded-br-sm after:h-2.5 after:border-l-0 after:border-t-0 after:border-2 after:transition-all`}
+            onClick={() => handleTabClick('msds')}
+          >
+            Msds, Charts or Pdf
+          </li>
+        )}
       </ul>
 
       {/* Tab Content */}
@@ -201,7 +203,7 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
             </div>
           )}
 
-          {activeTab === 'msds' && (
+          {activeTab === 'msds' && Array.isArray(pdfObjects) && pdfObjects.length > 0 && (
             <div className='msds' role="tabpanel">
               <div className="w-1/2 m-[1%] p-2.5 bg-grey-100 border border-grey-200">
                 <h5 className='bg-green text-white -translate-y-1/2 p-2.5 inline-block font-medium text-xl'>Downloads: MSDS/Size/Charts PDF's</h5>
