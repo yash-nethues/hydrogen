@@ -45,7 +45,8 @@ export async function loader(args) {
   const artistcollectionData = await fetchCollectionById(args, artistID);
 
   const bannerWithContentImageData = await bannerWithContentImage(args);
-  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, bannerWithContentImageData , finestcollectionData, bettercollectionData , arrivalcollectionData, professionalcollectionData, artistcollectionData});
+  const jtabFeaturedList = await loadJtabFeaturedProduct(args);
+  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, bannerWithContentImageData , finestcollectionData, bettercollectionData , arrivalcollectionData, professionalcollectionData, artistcollectionData, jtabFeaturedList });
 }
 
 /**
@@ -59,8 +60,19 @@ async function loadCriticalData({ context }) {
 
   ]);
 
+  // Exclude collections where custom.collection_type === 'Brand'
+  const featuredCollections = (collections?.nodes || [])
+    .filter((collection) => {
+      const typeMetafield = collection?.metafields?.find(
+        (mf) => mf && mf.key === 'collection_type'
+      );
+      const value = (typeMetafield?.value || '').trim().toLowerCase();
+      return value !== 'brand';
+    })
+    .slice(0, 15);
+
   return {
-    featuredCollections: collections.nodes,
+    featuredCollections,
   };
 }
 
@@ -256,6 +268,36 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
 }
 
 
+async function loadJtabFeaturedProduct({ context }, type = "jtab_featured_product") {
+  try {
+    const resp = await context.storefront.query(GET_METAOBJECT_QUERY, { variables: { type } });
+    const edges = resp?.metaobjects?.edges || [];
+    const items = [];
+    for (const edge of edges) {
+      const node = edge?.node;
+      if (!node) continue;
+      const fields = (node.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
+      const imageId = fields.promo_image?.startsWith('gid://shopify/MediaImage/') ? fields.promo_image : null;
+      let promo_image = fields.promo_image;
+      if (imageId) {
+        const mediaResp = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, { variables: { ids: [imageId] } });
+        promo_image = mediaResp?.nodes?.[0]?.image?.url || promo_image;
+      }
+      items.push({
+        featuring_section: fields.featuring_section || '',
+        promo_url: fields.promo_url || '/',
+        promo_image: promo_image || '/image/placeholder.jpg',
+        promo_image_title: fields.promo_image_title || '',
+      });
+    }
+    return items;
+  } catch (e) {
+    console.error('loadJtabFeaturedProduct error', e);
+    return [];
+  }
+}
+
+
 async function loadFooterSupplyData({ context }, type = "before_footer_supplies") {
   try {
     // Fetch the metaobject data
@@ -394,10 +436,10 @@ export default function Homepage() {
       {/*<TopAdsLink />*/}
       <RecommendedProducts products={data.recommendedProducts} title="The Finest Supplies Created For Artists" />
       <SaleProducts ads={data.adsData} type="home_ads_with_link" />
-      <BetterMaterials  title="Use Only The Best From Jerry's" products={data.recommendedProducts} />
+      <BetterMaterials  title="Use Only The Best From Jerry's" products={data.recommendedProducts} featuredList={data.jtabFeaturedList} />
       <FinestSupplies />
       <ArtAndSupplies />
-      <BetterMaterials title="Better Quality, Best Sellers" products={data.recommendedProducts} />
+      <BetterMaterials title="Better Quality, Best Sellers" products={data.recommendedProducts} featuredList={data.jtabFeaturedList} />
       <ProductsTabs products={data.recommendedProducts} />      
       <AdvertisementBanner ads={data.adsData} type="home_ads_with_link" />
       <CategoryLinkContent bannerWithContentImage={data.bannerWithContentImageData} type="banner_with_content_image" />
@@ -1066,10 +1108,17 @@ const FEATURED_COLLECTION_QUERY = `#graphql
       height
     }
     handle
+    metafields(identifiers: [
+      {namespace: "custom", key: "collection_type"}
+    ]) {
+      id
+      key
+      value
+    }
   }
   query FeaturedCollection($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    collections(first: 8, sortKey: UPDATED_AT, reverse: true) {
+    collections(first: 200, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...FeaturedCollection
       }

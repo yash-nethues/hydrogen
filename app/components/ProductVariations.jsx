@@ -23,12 +23,6 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   // Check if we're working with child products (they have childAttributes)
   const isChildProducts = productVariants && productVariants.length > 0 && productVariants[0].childAttributes;
   
-  // Debug logging for child products
-  if (isChildProducts) {
-    console.log('Child products detected:', productVariants.length);
-    console.log('First child product childAttributes:', productVariants[0]?.childAttributes);
-  }
-  
   // Create filter options based on whether we're using child products or regular variants
   const filterOptions = isChildProducts 
     ? {
@@ -59,9 +53,6 @@ export function ProductVariations({ images, productVariants, productVideos, prod
         size: [...new Set(productVariants.flatMap(v => v.selectedOptions?.find(opt => opt.name.toLowerCase() === 'size')?.value || []))],
         format: [...new Set(productVariants.flatMap(v => v.selectedOptions?.find(opt => opt.name.toLowerCase() === 'format')?.value || []))],
       };
-
-  // Debug logging for filter options
-  console.log('Filter options:', filterOptions);
 
   // Toggle filter section visibility
   const toggleFilter = () => {

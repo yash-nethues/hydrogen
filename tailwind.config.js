@@ -70,6 +70,7 @@ export default {
         'pink-gradient': 'linear-gradient(to right, #dc4654 0%, #dc4654 50%, #dc4654 51%, #ff4052 100%);',
         'Hoverpink': 'linear-gradient(to right, #dc4654 0%, #dc4654 50%, #dc4654 51%, #ff4052 100%);',
         'ul-listItem': "url('/image/icon-longArrow-brand.svg')",
+        'badge': "url('/image/badge-sprite.png')",
       },
       width: {
         '30': '30%',
