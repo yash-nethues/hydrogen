@@ -32,9 +32,9 @@ const tabContent = [
                       />
                     </div>
                     <p className="font-semibold text-sm text-blue text-center my-5 ">{article.title}</p>
-                    <p className="text-13 text-justify mb-3 pb-3">
+                    <div className="text-13 text-justify mb-3 pb-3">
                       {article.content.length > 250 ? `${article.content.substring(0, 250)}...` : article.content}
-                    </p>
+                    </div>
                     <div className="mt-auto text-center">
                       <Link className="btn-primary min-h-[38px] px-5 rounded-sm" to={`/blogs/news/${article.handle}`}>
                         <span>Read More</span>
@@ -83,9 +83,9 @@ const tabContent = [
                             </Link>
                             <div className="flex-1 p-2.5 text-center">
                               <Link to={`/blogs/news/${article.handle}`} className="font-semibold text-sm hover:text-brand transition-all">{article.title}</Link>
-                              <p className="text-sm my-2.5 hidden sm:block">
+                              <div className="text-sm my-2.5 hidden sm:block">
                                 {article.content.length > 100 ? `${article.content.substring(0, 100)}...` : article.content}
-                              </p>
+                              </div>
                               <div className="mt-auto text-center">
                                 <Link className="btn-primary min-h-[38px] w-full px-5 rounded-sm" to={`/blogs/news/${article.handle}`}>
                                   <span>Watch Now</span>

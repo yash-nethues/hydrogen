@@ -58,7 +58,7 @@ export default function Collection() {
   const {products} = useLoaderData();
 
   return (
-    <div className='2xl:container'>
+    <div className='custom-container'>
        <div className="collection mt-50">
             <div className='relative text-center pb-10'>
                   <h1 className='custom-h2 text-center text-blue text-3xl'>Products</h1>

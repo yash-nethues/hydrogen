@@ -5,6 +5,7 @@ import { Image, Money } from '@shopify/hydrogen';
 import React, { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Scrollbar, A11y, Autoplay } from 'swiper/modules';
+import { useIsClient } from "~/hooks/useIsClient";
 import ProductsTabs from '~/components/ProductsTabs';
 import HomeBlog from '~/components/home/HomeBlog';
 import BetterMaterials from '~/components/home/BetterMaterials';
@@ -69,6 +70,7 @@ async function loadCriticalData({ context }) {
       const value = (typeMetafield?.value || '').trim().toLowerCase();
       return value !== 'brand';
     })
+    .filter((c) => !!c.image)
     .slice(0, 15);
 
   return {
@@ -429,18 +431,19 @@ async function bannerWithContentImage({ context }, type = "banner_with_content_i
 export default function Homepage() {
 
   const data = useLoaderData();
+  const isClient = useIsClient();
   console.log('collectionData',data.collectionData);
   return (
     <div className="home flex flex-col ">
       <HomeBannerCaraousel banner={data.bannerImages} type="home_banner" />
       {/*<TopAdsLink />*/}
-      <RecommendedProducts products={data.recommendedProducts} title="The Finest Supplies Created For Artists" />
+      {isClient && <RecommendedProducts products={data.recommendedProducts} title="The Finest Supplies Created For Artists" />}
       <SaleProducts ads={data.adsData} type="home_ads_with_link" />
       <BetterMaterials  title="Use Only The Best From Jerry's" products={data.recommendedProducts} featuredList={data.jtabFeaturedList} />
       <FinestSupplies />
       <ArtAndSupplies />
       <BetterMaterials title="Better Quality, Best Sellers" products={data.recommendedProducts} featuredList={data.jtabFeaturedList} />
-      <ProductsTabs products={data.recommendedProducts} />      
+      {isClient && <ProductsTabs products={data.recommendedProducts} />}
       <AdvertisementBanner ads={data.adsData} type="home_ads_with_link" />
       <CategoryLinkContent bannerWithContentImage={data.bannerWithContentImageData} type="banner_with_content_image" />
       <ImageLinkList ads={data.adsData} type="home_ads_with_link" />
@@ -573,7 +576,7 @@ function HomeBannerCaraousel({ banner, type }) {
 function TopAdsLink({ adsData }) {
   return (
     <div className="container mt-j30 md:mt-[50px] md:px-10 2xl:px-[60px]  -order-1 md:order-none">
-      <div className="flex">
+      <ul className="flex">
         {adsData
           ?.filter(ad => ad.position_?.trim().toLowerCase() === "top")
           .map((ad, index) => (
@@ -588,7 +591,7 @@ function TopAdsLink({ adsData }) {
             </li>
           ))
         }
-      </div>
+      </ul>
     </div>
   );
 }
@@ -844,15 +847,19 @@ function FeaturedCollections({ collections, title }) {
                           },
                         }}
                       >
-                        {collections.map((collection) => (
+                        {collections.filter((c) => !!c.image).map((collection) => (
                           <SwiperSlide key={collection.id}>
                             <div className="flex flex-col">
                               <Link key={collection.id} to={`/collections/${collection.handle}`} >
                                 <div className="featured-collection-image aspect-square flex-none flex items-center justify-center">
-                                  {collection.image && (
-                                  <span className='w-3/4 aspect-square'>  
-                                    <Image data={collection.image} sizes="100vw" />
-                                  </span>
+                                  {collection.image ? (
+                                    <span className='w-3/4 aspect-square'>  
+                                      <Image data={collection.image} sizes="100vw" />
+                                    </span>
+                                  ) : (
+                                    <span className='w-3/4 aspect-square bg-grey-100 flex items-center justify-center'>
+                                      <img src="/image/placeholder.jpg" alt={collection.title} className="w-full h-full object-cover" />
+                                    </span>
                                   )}
                                 </div>
                                 <h3 className='text-sm jxl:text-base mb-0 text-blue text-center group-hover:text-brand font-normal'>{collection.title}</h3>
@@ -866,14 +873,18 @@ function FeaturedCollections({ collections, title }) {
                     </div>
                   ) : (
                     <div className="featured-collections ons-grid grid grid-cols-5 tb:grid-cols-6 gap-y-10 gap-x-5">
-                        {collections.map((collection) => (
-                          <div className="flex flex-col">
+                        {collections.filter((c) => !!c.image).map((collection) => (
+                          <div className="flex flex-col" key={collection.id}>
                             <Link key={collection.id} className="" to={`/collections/${collection.handle}`} >
                               <div className="featured-collection-image aspect-square flex-none flex items-center justify-center">
-                                {collection.image && (
-                                <span className='w-3/4 aspect-square'>  
-                                  <Image data={collection.image} sizes="100vw" />
-                                </span>
+                                {collection.image ? (
+                                  <span className='w-3/4 aspect-square'>  
+                                    <Image data={collection.image} sizes="100vw" />
+                                  </span>
+                                ) : (
+                                  <span className='w-3/4 aspect-square bg-grey-100 flex items-center justify-center'>
+                                    <img src="/image/placeholder.jpg" alt={collection.title} className="w-full h-full object-cover" />
+                                  </span>
                                 )}
                               </div>
                               <h3 className='text-sm jxl:text-base mb-0 text-blue text-center group-hover:text-brand font-normal'>{collection.title}</h3>

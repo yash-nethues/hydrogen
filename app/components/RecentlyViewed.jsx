@@ -3,9 +3,11 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import { Money } from '@shopify/hydrogen';
 import 'swiper/css';
+import { useIsClient } from "~/hooks/useIsClient";
 
 function RecentlyViewed({currentProduct}) {
   const [items, setItems] = useState([]);
+  const isClient = useIsClient();
 
   // On mount, update localStorage with the current product and load the list
   useEffect(() => {
@@ -43,7 +45,7 @@ function RecentlyViewed({currentProduct}) {
     }
   }, [currentProduct?.id]);
 
-  if (!items || items.length === 0) return null;
+  if (!isClient || !items || items.length === 0) return null;
 
   const isSlider = items.length >= 6;
 

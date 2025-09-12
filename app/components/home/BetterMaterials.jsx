@@ -8,6 +8,7 @@ import 'swiper/css';
 import { Link, Await } from '@remix-run/react';
 import { Suspense } from 'react';
 import { Image, Money } from '@shopify/hydrogen';
+import { useIsClient } from "~/hooks/useIsClient";
 
 // Utility function to check if a product is a group product
 function isGroupProduct(product) {
@@ -73,6 +74,7 @@ function BetterMaterials({ products, title, featuredList }) {
     const featured = Array.isArray(featuredList)
       ? featuredList.find((f) => (f?.featuring_section || '').trim() === (title || '').trim())
       : null;
+    const isClient = useIsClient();
     return (
       <div className="container mt-j30 md:mt-[50px] jlg:mt-[65px] md:px-10 2xl:px-[60px]">
         <div className='-mx-5 md:mx-0'>
@@ -129,7 +131,7 @@ function BetterMaterials({ products, title, featuredList }) {
                       
                       return (
                         <>
-                          {limitedProducts.length > 0 ? (
+                          {isClient && limitedProducts.length > 0 ? (
                             <>
                               <Swiper
                                       modules={[Navigation, Pagination, Scrollbar, A11y]}

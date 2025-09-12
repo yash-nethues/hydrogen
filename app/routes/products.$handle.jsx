@@ -574,7 +574,6 @@ export function WishlistButton({productId}) {
 export default function Product() {
   /** @type {LoaderReturnData} */
   const {product, videoObjects, viscosityObjects, pdfobjectIds, pdfObjects, rawMeta1, paintsMetaobjects, collection, arrivalcollectionData, professionalcollectionData, childProducts, relatedProducts, relatedSets, groupPriceRange, upsellProducts, crossSellProducts, parentProduct} = useLoaderData();
-  console.log('parentProducts', parentProduct);
   
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -681,6 +680,7 @@ export default function Product() {
 
   const [quantity, setQuantity] = useState(1);
   const [filterModal, setFilterModal] = useState(false);
+  // Defaults to oz; adjusted after mount based on size string
   const [unit, setUnit] = useState('oz');
 
   const color = selectedVariant.selectedOptions.find(
@@ -774,12 +774,12 @@ export default function Product() {
     }
     return acc;
   }, { viscosity: [] });
-    
-  const referenceSize = Array.isArray(mergedPaintsAttributes.size) 
-    ? mergedPaintsAttributes.size[0] 
-    : mergedPaintsAttributes.size;
-
+  
+  // Helper to format reference size according to current unit (oz/ml)
   const getDisplayReferenceSize = () => {
+    const referenceSize = Array.isArray(mergedPaintsAttributes.size)
+      ? mergedPaintsAttributes.size[0]
+      : mergedPaintsAttributes.size;
     if (!referenceSize) return '';
     const base = referenceSize.trim();
     const ozMatch = base.match(/([\d,.]+)\s*oz/i);
@@ -791,8 +791,11 @@ export default function Product() {
         return `${amount} OZ`;
       }
       if (mlMatch) {
-        const amount = mlMatch[1].replace(',', '');
-        return `${amount} ML`;
+        // Convert ML to OZ for display
+        const ml = parseFloat(mlMatch[1].replace(',', ''));
+        if (Number.isNaN(ml)) return base;
+        const ozFixed = (ml / 29.5735).toFixed(2);
+        return `${ozFixed} OZ`;
       }
       return base;
     }
@@ -810,6 +813,18 @@ export default function Product() {
     }
     return base;
   };
+
+  // Default unit based on the raw reference size from metafields (ML vs OZ)
+  useEffect(() => {
+    const rawRef = Array.isArray(mergedPaintsAttributes.size)
+      ? mergedPaintsAttributes.size[0]
+      : mergedPaintsAttributes.size;
+    const s = String(rawRef || '').toLowerCase();
+    if (s.includes('ml')) setUnit('ml');
+    else if (s.includes('oz')) setUnit('oz');
+  }, [product?.id]);
+    
+  // (old reference size helpers removed and replaced with displaySize computation below)
 
   return (
     <div className={`group/product ${match ? 'parrentProduct' : 'childProduct'}`}>
@@ -912,7 +927,9 @@ export default function Product() {
                       <span>Size : </span>
                       <span>{getDisplayReferenceSize()}</span>
                     </div>
-                    <UnitSwitcher value={unit} onUnitChange={(selectedUnit) => setUnit(selectedUnit)} />
+                    {(function(){ const s = String(getDisplayReferenceSize() || '').toLowerCase(); return s.includes('ml') || s.includes('oz'); })() && (
+                      <UnitSwitcher value={unit} onUnitChange={(selectedUnit) => setUnit(selectedUnit)} />
+                    )}
                     <div className="text-17 mb-0.5 font-medium">
                       <span>Format : </span>
                       <span>{mergedPaintsAttributes.format || format}</span>

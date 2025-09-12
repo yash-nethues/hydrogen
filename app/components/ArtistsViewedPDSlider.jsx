@@ -4,10 +4,13 @@ import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import { Image, Money } from '@shopify/hydrogen';
+import { useIsClient } from "~/hooks/useIsClient";
 
 
 function ArtistsViewedPDSlider({products}) {
-    const items = Array.isArray(products) ? products.filter(Boolean) : [];
+    const items = Array.isArray(products) ? products.filter((p) => p && p.handle) : [];
+    const isClient = useIsClient();
+    if (!isClient || items.length === 0) return null;
     return (
         <div className='w-full relative'>
             <h2 className='text-blue text-34 font-normal mb-j15'>Artists Also Viewed These Supplies</h2>
@@ -38,12 +41,20 @@ function ArtistsViewedPDSlider({products}) {
                 {items.map((product, index) => (
                     <SwiperSlide key={index}>
                         <div className="flex flex-wrap justify-center border p-5">
-                        <img className="w-auto max-w-full h-60 object-fill" src={product.featuredImage?.url} alt={product.title} />
+                        {product?.featuredImage?.url ? (
+                          <img className="w-auto max-w-full h-60 object-fill" src={product.featuredImage.url} alt={product.title} />
+                        ) : (
+                          <div className="text-xs text-gray-500 p-4 text-center w-full h-60 flex items-center justify-center">No Image</div>
+                        )}
                         <div className='block'>
                         <span className='text-sm no-underline hover:underline'>
-                            <a className="product-item-link hover:underline" href={`/products/${product.handle}`}>
-                                {product.title}
-                            </a>
+                            {product.handle ? (
+                              <a className="product-item-link hover:underline" href={`/products/${product.handle}`}>
+                                  {product.title}
+                              </a>
+                            ) : (
+                              <span>{product.title}</span>
+                            )}
                         </span>
                         <p className="minimal-price">
                         <span className="text-brand text-sm mt-2 block">Starting At:</span>

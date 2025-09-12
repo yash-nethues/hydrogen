@@ -256,29 +256,29 @@ export default function Collection() {
     <>
       <CouponBanners bannerCoupons={collection.banner_coupons} />
 
-      <header className="container 2xl:container ">
-        <div className='h-44 pt-4 pb-3 border-t border-grey-200 border-b border-grey-200'>
-          <div className='text-center pl-4 pr-4 max-w-[1170px] mx-auto text-base text-white'>
-            <h1 className='text-40 pt-5 pb-5 block text-blue font-semibold'><span className=''>{collection.title}</span></h1>
-            {collection.bannerContent?.value && <p className='pt-2 text-base !text-blue'>{collection.bannerContent.value}</p>}
-            <a href="#faq" className='text-blue hover:underline'>...Read More+</a>
+      <header className="custom-container mb-5 md:mb-0">
+        <div className=' py-3 border-t border-b border-grey-200'>
+          <div className='text-center px-5 max-w-[1170px] mx-auto text-blue'>
+            <h1 className='text-22 md:text-26 jlg:text-40 py-5 mb-0 block font-semibold'><span className='leading-none block'>{collection.title}</span></h1>
+            {collection.bannerContent?.value && <p>{collection.bannerContent.value}</p>}
+            <a href="#faq" className='hover:underline'>...Read More+</a>
           </div>
         </div>
       </header>
 
 
-      <div className='bg-themegray pl-0 pr-0 mb-5 h-11 flex items-center'>
-        <div className="breadcrumb container 2xl:container">
+      <div className='-order-1 md:order-none bg-grey-100 mb-5 h-11 flex items-center'>
+        <div className="breadcrumb custom-container">
           <ul className=" flex">
-            <li className="!text-grey-500  text-sm underline hover:no-underline hover:!text-brand px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><Link to="/">Home</Link></li>
-            <li className="!text-grey-500  text-sm underline hover:no-underline hover:!text-brand px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><Link to="/">Collection</Link></li>
-            <li className="active text-sm !text-brand  px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10">{collection.title}</li>
+            <li className="!text-grey-500  text-sm px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><Link to="/" className='font-medium  underline hover:no-underline hover:!text-brand'>Home</Link></li>
+            <li className="!text-grey-500  text-sm px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><Link to="/" className='font-medium  underline hover:no-underline hover:!text-brand'>Collection</Link></li>
+            <li className="active text-sm !text-brand px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10">{collection.title}</li>
           </ul>
         </div>
       </div>
 
       {collection.relatedCategories?.references?.edges?.length > 0 && (
-        <div className="flex flex-wrap container 2xl:container">
+        <div className="flex flex-wrap custom-container">
           {collection.relatedCategories.references.edges.map(({ node }) => (
             <div key={node.id} className="w-1/5 p-5 pb-1 text-center">
               <Link to={`/collections/${node.handle}`} className='text-center'>
@@ -296,12 +296,12 @@ export default function Collection() {
             </div>
           ))}
         </div>
-
       )}
-      <div className='container 2xl:container '>
-        <div className='flex border-t border-grey-200 '>
-          <div className='w-1/5 border-r border-grey-200 pt-7 pr-7 '>
-            <div className='relative sticky top-0'>
+
+      <div className='custom-container'>
+        <div className='flex md:border-t md:border-grey-200 '>
+          <div className='hidden md:block md:w-[30%] tb:w-[20.833%] md:border-r md:border-grey-200 pt-j15 pr-j15 tb:pt-5 tb:pr-5'>
+            <div className='sticky top-16'>
               {collection.products.filters.map((filter, index) => {
                 // Determine if this is a variant filter or product property filter
                 const isVariantFilter = filter.id !== 'product_type' && filter.id !== 'vendor';
@@ -415,53 +415,51 @@ export default function Collection() {
               })}
             </div>
           </div>
-          <div className="w-4/5">
-            <div className="md:p-j30 md:pr-0">
-              <div className='flex flex-wrap justify-between'>
-                <div className='leading-10 font-semibold text-blue text-base'>Showing All {collection.title}</div>
-                <div className='flex flex-wrap justify-end gap-x-2 items-center'>
-                  <span className='uppercase font-semibold text-base !text-blue'>Sort</span>
-                  <div className='flex gap-x-2'>
-                    <button onClick={() => setToggleView(true)} className={`text-sm text-grey w-11 h-11 flex justify-center items-center border border-grey-200  hover:bg-brand-100 hover:text-white font-semibold hover:border-brand-200 ${toggleView ? 'bg-brand-100 bg-brand-100  text-white' : 'bg-gray-100'}`}> <TfiLayoutGrid2Alt />  </button>
-                    <button onClick={() => setToggleView(false)} className={`text-base text-grey  w-11 h-11 font-semibold flex justify-center items-center border border-grey-200  hover:bg-brand-100 hover:text-white font-semibold hover:border-brand-200 ${toggleView ? 'bg-gray-100' : 'bg-brand-100 bg-brand-100 text-white'}`}>  <FaList />
-                    </button>
-                  </div>
+          <div className="w-full md:w-[70%] tb:w-[79.167%] md:pt-j15 md:pl-j15 tb:pt-5 tb:pl-5">
+            <div className='flex flex-wrap justify-between mb-2.5'>
+              <div className='leading-10 font-semibold hidden md:block text-blue'>Showing All {collection.title}</div>
+              <div className='flex flex-wrap justify-end gap-x-2 items-center ml-auto'>
+                <span className='uppercase hidden md:block font-semibold text-blue'>Sort</span>
+                <div className='flex gap-x-2'>
+                  <button onClick={() => setToggleView(true)} className={`text-sm text-base-300 w-[45px] h-[45px] transition-all flex justify-center items-center border  hover:bg-brand hover:text-white font-semibold hover:border-brand ${toggleView ? ' bg-brand border-brand  text-white' : 'bg-gray-100 border-grey-200'}`}> <TfiLayoutGrid2Alt className="w-4 h-4" />  </button>
+                  <button onClick={() => setToggleView(false)} className={`text-base text-base-300  w-[45px] h-[45px] transition-all  flex justify-center items-center border  hover:bg-brand hover:text-white font-semibold hover:border-brand ${toggleView ? 'bg-gray-100 border-grey-200' : ' bg-brand border-brand text-white'}`}>  <FaList className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              { console.log('data', collection.products) }
-
-              <PaginatedResourceSection
-                connection={{ nodes: paginatedNodes }}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-                resourcesClassName="flex flex-wrap"
-              >
-                {({ node: product, index }) => (
-                  <ProductItem
-                    key={product.id}
-                    product={product}
-                    isExpanded={isExpanded}
-                    openPopup={openPopup}
-                    content={content}
-                    iframeContent={iframeContent}
-                    closePopup={closePopup}
-                    isPopupOpen={isPopupOpen}
-                    handleToggleDescription={handleToggleDescription}
-                    toggleView={toggleView}
-                    loading={index < 8 ? 'eager' : undefined}
-                  />
-                )}
-              </PaginatedResourceSection>
-              <Analytics.CollectionView
-                data={{
-                  collection: {
-                    id: collection.id,
-                    handle: collection.handle,
-                  },
-                }}
-              />
             </div>
+            { console.log('data', collection.products) }
+
+            <PaginatedResourceSection
+              connection={{ nodes: paginatedNodes }}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+              resourcesClassName="flex flex-wrap md:-mx-5"
+            >
+              {({ node: product, index }) => (
+                <ProductItem
+                  key={product.id}
+                  product={product}
+                  isExpanded={isExpanded}
+                  openPopup={openPopup}
+                  content={content}
+                  iframeContent={iframeContent}
+                  closePopup={closePopup}
+                  isPopupOpen={isPopupOpen}
+                  handleToggleDescription={handleToggleDescription}
+                  toggleView={toggleView}
+                  loading={index < 8 ? 'eager' : undefined}
+                />
+              )}
+            </PaginatedResourceSection>
+            <Analytics.CollectionView
+              data={{
+                collection: {
+                  id: collection.id,
+                  handle: collection.handle,
+                },
+              }}
+            />
           </div>
         </div>
       </div>
@@ -487,54 +485,63 @@ function ProductItem({ product, loading, toggleView, iframeContent, isExpanded, 
     <>
       {toggleView ? (
         <>
-          <div className='sm:w-2/6 md:w-2/4  lg:w-2/6 xl:w-3/12 pb-11 relative my-j30 px-5'>
-            <Link
-              className="product-item"
-              key={product.id}
-              prefetch="intent"
-              to={variantUrl}
-            >
-              {product.featuredImage && (
-                <div className='p-5 text-center'>
-                  <Image
-                    alt={product.featuredImage.altText || product.title}
-                    aspectRatio="1/1"
-                    data={product.featuredImage}
-                    loading={loading}
-                    className='inline-block'
-                    sizes="(min-width: 45em) 400px, 100vw"
-                    style={{ width: '75%' }}
-                  />
-                  <button type="button" className='flex  group text-[28px] absolute right-7 top-0  text-gray-600 h-12 w-12 items-center justify-center '>
-                    <IoMdHeartEmpty className='group-hover:hidden' />
-                    <IoMdHeart className='fill-red-500 hidden group-hover:block ' />
-
-                  </button>
-                </div>
-              )}
-              <div className='text-center pt-5'>
-                <h4 className='text-15 min-h-11 font-semibold hover:underline'>{product.title}</h4>
-                <small className='text-15 mb-3 mt-2  text-brand flex justify-center gap-2 items-center'>
-                  Starting At: <span className='font-semibold text-22 text-blue'> <Money data={product.priceRange.minVariantPrice} /></span>
+          <div className='sm:w-2/6 md:w-2/4 lg:w-2/6 xl:w-3/12 py-5 px-2.5 md:py-j30 md:px-5'>
+            <div className='w-full min-h-full flex flex-col relative'>
+              <Link className="product-item flex-none" key={product.id} prefetch="intent" to={variantUrl}>
+                {product.featuredImage && (
+                  <div className='w-full aspect-square flex items-center justify-center'>
+                    <Image
+                      alt={product.featuredImage.altText || product.title}
+                      aspectRatio="1/1"
+                      data={product.featuredImage}
+                      loading={loading}
+                      className='inline-block !w-auto max-w-[85%] max-h-[85%]'
+                      sizes="(min-width: 45em) 400px, 100vw"
+                    />
+                  </div>
+                )}
+              </Link>
+              <div className='text-center flex-1 flex flex-col pt-2.5'>
+                <h4 className='text-sm md:text-15 m-0 !leading-normal min-h-14 font-semibold hover:underline'>
+                    <Link to={variantUrl}>
+                      {product.title}
+                    </Link>
+                  </h4>
+                <small className='mb-j15 mt-0.5 text-sm md:text-15 !leading-normal text-brand flex flex-wrap justify-center gap-x-1 items-center'>
+                  Starting At: <span className='font-semibold text-22 leading-none text-blue'> <Money data={product.priceRange.minVariantPrice} /></span>
                 </small>
-                <div className='flex justify-center w-full'>
-                  <Link to={variantUrl} className='btn-secondary mt-4 absolute bottom-0'>
+                <div className='flex justify-center w-full md:max-w-40 mt-auto md:mx-auto max-[767px]:px-j5'>
+                  <Link to={variantUrl} className='btn-secondary w-full px-2.5 py-2.5 mt-j30'>
                     Shop Now
                   </Link>
                 </div>
               </div>
-              <div className='absolute top-0 left-0 w-11 gap-y-j5 flex flex-wrap'>
-                {product?.metafield?.value === "On Super Sale" && (
-                  <img src="/image/super-sale_1.jpg" alt="Super Sale" />
-                )}
-                {product?.metafield?.value === "New Arrivals" && (
-                  <img src="/image/only-at-jerrys_1.jpg" alt="On Sale" />
-                )}
+              <button type="button" className='flex  group text-[28px] absolute right-4 top-4  text-gray-600 w-7 h-7 items-center justify-center '>
+                <IoMdHeartEmpty className='group-hover:hidden' />
+                <IoMdHeart className='fill-red-500 hidden group-hover:block ' />
+              </button>
+              <div className='jerry-badge'>
+                {/* 
+                  <span className='special-offer'></span>
+                  <span className='free-offer'></span>
+                  <span className='bulk'></span>
+                  <span className='top-sellers'></span>
+                  <span className='new'></span>
+                  <span className='best-value'></span>
+                  <span className='has-new-items'></span>
+                  <span className='out-of-stock'></span>
+                */}
                 {product?.metafield?.value === "On Sale" && (
-                  <img src="/image/sale_1.jpg" alt="On Arrivals" />
+                  <span className='sale'></span>
+                )}
+                {product?.metafield?.value === "On Super Sale" && (
+                    <span className='super-sale'></span>
+                )}                
+                {product?.metafield?.value === "New Arrivals" && (
+                  <span className='only-at-jerrys'></span> 
                 )}
               </div>
-            </Link>
+            </div>
           </div>
         </>
       ) : (

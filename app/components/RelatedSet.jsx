@@ -4,10 +4,12 @@ import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';
 import { Image, Money } from '@shopify/hydrogen';
+import { useIsClient } from "~/hooks/useIsClient";
 
 function RelatedSet({products}) {
     const items = Array.isArray(products) ? products.filter(Boolean) : [];
-    if (items.length === 0) return null;
+    const isClient = useIsClient();
+    if (!isClient || items.length === 0) return null;
     return (
         <div className="w-1/3 relative pr-2">
             <h2 className='text-blue text-34 font-normal mb-j15 '>Shop Related Sets</h2>

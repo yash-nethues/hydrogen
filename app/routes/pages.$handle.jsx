@@ -1,6 +1,7 @@
+import React, { useState } from "react";
 import { defer } from '@shopify/remix-oxygen';
 import { useLoaderData } from '@remix-run/react';
-import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
+import { Navigation, Pagination, Scrollbar,  A11y } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import Accordion from "../components/Accordion";
 import CouponBanners from "../components/CouponBanners";
@@ -62,28 +63,27 @@ function loadDeferredData({ context }) {
 export default function Page() {
   /* @type {LoaderReturnData} */
   const { page } = useLoaderData();
+  const [showArrows, setShowArrows] = useState(false);
   const totalBrands = page?.listBrands?.references?.edges?.length || 0;
   return (
     <div className="page">
       <CouponBanners bannerCoupons={page.banner_coupons} />
 
-      <header className="container 2xl:container">
-        <div className='h-44 pt-3 pb-3' style={page.bannerImage?.reference?.image?.url
+      <header className="custom-container mb-5 md:mb-0">
+        <div className='min-h-[100px] md:min-h-44 py-3 bg-center bg-[length:100%_100%] md:bg-cover' style={page.bannerImage?.reference?.image?.url
           ? { backgroundImage: `url(${page.bannerImage.reference.image.url})` }
           : {}}>
-          <div className='text-center pl-4 pr-4 max-w-[1170px] mx-auto text-base
- text-white'>
-            <h1 className='text-40 pt-5 pb-5 block font-semibold'><span className='' style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)' }}>{page.title}</span></h1>
-            {page.bannerContent?.value && <p className='pt-2 text-base
-!text-white'>{page.bannerContent.value}</p>}
-            <a href="#faq" className='hover:underline'>...Read More+</a>
+          <div className='text-center px-5 max-w-[1170px] mx-auto text-white'>
+            <h1 className='text-22 md:text-26 jlg:text-40 py-5 mb-0 block font-semibold'><span className='leading-none block' style={{ textShadow: '0px 0px 10px rgba(0, 0, 0, 0.3)' }}>{page.title}</span></h1>
+            {page.bannerContent?.value && <p>{page.bannerContent.value}</p>}
+            <a href="#faq" className='hover:underline'>... Read More+</a>
           </div>
         </div>
       </header>
-      <div className=' bg-grey-100 pl-0 pr-0 mb-5 h-11 flex items-center'>
-        <div className="container breadcrumb 2xl:container">
+      <div className='-order-1 md:order-none bg-grey-100 md:mb-5 h-11 flex items-center'>
+        <div className=" breadcrumb custom-container">
           <ul className="flex">
-            <li className="!text-grey-500  text-sm underline hover:no-underline hover:!text-brand px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><a href="/">Home</a></li>
+            <li className="!text-grey-500  text-sm px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"><a href="/" className='font-medium  underline hover:no-underline hover:!text-brand'>Home</a></li>
             <li className="active text-sm !text-brand  px-2 first:ps-0 last:pe-0 relative after:content-['/'] after:absolute after:-end-0.5 after:top-0.5 after:pointer-events-none after:!text-grey-500 last:after:hidden after:text-10"> </li>
           </ul>
         </div>
@@ -91,108 +91,91 @@ export default function Page() {
 
       {page.listCollections?.references?.edges?.length > 0 && (
         <div className="page-list-collections">
-          <div className="text-center p-5 mb-10">
-            <h2 className="text-blue text-3xl custom-h2  relative pb-7">
-              {page.title} by Category
-            </h2>
-          </div>
+          <div className='custom-container'>
+            <div className="text-center mb-5 md:mb-10">
+              <h2 className="text-blue font-normal text-xl md:text-3xl custom-h2 before:ml-j30 after:-ml-j30 after:bottom-1 relative p-j5 md:p-5">
+                {page.title} by Category
+              </h2>
+            </div>
 
-          <div className="flex flex-wrap  custom-container">
-            {page.listCollections.references.edges.map(({ node }) => (
-              <div key={node.id} className="w-1/5 p-5 text-center">
-                <a href={`/collections/${node.handle}`} className='text-center'>
-                  <div className="flex justify-center flex-wrap p-5">
-                    <figure className='h-52 xl:mb-5 flex items-center'>
-                      {node.image?.url ? (
-                        <img src={node.image.url} alt={node.title} className="image-thumb" />
-                      ) : (
-                        <img src="/default-image.jpg" alt="Default" className="image-thumb" />
-                      )}
-                    </figure>
-                    <h6 className="xl:mt-4 text-blue font-[500] text-lg hover:underline">{node.title}</h6>
-                  </div>
-                </a>
-              </div>
-            ))}
+            <div className="flex flex-wrap">
+              {page.listCollections.references.edges.map(({ node }) => (
+                <div key={node.id} className="w-1/2 sm:1/3 tb:w-1/4 jlg:w-1/5 p-5 text-center">
+                  <a href={`/collections/${node.handle}`} className='text-center'>
+                    <div className="flex flex-col">
+                      <figure className='w-full aspect-square flex items-center justify-center'>
+                        {node.image?.url ? (
+                          <img src={node.image.url} alt={node.title} className="image-thumb max-w-[75%] max-h-full" />
+                        ) : (
+                          <img src="/default-image.jpg" alt="Default" className="image-thumb max-w-[75%] max-h-full" />
+                        )}
+                      </figure>
+                      <h6 className=" text-blue font-[500] mb-0 text-sm jxl:text-lg hover:underline">{node.title}</h6>
+                    </div>
+                  </a>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
       
       {page.listBrands?.references?.edges?.length > 0 && (
-        <div className="container 2xl:container mt-40">
+        <div className="custom-container mt-[60px] md:mt-[150px]">
           <div className="page-list-collections">
-            <h2 className="text-blue text-2xl font-bold relative pb-4">
+            <h2 className="text-25 font-semibold  relative mb-j15">
               {page.title} by Brands
             </h2>
           </div>
-          <div className="flex relative custom-container bg-themegray border border-grey-200 pt-5 pl-7 pr-7 pb-0">
-
-
+          <div className="flex relative custom-container bg-themegray border border-grey-200 py-5 px-[25px]">
             <Swiper
               modules={[Navigation, Pagination, Scrollbar, A11y]}
               spaceBetween={20}
               navigation={{ nextEl: ".n_arrow-right", prevEl: ".n_arrow-left" }}
               pagination={{ clickable: true }}
               scrollbar={{ draggable: false }}
-              slidesPerView={3}
-              breakpoints={{
-                1440: {
-                  slidesPerView: totalBrands > 10 ? 10 : totalBrands,
-                },
-                1200: {
-                  slidesPerView: totalBrands > 8 ? 8 : totalBrands,
-                },
-                992: {
-                  slidesPerView: totalBrands > 6 ? 6 : totalBrands,
-                },
-                767: {
-                  slidesPerView: totalBrands > 3 ? 3 : totalBrands,
-                },
+              slidesPerView={'auto'}
+              loop={true}
+              onSwiper={(swiper) => {
+                const totalSlides = swiper.slides.length;
+
+                // Determine current slidesPerView (handles both "auto" and number)
+                const currentSlidesPerView =
+                  typeof swiper.params.slidesPerView === "number"
+                    ? swiper.params.slidesPerView
+                    : Math.floor(swiper.width / swiper.slides[0].offsetWidth);
+
+                // Store condition in swiper instance for later use
+                setShowArrows(totalSlides > currentSlidesPerView);
+              }}
+              onResize={(swiper) => {
+                const totalSlides = swiper.slides.length;
+                const currentSlidesPerView =
+                  typeof swiper.params.slidesPerView === "number"
+                    ? swiper.params.slidesPerView
+                    : Math.floor(swiper.width / swiper.slides[0].offsetWidth);
+
+                setShowArrows(totalSlides > currentSlidesPerView);
               }}
             >
-              return (
               {page.listBrands.references.edges.map(({ node }) => (
-                <SwiperSlide key={node.id} style={{ width: '141px' }}>
-                  <a href={`/collections/${node.handle}`}>
-                    <figure className="border border-gray-200 bg-white mb-0">
+                <SwiperSlide key={node.id} className='!w-[140px]'>
+                  <a href={`/collections/${node.handle}`} className='block' >
+                    <figure className="border border-gray-200 aspect-square flex items-center justify-center bg-white p-2.5 mb-0">
                       {node.image?.url ? (
-                        <img src={node.image.url} alt={node.title} className="image-thumb" />
+                        <img src={node.image.url} alt={node.title} className="image-thumb max-w-full max-h-[120px]" />
                       ) : (
-                        <img src="/default-image.jpg" alt="Default" className="image-thumb" />
+                        <img src="/default-image.jpg" alt="Default" className="image-thumb max-w-full max-h-[120px]" />
                       )}
                     </figure>
                   </a>
                 </SwiperSlide>
               ))}
-              );
             </Swiper>
-              <button className="n_arrow-left arrow swiper-button-prev -mt-4 ml-1"></button>
-              <button className="n_arrow-right arrow swiper-button-next -mt-4"></button>
-
-            {/*page.listBrands.references.edges.map(({ node }) => (
-                  <div key={node.id} className="sub-category">
-                    
-                    <a href={`/collections/${node.handle}`}>
-                      <figure className="border border-gray-200 bg-white">
-                        {node.image?.url ? (
-                          <img src={node.image.url} alt={node.title} className="image-thumb" />
-                        ) : (
-                          <img src="/default-image.jpg" alt="Default" className="image-thumb" />
-                        )}
-                      </figure>
-                    </a>
-                  </div>
-                ))*/}
+            <button className={`n_arrow-left arrow swiper-button-prev before:w-5 before:h-5 ml-1 ${ !showArrows ? "hidden" : ""}`}></button>
+            <button className={`n_arrow-right arrow swiper-button-next before:w-5 before:h-5  ${ !showArrows ? "hidden" : ""}`}></button>            
           </div>
-
-
-
         </div>
-
-
-
-
-
       )}
 
       <Accordion page={page} faqs={page.faqs.references.edges} />

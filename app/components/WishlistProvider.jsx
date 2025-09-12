@@ -7,7 +7,7 @@ export function WishlistProvider({children}) {
   const [wishlist, setWishlist] = useState([]);
   const isClient = useIsClient();
 
-  console.log('wishlist data:- ', wishlist);
+  // console.debug('wishlist data', wishlist);
 
   useEffect(() => {
     if (isClient) {
