@@ -1370,6 +1370,10 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       value
       type
     }
+    nameShort: metafield(namespace: "custom", key: "name_short") {
+      value
+      type
+    }
   }
 `;
 
@@ -1564,6 +1568,10 @@ const CHILD_PRODUCTS_QUERY = `#graphql
         id
         title
         handle
+        nameShort: metafield(namespace: "custom", key: "name_short") {
+          value
+          type
+        }
         selectedOrFirstAvailableVariant {
           ...ProductVariant
         }

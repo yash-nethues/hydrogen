@@ -2,6 +2,7 @@ import { defer } from '@shopify/remix-oxygen';
 import { Await, useLoaderData, Link } from '@remix-run/react';
 import { Suspense } from 'react';
 import { Image, Money } from '@shopify/hydrogen';
+import { RichTextRenderer } from '~/components/RichTextRenderer';
 import React, { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Scrollbar, A11y, Autoplay } from 'swiper/modules';
@@ -29,6 +30,7 @@ export async function loader(args) {
 
   const adsData = await loadADSData(args);
   const supplyData = await loadFooterSupplyData(args);
+  const featureContent = await loadFeatureContent(args);
 
   const FinestcollectionId = '484561191209'; // Change this to any dynamic value
   const betterMaterialcollectionId = '484561223977'; // Change this to any dynamic value
@@ -47,7 +49,8 @@ export async function loader(args) {
 
   const bannerWithContentImageData = await bannerWithContentImage(args);
   const jtabFeaturedList = await loadJtabFeaturedProduct(args);
-  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, bannerWithContentImageData , finestcollectionData, bettercollectionData , arrivalcollectionData, professionalcollectionData, artistcollectionData, jtabFeaturedList });
+  const homepageFeaturedCollections = await loadHomepageFeaturedCollections(args);
+  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, featureContent, bannerWithContentImageData , finestcollectionData, bettercollectionData , arrivalcollectionData, professionalcollectionData, artistcollectionData, jtabFeaturedList, homepageFeaturedCollections });
 }
 
 /**
@@ -181,29 +184,54 @@ async function loadBannerData({ context }, type = "home_banner") {
       variables: { type }
     });
 
-    // Parse the banner_images field from the response
-    const bannerImagesStr = GetMetaobject?.metaobjects?.edges?.[0]?.node?.fields?.find(field => field.key === "banner_images")?.value;
+    const edges = GetMetaobject?.metaobjects?.edges || [];
+    // Each metaobject entry represents a banner item now. Fields:
+    // - banner_image: MediaImage GID or URL
+    // - banner_heading: string (optional)
+    // - banner_content: string (optional)
+    // - button_text, button_link (optional)
 
-    if (!bannerImagesStr) {
-      console.error("No banner images found.");
-      return { bannerImages: [] };
-    }
-
-    // Parse the JSON string to get an array of image IDs
-    const bannerImageIds = bannerImagesStr ? JSON.parse(bannerImagesStr) : [];
-
-    // Fetch the actual image data using the MediaImage IDs
-    const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, {
-      variables: { ids: bannerImageIds }
+    // Collect all media image IDs to resolve to URLs in one request
+    const mediaIds = [];
+    const items = edges.map((edge) => {
+      const fields = (edge?.node?.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
+      const banner_image = fields.banner_image || '';
+      if (typeof banner_image === 'string' && banner_image.startsWith('gid://shopify/MediaImage/')) {
+        mediaIds.push(banner_image);
+      }
+      return {
+        raw_image: banner_image,
+        banner_heading: fields.banner_heading || '',
+        banner_content: fields.banner_content || '',
+        // Support multiple possible field names for button text and link
+        button: fields.button_text || fields.banner_button || fields.banner_button_text || '',
+        button_link: fields.button_link || fields.banner_button_link || fields.banner_link || '#',
+      };
     });
 
-    // Extract the image URLs from the response
-    const bannerImages = mediaResponse?.nodes?.map(node => node?.image?.url) || [];
+    let imageUrlMap = {};
+    if (mediaIds.length > 0) {
+      const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, {
+        variables: { ids: mediaIds }
+      });
+      imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
+        if (node?.id && node?.image?.url) acc[node.id] = node.image.url;
+        return acc;
+      }, {});
+    }
 
-    return { bannerImages };
+    const bannerItems = items.map((it) => ({
+      image: it.raw_image?.startsWith('gid://shopify/MediaImage/') ? (imageUrlMap[it.raw_image] || '/image/placeholder.jpg') : (it.raw_image || '/image/placeholder.jpg'),
+      heading: it.banner_heading,
+      content: it.banner_content,
+      button: it.button,
+      button_link: it.button_link,
+    }));
+
+    return { bannerItems };
   } catch (error) {
     console.error('Error fetching banner data:', error);
-    return { bannerImages: [] };  // Return an empty array in case of error
+    return { bannerItems: [] };  // Return an empty array in case of error
   }
 }
 
@@ -269,6 +297,55 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
   }
 }
 
+// Load homepage featured collections via metaobject 'homepage_feature_collection'
+async function loadHomepageFeaturedCollections({ context }, type = "homepage_feature_collection") {
+  try {
+    const resp = await context.storefront.query(GET_METAOBJECT_QUERY, { variables: { type } });
+    const edges = resp?.metaobjects?.edges || [];
+    // Collect GIDs from all metaobjects and fields
+    const gidSet = new Set();
+    for (const edge of edges) {
+      const fieldList = edge?.node?.fields || [];
+      // Any JSON array in any field
+      for (const f of fieldList) {
+        const val = f?.value;
+        if (!val || typeof val !== 'string') continue;
+        // Try parse as JSON array
+        try {
+          const parsed = JSON.parse(val);
+          if (Array.isArray(parsed)) {
+            parsed.forEach((p) => {
+              if (typeof p === 'string' && p.startsWith('gid://shopify/Collection/')) gidSet.add(p);
+            });
+            continue;
+          }
+        } catch {
+          // not JSON, continue
+        }
+        // If direct GID string
+        if (val.startsWith('gid://shopify/Collection/')) gidSet.add(val);
+      }
+    }
+    const rawIds = Array.from(gidSet);
+    if (!Array.isArray(rawIds) || rawIds.length === 0) return [];
+    // Fetch collections by ID
+    const results = await Promise.all(
+      rawIds.map(async (gid) => {
+        try {
+          const res = await context.storefront.query(GET_COLLECTION_BY_ID_QUERY, { variables: { id: gid } });
+          return res?.collection || null;
+        } catch {
+          return null;
+        }
+      })
+    );
+    return results.filter((c) => c && c.image);
+  } catch (e) {
+    console.error('loadHomepageFeaturedCollections error', e);
+    return [];
+  }
+}
+
 
 async function loadJtabFeaturedProduct({ context }, type = "jtab_featured_product") {
   try {
@@ -299,6 +376,25 @@ async function loadJtabFeaturedProduct({ context }, type = "jtab_featured_produc
   }
 }
 
+
+// Load feature content for ArtAndSupplies section from metaobject 'feature_content'
+async function loadFeatureContent({ context }, type = "feature_content") {
+  try {
+    const resp = await context.storefront.query(GET_METAOBJECT_QUERY, { variables: { type } });
+    const edge = resp?.metaobjects?.edges?.[0];
+    const fields = (edge?.node?.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
+    return {
+      feature_title: fields.feature_title || '',
+      feature_content: fields.feature_content || '',
+      feature_button: fields.feature_button || '',
+      feature_button_link: fields.feature_button_link || '#',
+      background_color: fields.background_color || ''
+    };
+  } catch (e) {
+    console.error('loadFeatureContent error', e);
+    return null;
+  }
+}
 
 async function loadFooterSupplyData({ context }, type = "before_footer_supplies") {
   try {
@@ -432,23 +528,23 @@ export default function Homepage() {
 
   const data = useLoaderData();
   const isClient = useIsClient();
-  console.log('collectionData',data.collectionData);
+  console.log('collectionData',data);
   return (
     <div className="home flex flex-col ">
-      <HomeBannerCaraousel banner={data.bannerImages} type="home_banner" />
-      {/*<TopAdsLink />*/}
+      <HomeBannerCaraousel banner={data.bannerItems} type="home_banner" />
+      <TopAdsLink ads={data.adsData} />
       {isClient && <RecommendedProducts products={data.recommendedProducts} title="The Finest Supplies Created For Artists" />}
       <SaleProducts ads={data.adsData} type="home_ads_with_link" />
       <BetterMaterials  title="Use Only The Best From Jerry's" products={data.recommendedProducts} featuredList={data.jtabFeaturedList} />
       <FinestSupplies />
-      <ArtAndSupplies />
+      <ArtAndSupplies feature={data.featureContent} />
       <BetterMaterials title="Better Quality, Best Sellers" products={data.recommendedProducts} featuredList={data.jtabFeaturedList} />
       {isClient && <ProductsTabs products={data.recommendedProducts} />}
       <AdvertisementBanner ads={data.adsData} type="home_ads_with_link" />
       <CategoryLinkContent bannerWithContentImage={data.bannerWithContentImageData} type="banner_with_content_image" />
       <ImageLinkList ads={data.adsData} type="home_ads_with_link" />
       <CustomShop />
-      <FeaturedCollections collections={data.featuredCollections} title="Shop By Categories" />
+      <FeaturedCollections collections={data.homepageFeaturedCollections?.length ? data.homepageFeaturedCollections : data.featuredCollections} title="Shop By Categories" />
       <HomeBlog posts={data.blogPosts} title='Latest Blog Articles  <div class="block w-full text-sm mt-2.5">Know more about the latest updates</div>' />
       <ShopSupplies supplyList={data.supplyData} type="before_footer_supplies" title="Shop Our Artists Supplies" />
     </div>
@@ -471,11 +567,28 @@ export default function Homepage() {
  */
 
 function HomeBannerCaraousel({ banner, type }) {
-
+  console.log('banner:- ', banner);
+  // banner is now array of bannerItems: {image, heading, content, button, button_link}
+  const items = Array.isArray(banner) ? banner : [];
+  
   useEffect(() => {
-    const slides = document.querySelector('.carousel-slides');
-    const slideCount = slides.children.length;
-    const indicators = document.querySelectorAll('.indicator');
+    const root = document.querySelector('.home_banner');
+    if (!root) return;
+    const slides = root.querySelector('.carousel-slides');
+    const indicators = root.querySelectorAll('.indicator');
+    if (!slides) return;
+    const slideEls = slides.querySelectorAll('.carousel-slide');
+    const slideCount = slideEls.length;
+    if (slideCount === 0) return;
+
+    // Ensure proper layout for translateX carousel
+    slides.style.display = 'flex';
+    slides.style.willChange = 'transform';
+    slides.style.transition = 'transform 0.5s ease';
+    slideEls.forEach((el) => {
+      el.style.flex = '0 0 100%';
+      el.style.width = '100%';
+    });
     let currentIndex = 0;
 
     const updateCarousel = () => {
@@ -486,99 +599,108 @@ function HomeBannerCaraousel({ banner, type }) {
       });
     };
 
-    document.getElementById('prev').addEventListener('click', () => {
+    const prevBtn = root.querySelector('.carousel-prev');
+    const nextBtn = root.querySelector('.carousel-next');
+
+    const onPrev = () => {
       currentIndex = (currentIndex - 1 + slideCount) % slideCount;
       updateCarousel();
-    });
-
-    document.getElementById('next').addEventListener('click', () => {
+    };
+    const onNext = () => {
       currentIndex = (currentIndex + 1) % slideCount;
       updateCarousel();
-    });
+    };
+    prevBtn?.addEventListener('click', onPrev);
+    nextBtn?.addEventListener('click', onNext);
 
     indicators.forEach((indicator, idx) => {
-      indicator.addEventListener('click', () => {
+      const onClick = () => {
         currentIndex = idx;
         updateCarousel();
-      });
+      };
+      indicator.addEventListener('click', onClick);
+      // Attach reference for cleanup
+      indicator.__onClick = onClick;
     });
 
     updateCarousel();
+
+    return () => {
+      prevBtn?.removeEventListener('click', onPrev);
+      nextBtn?.removeEventListener('click', onNext);
+      indicators.forEach((indicator) => {
+        if (indicator.__onClick) {
+          indicator.removeEventListener('click', indicator.__onClick);
+          delete indicator.__onClick;
+        }
+      });
+    };
   }, []);
 
+  if (items.length === 0) return null;
   return (
-    <div className="md:pt-5 -order-1 md:order-none">
-      <div className="container md:px-10 2xl:px-[60px]">
-        <div className='px-j5 -mx-5 md:mx-0 md:px-0'>
-        <div id="carousel" className="relative">
-          <div className="relative overflow-hidden">
-            <div className="carousel-slides flex transition-transform duration-500">
-
-
-
-              {banner && banner.length > 0 ? (
-                banner.map((image, index) => (
-                  <>
-                  <div className='relative w-full flex-shrink-0'>
-
-                  {index === 0 ? (
-                    <>
-                      <a key={index} href="#">
-                      {/* mobile image */}
-                        <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full md:hidden" />
-                      {/* desktop image */}
-                        <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full hidden md:block" />
-                      </a>
-                      <div className='absolute z-10 top-2/4 left-2/4 bg-white/90 border-2 border-grey-200 w-3/5 max-[479px]:w-[90%] max-w-j600 -translate-x-2/4  mx-5 max-[479px]:!mx-0 -translate-y-2/4'> 
-                        <div className="p-j15 md:p-5 text-center">
-                          <h2 className='text-base md:text-xl tb:text-26 jlg:text-34 leading-tight font-medium  text-blue mb-2.5 md:mb-4'>Elegant Plein Aire Frames<br />with Timeless Style</h2>
-                          <p className='mb-2.5 text-xs md:text-sm jxl:text-base !text-blue'>Our Most Popular Ready-Made Frame Style</p>
-                          <a className="btn-secondary uppercase min-w-[165px] !leading-none inline-block min-h-j30 md:min-h-[38px] tb:min-h-10  max-[767px]:text-xs py-2.5 md:pt-3 rounded-[3px] shadow-[0px_0px_5px_rgba(0,0,0,0.4)]" href="#" >Shop Now</a>
-                        </div>
-                      </div>
-                  </>
-            ) : (
-             <>              
-                <a key={index} href="#">
-                  {/* mobile image */}
-                    <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full md:hidden" />
-                  {/* desktop image */}
-                    <img key={index} src={image} alt={`Slide ${index + 1}`} className="w-full hidden md:block" />
-                </a>
-                <a href="#" className='btn-secondary uppercase min-w-[165px] text-center max-[479px]:!min-w-[unset] max-[767px]:px-2.5 !leading-none inline-block min-h-9 md:min-h-[38px] tb:min-h-10  max-[767px]:text-xs pb-2.5 pt-3 rounded-[3px] shadow-[0px_0px_5px_rgba(0,0,0,0.4)] absolute bottom-[17%] left-[7%] md:bottom-[5%] md:left-[3%]'>Shop Now</a>
-              </>
-            )}
-                      </div>
-                 </>
-                ))
-              ) : (
-                <div>No Banner Images Available</div>
-              )}
-
-
+    <div className="home_banner relative">
+      <div className='container md:px-10 2xl:px-[60px]'>
+      <div className="carousel-container  relative overflow-hidden">
+        <div className="carousel-slides relative">
+          {items.map((b, index) => (
+            <div key={index} className="carousel-slide relative">
+              <div className="relative">
+                <div className="carousel-slide-inner">
+                  <a key={index} href={b.button_link || '#'}>
+                    {/* mobile image */}
+                    <img key={index} src={b.image} alt={`Slide ${index + 1}`} className="w-full md:hidden" />
+                    {/* desktop image */}
+                    <img key={index} src={b.image} alt={`Slide ${index + 1}`} className="w-full hidden md:block" />
+                  </a>
+                </div>
+                {((b.heading || b.content) && b.button) && (
+                  <div className='absolute z-10 top-2/4 left-2/4 bg-white/90 border-2 border-grey-200 w-3/5 max-[479px]:w-[90%] max-w-[600px] -translate-x-2/4  mx-5 max-[479px]:!mx-0 -translate-y-2/4'> 
+                    <div className="p-j15 md:p-5 text-center">
+                      {b.heading && (
+                        <h2 className='text-base md:text-xl tb:text-26 jlg:text-34 leading-tight font-medium  text-blue mb-2.5 md:mb-4' dangerouslySetInnerHTML={{__html: b.heading}} />
+                      )}
+                      {b.content && (
+                        <p className='mb-2.5 text-xs md:text-sm jxl:text-base !text-blue' dangerouslySetInnerHTML={{__html: b.content}} />
+                      )}
+                      {b.button && (
+                        <a className="btn-secondary uppercase min-w-[165px] !leading-none inline-block min-h-j30 md:min-h-[38px] tb:min-h-10  max-[767px]:text-xs py-2.5 md:pt-3 rounded-[3px] shadow-[0px_0px_5px_rgba(0,0,0,0.4)]" href={b.button_link || '#'} >{b.button}</a>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {(!b.heading && !b.content && b.button) && (
+                  <div className="absolute bottom-[5%] left-[3%]">
+                    <a className="btn-secondary uppercase min-w-[165px] !leading-none inline-block min-h-j30 md:min-h-[38px] tb:min-h-10  max-[767px]:text-xs py-2.5 md:pt-3 rounded-[3px] shadow-[0px_0px_5px_rgba(0,0,0,0.4)]" href={b.button_link || '#'} >{b.button}</a>
+                  </div>
+                )}
+              </div>
+              <div className="carousel-caption absolute bottom-0 w-full text-center"></div>
             </div>
-            <button id="prev" className="carousel-nav absolute top-1/2 left-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl transition-all text-blue w-10 h-10 rounded-full -scale-x-100"></button>
-            <button id="next" className="carousel-nav absolute top-1/2 right-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl  transition-all text-blue w-10 h-10 rounded-full"></button>
-          </div>
-          <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
-              {banner.map((image, index) => (
-                <button key={index} className="indicator w-2 h-2 bg-gray-400 rounded-full" data-slide={index}></button>
-              ))}
-          </div>
+          ))}
         </div>
+        <button className="carousel-prev carousel-nav absolute top-1/2 left-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl transition-all text-blue w-10 h-10 rounded-full -scale-x-100"></button>
+        <button className="carousel-next carousel-nav absolute top-1/2 right-2 -translate-y-1/2 bg-white/50 hover:bg-white flex items-center justify-center text-4xl  transition-all text-blue w-10 h-10 rounded-full"></button>
+      </div>
+      <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 flex space-x-2">
+        {items.map((_, index) => (
+          <button key={index} className="indicator w-2 h-2 bg-gray-400 rounded-full" data-slide={index}></button>
+        ))}
       </div>
       </div>
+      
     </div>
   );
 }
 
 
-function TopAdsLink({ adsData }) {
+function TopAdsLink({ ads }) {
+  console.log('adsData:- ', ads);
   return (
     <div className="container mt-j30 md:mt-[50px] md:px-10 2xl:px-[60px]  -order-1 md:order-none">
       <ul className="flex">
-        {adsData
-          ?.filter(ad => ad.position_?.trim().toLowerCase() === "top")
+        {ads
+          ?.filter(ad => ad.position_?.trim().toLowerCase() === "after banner")
           .map((ad, index) => (
             <li key={index} data-position={ad.position_}>
               <a href={ad.ads_link || "#"}>
@@ -847,7 +969,7 @@ function FeaturedCollections({ collections, title }) {
                           },
                         }}
                       >
-                        {collections.filter((c) => !!c.image).map((collection) => (
+                        {(collections || []).filter((c) => !!c.image).map((collection) => (
                           <SwiperSlide key={collection.id}>
                             <div className="flex flex-col">
                               <Link key={collection.id} to={`/collections/${collection.handle}`} >
@@ -873,7 +995,7 @@ function FeaturedCollections({ collections, title }) {
                     </div>
                   ) : (
                     <div className="featured-collections ons-grid grid grid-cols-5 tb:grid-cols-6 gap-y-10 gap-x-5">
-                        {collections.filter((c) => !!c.image).map((collection) => (
+                        {(collections || []).filter((c) => !!c.image).map((collection) => (
                           <div className="flex flex-col" key={collection.id}>
                             <Link key={collection.id} className="" to={`/collections/${collection.handle}`} >
                               <div className="featured-collection-image aspect-square flex-none flex items-center justify-center">
@@ -908,7 +1030,7 @@ function AdvertisementBanner({ ads, type }) {
   return (
     <div className='container md:px-10 2xl:px-[60px] mt-j30 md:mt-[50px] jlg::mt-[65px]'>
       {ads
-        ?.filter(ad => ad.position_?.trim().toLowerCase() === "bottom")
+        ?.filter(ad => ad.position_?.trim().toLowerCase() === "middle")
         .map((ad, index) => (
         <div className='-mx-5 md:mx-0'>
           <div class="text-center mb-j30 md:mb-[51px] px-2.5 md:hidden">
@@ -979,29 +1101,34 @@ function SaleProducts({ ads, type }) {
     );
   }
 
+  // Top ads only
+  const topAds = ads.filter((ad) => ad.position_?.trim().toLowerCase() === 'top');
+  console.log('topAds', ads);
+  // Build rows with pointer: first row 3, then 2 each
+  const rows = [];
+  let i = 0;
+  while (i < topAds.length) {
+    const groupSize = rows.length === 0 ? 3 : 2;
+    rows.push(topAds.slice(i, i + groupSize));
+    i += groupSize;
+  }
+
   return (
     <div className='container mt-j30 md:px-10 2xl:px-[60px] -order-1 md:order-none'>
-      {ads
-        .filter(ad => ad.position_?.trim().toLowerCase() === "top") // Filter only "Top" ads
-        .reduce((rows, ad, index) => {
-          if (index % 3 === 0) {
-            rows.push([]); // Start a new row every 3 items
-          }
-          rows[rows.length - 1].push({ ...ad, globalIndex: index }); // Track the global index
-          return rows;
-        }, [])
-        .map((row, rowIndex) => (
-          <div key={rowIndex}  className={`flex flex-col md:flex-row -mx-5 px-2.5 mb-10 md:mb-0 md:px-0 md:mx-0 ${row.length  > 2 ? "md:gap-x-5 lg:gap-x-10" : "gap-y-2.5 [&_a.desktopHide]:md:hidden [&_a.mobileHide]:hidden [&_a.mobileHide]:md:block [&:has(a.desktopHide)]:!gap-y-10 md:gap-x-1.5 tb:gap-x-2 lg:gap-x-4"}`}>
-            {row.map((ad, index) => (
-              <div key={index} className={`w-full md:mb-[34px] ${ad.globalIndex > 2 ? "md:w-6/12" : "md:w-4/12"}`}>
-                <a href={ad.ads_link || "#"} >
-                  <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${ad.globalIndex + 1}`} />
-                </a>
-              </div>
-            ))}
-          </div>
-        ))
-      }   
+      {rows.map((row, rIndex) => (
+        <div key={rIndex} className='flex flex-col md:flex-row -mx-5 px-2.5 mb-10 md:mb-0 md:px-0 md:mx-0 md:gap-x-5 lg:gap-x-10'>
+          {row.map((ad, idx) => (
+            <div key={idx} className={`w-full md:mb-[34px] ${rIndex === 0 ? 'md:w-4/12' : 'md:w-6/12'}`}>
+              <a href={ad.ads_link || "#"}>
+                <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${rIndex === 0 ? idx + 1 : 3 + (rIndex - 1) * 2 + idx + 1}`} />
+              </a>
+            </div>
+          ))}
+          {rIndex !== 0 && row.length === 1 && (
+            <div className='md:w-6/12'></div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -1018,15 +1145,38 @@ function OfferProducts() {
   );
 }
 
-function ArtAndSupplies() {
+function ArtAndSupplies({ feature }) {
+  if (!feature) return null;
+  const bgStyle = feature.background_color ? { backgroundColor: feature.background_color } : {};
   return (
-    <section className='bg-grey-100 mt-j30 md:mt-[50px] jlg::mt-[65px] -order-1 md:order-none'>
-      <div className='container md:px-10 2xl:px-[60px]'>
+    <section className='mt-j30 md:mt-[50px] jlg::mt-[65px] -order-1 md:order-none' style={bgStyle}>
+      <div className='container max-w-[1240px] md:px-10 2xl:px-[60px]'>
         <div className="specialist-in-providing center text-center -mx-5  py-5 px-2.5 md:mx-0 md:py-10 md:px-0">
           <div data-content-type="html" data-appearance="default" data-element="main" data-decoded="true">
-            <h1 className='text-blue text-[clamp(11px,2.5vw,36px)] font-semibold mb-j5 block'>Professional Art Supplies &amp; Framing Specialists</h1>
-            <span className='text-blue text-[1.5vw] max-[479px]:text-[2.5vw] tb:text-[1.3em] block mb-j5 leading-normal'>Better Art Materials, Reliability, Great Prices, Exceptional Service! Trusted For Over 50 Years. The Quality Of Your Art Matters To Us!</span>
-            <Link to="#" className='text-blue underline text-[1.5vw] max-[479px]:text-[2.5vw] tb:text-sm'><strong>About Us &gt;</strong></Link>
+            {feature.feature_title && (
+              <h1 className='text-blue text-[clamp(11px,2.5vw,36px)] font-semibold mb-j5 block' dangerouslySetInnerHTML={{ __html: feature.feature_title }} />
+            )}
+            {feature.feature_content && (() => {
+              // feature_content may be rich text JSON from Shopify
+              try {
+                const json = JSON.parse(feature.feature_content);
+                if (json && typeof json === 'object') {
+                  return (
+                    <div className='text-blue text-[1.5vw] max-[479px]:text-[2.5vw] tb:text-[1.3em] block mb-j5 leading-normal'>
+                      <RichTextRenderer content={json} />
+                    </div>
+                  );
+                }
+              } catch (_) {
+                // not JSON; fall through to HTML string
+              }
+              return (
+                <span className='text-blue text-[1.5vw] max-[479px]:text-[2.5vw] tb:text-[1.3em] block mb-j5 leading-normal' dangerouslySetInnerHTML={{ __html: feature.feature_content }} />
+              );
+            })()}
+            {feature.feature_button && (
+              <a href={feature.feature_button_link || '#'} className='text-blue underline text-[1.5vw] max-[479px]:text-[2.5vw] tb:text-sm'><strong>{feature.feature_button}</strong></a>
+            )}
           </div>
         </div>
       </div>
@@ -1088,7 +1238,7 @@ function ImageLinkList({ ads, type }) {
     <div className='container md:px-10 2xl:px-[60px] mt-j30 md:mt-[50px] jlg::mt-[65px]'>
       <div className="image-link-lists -mx-2.5 md:mx-0">
         <ul className="image-catList flex flex-col md:flex-row md:flex-wrap gap-y-2.5 md:gap-y-5 tb:gap-y-10 justify-center md:-mx-2.5 tb:-mx-5">          
-          {ads ?.filter(ad => ad.position_?.trim().toLowerCase() === "middle")
+          {ads ?.filter(ad => ad.position_?.trim().toLowerCase() === "bottom")
           .map((ad, index) => (
             <li key={index} className='md:w-1/3  md:px-2.5 tb:px-5'>
               <a href={ad.ads_link || "#"}>
@@ -1203,7 +1353,7 @@ const CHILD_PRODUCTS_PRICE_QUERY = `#graphql
 
 const GET_METAOBJECT_QUERY = `#graphql
   query GetMetaobject($type: String!) {
-    metaobjects(type: $type, first: 10) {
+    metaobjects(type: $type, first: 20) {
       edges {
         node {
           handle
