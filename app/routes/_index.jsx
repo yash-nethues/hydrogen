@@ -30,27 +30,13 @@ export async function loader(args) {
 
   const adsData = await loadADSData(args);
   const supplyData = await loadFooterSupplyData(args);
+  const customShopItems = await loadCustomShop(args);
   const featureContent = await loadFeatureContent(args);
-
-  const FinestcollectionId = '484561191209'; // Change this to any dynamic value
-  const betterMaterialcollectionId = '484561223977'; // Change this to any dynamic value
-  const newArrivalID = '483298181417';
-  const professionalID = '484561191209';
-  const artistID = '484561223977';
-
-
-
-  const finestcollectionData = await fetchCollectionById(args, FinestcollectionId);
-  const bettercollectionData = await fetchCollectionById(args, betterMaterialcollectionId);
-
-  const arrivalcollectionData = await fetchCollectionById(args, newArrivalID);
-  const professionalcollectionData = await fetchCollectionById(args, professionalID);
-  const artistcollectionData = await fetchCollectionById(args, artistID);
 
   const bannerWithContentImageData = await bannerWithContentImage(args);
   const jtabFeaturedList = await loadJtabFeaturedProduct(args);
   const homepageFeaturedCollections = await loadHomepageFeaturedCollections(args);
-  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, featureContent, bannerWithContentImageData , finestcollectionData, bettercollectionData , arrivalcollectionData, professionalcollectionData, artistcollectionData, jtabFeaturedList, homepageFeaturedCollections });
+  return defer({ ...deferredData, ...criticalData, ...bannerData, adsData, supplyData, featureContent, customShopItems, bannerWithContentImageData, jtabFeaturedList, homepageFeaturedCollections });
 }
 
 /**
@@ -196,13 +182,28 @@ async function loadBannerData({ context }, type = "home_banner") {
     const items = edges.map((edge) => {
       const fields = (edge?.node?.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
       const banner_image = fields.banner_image || '';
+      const mobile_image = fields.mobile_image || '';
       if (typeof banner_image === 'string' && banner_image.startsWith('gid://shopify/MediaImage/')) {
         mediaIds.push(banner_image);
       }
+      if (typeof mobile_image === 'string' && mobile_image.startsWith('gid://shopify/MediaImage/')) {
+        mediaIds.push(mobile_image);
+      }
+      const fromRaw = fields.from || fields.from || '';
+      const toRaw = fields.to || fields.to || '';
+      const parseTs = (v) => {
+        if (!v || typeof v !== 'string') return null;
+        const ts = Date.parse(v);
+        return Number.isFinite(ts) ? ts : null;
+      };
       return {
         raw_image: banner_image,
+        raw_mobile_image: mobile_image,
         banner_heading: fields.banner_heading || '',
         banner_content: fields.banner_content || '',
+        banner_order: parseInt(fields.banner_order) || 0,
+        fromTs: parseTs(fromRaw),
+        toTs: parseTs(toRaw),
         // Support multiple possible field names for button text and link
         button: fields.button_text || fields.banner_button || fields.banner_button_text || '',
         button_link: fields.button_link || fields.banner_button_link || fields.banner_link || '#',
@@ -220,8 +221,20 @@ async function loadBannerData({ context }, type = "home_banner") {
       }, {});
     }
 
-    const bannerItems = items.map((it) => ({
+    // Filter by time window (from/to). If no bounds provided, always include
+    const nowTs = Date.now();
+    const timeFiltered = items.filter((it) => {
+      if (it.fromTs && nowTs < it.fromTs) return false;
+      if (it.toTs && nowTs > it.toTs) return false;
+      return true;
+    });
+
+    // Sort items by banner_order in ascending order
+    const sortedItems = timeFiltered.sort((a, b) => a.banner_order - b.banner_order);
+
+    const bannerItems = sortedItems.map((it) => ({
       image: it.raw_image?.startsWith('gid://shopify/MediaImage/') ? (imageUrlMap[it.raw_image] || '/image/placeholder.jpg') : (it.raw_image || '/image/placeholder.jpg'),
+      mobileImage: it.raw_mobile_image?.startsWith('gid://shopify/MediaImage/') ? (imageUrlMap[it.raw_mobile_image] || '') : (it.raw_mobile_image || ''),
       heading: it.banner_heading,
       content: it.banner_content,
       button: it.button,
@@ -255,10 +268,12 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
 
     console.log('Processed Ads Data (Before Fetching Images):', adsData);
 
-    // Extract MediaImage IDs from adsData
-    const mediaImageIds = adsData
-      .filter(ad => ad.ads_image?.startsWith('gid://shopify/MediaImage/'))
-      .map(ad => ad.ads_image);
+    // Extract MediaImage IDs from adsData (desktop and mobile)
+    const mediaImageIds = [];
+    adsData.forEach((ad) => {
+      if (ad.ads_image?.startsWith('gid://shopify/MediaImage/')) mediaImageIds.push(ad.ads_image);
+      if (ad.mobile_image?.startsWith('gid://shopify/MediaImage/')) mediaImageIds.push(ad.mobile_image);
+    });
 
     console.log('MediaImage IDs:', mediaImageIds);
 
@@ -284,6 +299,9 @@ async function loadADSData({ context }, type = "home_ads_with_link") {
       adsData.forEach(ad => {
         if (ad.ads_image?.startsWith('gid://shopify/MediaImage/')) {
           ad.ads_image = imageUrlMap[ad.ads_image] || "/image/placeholder.jpg";
+        }
+        if (ad.mobile_image?.startsWith('gid://shopify/MediaImage/')) {
+          ad.mobile_image = imageUrlMap[ad.mobile_image] || ad.ads_image || "/image/placeholder.jpg";
         }
       });
     }
@@ -460,6 +478,53 @@ async function loadFooterSupplyData({ context }, type = "before_footer_supplies"
   }
 }
 
+// Load Custom Shop content from metaobject 'homepage_custom_shop'
+async function loadCustomShop({ context }, type = "homepage_custom_shop") {
+  try {
+    const resp = await context.storefront.query(GET_METAOBJECT_QUERY, { variables: { type } });
+    const edges = resp?.metaobjects?.edges || [];
+    const items = edges.map((edge) => {
+      const fields = (edge?.node?.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
+      return {
+        shop_title: fields.shop_title || '',
+        shop_subtitle: fields.shop_subtitle || '',
+        shop_content: fields.shop_content || '',
+        shop_image: fields.shop_image || '',
+        shop_button: fields.shop_button || '',
+        button_link: fields.button_link || '#',
+        order: parseInt(fields.ads_order) || 0,
+      };
+    });
+
+    // Resolve MediaImage IDs to URLs
+    const mediaIds = items
+      .map((it) => it.shop_image)
+      .filter((id) => typeof id === 'string' && id.startsWith('gid://shopify/MediaImage/'));
+    let imageUrlMap = {};
+    if (mediaIds.length > 0) {
+      const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, { variables: { ids: mediaIds } });
+      imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
+        if (node?.id && node?.image?.url) acc[node.id] = node.image.url;
+        return acc;
+      }, {});
+    }
+
+    const normalized = items
+      .map((it) => ({
+        ...it,
+        shop_image: it.shop_image?.startsWith('gid://shopify/MediaImage/') ? (imageUrlMap[it.shop_image] || '/image/placeholder.jpg') : (it.shop_image || '/image/placeholder.jpg'),
+      }))
+      .sort((a, b) => a.order - b.order);
+
+    // Return only the latest two entries (by incoming order), prefer end of list
+    const latestTwo = normalized.slice(-2);
+    return latestTwo;
+  } catch (e) {
+    console.error('loadCustomShop error', e);
+    return [];
+  }
+}
+
 async function bannerWithContentImage({ context }, type = "banner_with_content_image") {
   try {
     // Fetch the metaobject data
@@ -543,7 +608,7 @@ export default function Homepage() {
       <AdvertisementBanner ads={data.adsData} type="home_ads_with_link" />
       <CategoryLinkContent bannerWithContentImage={data.bannerWithContentImageData} type="banner_with_content_image" />
       <ImageLinkList ads={data.adsData} type="home_ads_with_link" />
-      <CustomShop />
+      <CustomShop items={data.customShopItems} />
       <FeaturedCollections collections={data.homepageFeaturedCollections?.length ? data.homepageFeaturedCollections : data.featuredCollections} title="Shop By Categories" />
       <HomeBlog posts={data.blogPosts} title='Latest Blog Articles  <div class="block w-full text-sm mt-2.5">Know more about the latest updates</div>' />
       <ShopSupplies supplyList={data.supplyData} type="before_footer_supplies" title="Shop Our Artists Supplies" />
@@ -639,8 +704,8 @@ function HomeBannerCaraousel({ banner, type }) {
 
   if (items.length === 0) return null;
   return (
-    <div className="home_banner relative">
-      <div className='container md:px-10 2xl:px-[60px]'>
+    <div className="home_banner relative   -order-1 md:order-none">
+      <div className='container px-[10px] md:px-10 2xl:px-[60px]'>
       <div className="carousel-container  relative overflow-hidden">
         <div className="carousel-slides relative">
           {items.map((b, index) => (
@@ -649,9 +714,9 @@ function HomeBannerCaraousel({ banner, type }) {
                 <div className="carousel-slide-inner">
                   <a key={index} href={b.button_link || '#'}>
                     {/* mobile image */}
-                    <img key={index} src={b.image} alt={`Slide ${index + 1}`} className="w-full md:hidden" />
+                    <img key={`m-${index}`} src={b.mobileImage || b.image} alt={`Slide ${index + 1}`} className="w-full md:hidden" />
                     {/* desktop image */}
-                    <img key={index} src={b.image} alt={`Slide ${index + 1}`} className="w-full hidden md:block" />
+                    <img key={`d-${index}`} src={b.image} alt={`Slide ${index + 1}`} className="w-full hidden md:block" />
                   </a>
                 </div>
                 {((b.heading || b.content) && b.button) && (
@@ -697,18 +762,17 @@ function HomeBannerCaraousel({ banner, type }) {
 function TopAdsLink({ ads }) {
   console.log('adsData:- ', ads);
   return (
-    <div className="container mt-j30 md:mt-[50px] md:px-10 2xl:px-[60px]  -order-1 md:order-none">
+    <div className="container mt-j30 md:mt-[50px] px-0 md:px-10 2xl:px-[60px]  -order-1 md:order-none">
       <ul className="flex">
         {ads
-          ?.filter(ad => ad.position_?.trim().toLowerCase() === "after banner")
+          ?.filter(ad => ad.position_?.trim().toLowerCase() === "top hero banner ad")
           .map((ad, index) => (
             <li key={index} data-position={ad.position_}>
               <a href={ad.ads_link || "#"}>
-                <img
-                  src={ad.ads_image || "/image/placeholder.jpg"}
-                  alt={`Ad ${index + 1}`}
-                  className="cat-list inline-block"
-                />
+                {/* desktop image */}
+                <img src={ad.ads_image || "/image/placeholder.jpg"} alt={`Ad ${index + 1}`} className="cat-list inline-block hidden md:block" />
+                {/* mobile image */}
+                <img src={ad.mobile_image || ad.ads_image || "/image/placeholder.jpg"} alt={`Ad ${index + 1}`} className="cat-list inline-block md:hidden" />
               </a>
             </li>
           ))
@@ -1030,7 +1094,7 @@ function AdvertisementBanner({ ads, type }) {
   return (
     <div className='container md:px-10 2xl:px-[60px] mt-j30 md:mt-[50px] jlg::mt-[65px]'>
       {ads
-        ?.filter(ad => ad.position_?.trim().toLowerCase() === "middle")
+        ?.filter(ad => ad.position_?.trim().toLowerCase() === "middle hero banner ad")
         .map((ad, index) => (
         <div className='-mx-5 md:mx-0'>
           <div class="text-center mb-j30 md:mb-[51px] px-2.5 md:hidden">
@@ -1041,17 +1105,9 @@ function AdvertisementBanner({ ads, type }) {
           <div className="advertisement-banner" key={index}>              
             <a data-discover="true" href={ad.ads_link || "#"}>
               {/* desktop image */}
-              <img
-                src={ad.ads_image || "/image/placeholder.jpg"}
-                alt={`Ad ${index + 1}`}
-                className="advertisement hidden md:block w-full"
-              />
+              <img src={ad.ads_image || "/image/placeholder.jpg"} alt={`Ad ${index + 1}`} className="advertisement hidden md:block w-full" />
               {/* mobile image */}
-              <img
-                src={ad.ads_image || "/image/placeholder.jpg"}
-                alt={`Ad ${index + 1}`}
-                className="advertisement md:hidden w-full"
-              />
+              <img src={ad.mobile_image || ad.ads_image || "/image/placeholder.jpg"} alt={`Ad ${index + 1}`} className="advertisement md:hidden w-full" />
             </a>
           </div>
         </div>
@@ -1092,41 +1148,72 @@ function CategoryLinkContent({ bannerWithContentImage, type }) {
   );
 }
 function SaleProducts({ ads, type }) {
-  // Handle cases where ads is undefined or empty
-  if (!ads || ads.length === 0) {
-    return (
-      <div className='container pt-20  md:px-10 2xl:px-[60px]'>
-        <p>No ads available.</p>
-      </div>
-    );
-  }
+  if (!ads || ads.length === 0) return null;
+  const norm = (s) => (s || '').trim().toLowerCase();
+  const nowTs = Date.now();
+  const parseTs = (v) => {
+    if (!v || typeof v !== 'string') return null;
+    const ts = Date.parse(v);
+    return Number.isFinite(ts) ? ts : null;
+  };
+  const withinWindow = (ad) => {
+    const fromTs = parseTs(ad.from);
+    const toTs = parseTs(ad.to);
+    if (fromTs && nowTs < fromTs) return false;
+    if (toTs && nowTs > toTs) return false;
+    return true;
+  };
 
-  // Top ads only
-  const topAds = ads.filter((ad) => ad.position_?.trim().toLowerCase() === 'top');
-  console.log('topAds', ads);
-  // Build rows with pointer: first row 3, then 2 each
-  const rows = [];
-  let i = 0;
-  while (i < topAds.length) {
-    const groupSize = rows.length === 0 ? 3 : 2;
-    rows.push(topAds.slice(i, i + groupSize));
-    i += groupSize;
+  // Split by positions
+  const topThree = ads.filter((ad) => norm(ad.position_) === 'top three ads block').filter(withinWindow);
+  const twoBlock = ads.filter((ad) => norm(ad.position_) === 'two ads block').filter(withinWindow);
+
+  // Top Three: latest 3 by ads_order (desc)
+  const latestTopThree = topThree
+    .slice()
+    .sort((a, b) => (parseInt(b.ads_order) || 0) - (parseInt(a.ads_order) || 0))
+    .slice(0, 3);
+
+  // Two Ads Block: sort by ads_order asc (or keep as-is if not provided)
+  const sortedTwoBlock = twoBlock.slice().sort((a, b) => (parseInt(a.ads_order) || 0) - (parseInt(b.ads_order) || 0));
+  // Chunk into rows of 2
+  const twoRows = [];
+  for (let i = 0; i < sortedTwoBlock.length; i += 2) {
+    twoRows.push(sortedTwoBlock.slice(i, i + 2));
   }
 
   return (
     <div className='container mt-j30 md:px-10 2xl:px-[60px] -order-1 md:order-none'>
-      {rows.map((row, rIndex) => (
-        <div key={rIndex} className='flex flex-col md:flex-row -mx-5 px-2.5 mb-10 md:mb-0 md:px-0 md:mx-0 md:gap-x-5 lg:gap-x-10'>
-          {row.map((ad, idx) => (
-            <div key={idx} className={`w-full md:mb-[34px] ${rIndex === 0 ? 'md:w-4/12' : 'md:w-6/12'}`}>
+      {/* Top Three Ads Block - single row, 3 columns */}
+      {latestTopThree.length > 0 && (
+        <div className='flex flex-col md:flex-row -mx-5 px-2.5 mb-10 md:mb-0 md:px-0 md:mx-0 gap-y-5 md:gap-x-5 lg:gap-x-10'>
+          {latestTopThree.map((ad, idx) => (
+            <div key={idx} className='w-full md:mb-[34px] md:w-4/12'>
               <a href={ad.ads_link || "#"}>
-                <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${rIndex === 0 ? idx + 1 : 3 + (rIndex - 1) * 2 + idx + 1}`} />
+                {/* desktop image */}
+                <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${idx + 1}`} className="hidden md:block" />
+                {/* mobile image */}
+                <img src={ad.mobile_image || ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${idx + 1}`} className="md:hidden" />
               </a>
             </div>
           ))}
-          {rIndex !== 0 && row.length === 1 && (
-            <div className='md:w-6/12'></div>
-          )}
+        </div>
+      )}
+
+      {/* Two Ads Block - multiple rows, 2 columns */}
+      {twoRows.map((row, rIndex) => (
+        <div key={rIndex} className='flex flex-col md:flex-row -mx-5 px-2.5 mb-10 md:mb-0 md:px-0 md:mx-0  gap-y-2.5 md:gap-x-5 lg:gap-x-10'>
+          {row.map((ad, idx) => (
+            <div key={idx} className='w-full md:mb-[34px] md:w-6/12'>
+              <a href={ad.ads_link || "#"}>
+                {/* desktop image */}
+                <img src={ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${idx + 1}`} className="hidden md:block" />
+                {/* mobile image */}
+                <img src={ad.mobile_image || ad.ads_image || "/image/placeholder.jpg"} width="100%" height="auto" alt={ad.altText || `Ad ${idx + 1}`} className="md:hidden" />
+              </a>
+            </div>
+          ))}
+          {row.length === 1 && <div className='md:w-6/12'></div>}
         </div>
       ))}
     </div>
@@ -1238,15 +1325,14 @@ function ImageLinkList({ ads, type }) {
     <div className='container md:px-10 2xl:px-[60px] mt-j30 md:mt-[50px] jlg::mt-[65px]'>
       <div className="image-link-lists -mx-2.5 md:mx-0">
         <ul className="image-catList flex flex-col md:flex-row md:flex-wrap gap-y-2.5 md:gap-y-5 tb:gap-y-10 justify-center md:-mx-2.5 tb:-mx-5">          
-          {ads ?.filter(ad => ad.position_?.trim().toLowerCase() === "bottom")
+          {ads ?.filter(ad => ad.position_?.trim().toLowerCase() === "bottom three ads block")
           .map((ad, index) => (
             <li key={index} className='md:w-1/3  md:px-2.5 tb:px-5'>
               <a href={ad.ads_link || "#"}>
-                <img
-                  src={ad.ads_image || "/image/placeholder.jpg"}
-                  alt={`Ad ${index + 1}`}
-                  className="cat-list w-full"
-                />
+                {/* desktop image */}
+                <img src={ad.ads_image || "/image/placeholder.jpg"} alt={`Ad ${index + 1}`} className="cat-list w-full hidden md:block" />
+                {/* mobile image */}
+                <img src={ad.mobile_image || ad.ads_image || "/image/placeholder.jpg"} alt={`Ad ${index + 1}`} className="cat-list w-full md:hidden" />
               </a>
             </li>
           ))}
@@ -1396,6 +1482,7 @@ const GET_COLLECTION_BY_ID_QUERY = `#graphql
       id
       title
       description
+      handle
       image {
         url
         altText
