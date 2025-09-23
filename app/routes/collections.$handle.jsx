@@ -311,11 +311,11 @@ export default function Collection() {
             >
               {hasBanner && <div className="absolute inset-0 bg-black/40 pointer-events-none" />}
               <div className={`relative text-center px-5 max-w-[1170px] mx-auto ${hasBanner ? 'text-white' : 'text-blue'}`}>
-                <h1 className='text-22 md:text-26 jlg:text-40 py-5 mb-0 block font-semibold'><span className='leading-none block'>{collection.title}</span></h1>
-                {collection.bannerContent?.value && <p>{collection.bannerContent.value}</p>}
-                <a href="#faq" className='hover:underline'>...Read More+</a>
-              </div>
-            </div>
+            <h1 className='text-22 md:text-26 jlg:text-40 py-5 mb-0 block font-semibold'><span className='leading-none block'>{collection.title}</span></h1>
+            {collection.bannerContent?.value && <p>{collection.bannerContent.value}</p>}
+            <a href="#faq" className='hover:underline'>...Read More+</a>
+          </div>
+        </div>
           );
         })()}
       </header>
@@ -356,9 +356,9 @@ export default function Collection() {
         <div className='flex md:border-t md:border-grey-200 '>
           <div className='hidden md:block md:w-[30%] tb:w-[20.833%] md:border-r md:border-grey-200 pt-j15 pr-j15 tb:pt-5 tb:pr-5'>
             <div className='sticky top-16'>
-              <div className="mainbox">
+                      <div className="mainbox">
                 {siblingCollections.length > 0 && (
-                  <div className="applied-filters">
+                        <div className="applied-filters">
                     <h4>Categories</h4>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {siblingCollections.map((node) => (
@@ -366,9 +366,9 @@ export default function Collection() {
                           {node.title}
                         </Link>
                       ))}
-                    </div>
-                  </div>
-                )}
+                        </div>
+                      </div>
+                    )}
                 <h3 className='font-semibold py-2 pl-5 mb-5'>SHOP BY:</h3>
                 {moreWaysFilter?.values?.length ? (
                   <>
@@ -376,15 +376,15 @@ export default function Collection() {
                     <ul className="px-5 pb-5">
                       {moreWaysFilter.values.map((value) => (
                         <li key={value.id} className="mb-2">
-                          <Link
+                              <Link
                             to={createFilterUrl('v', moreWaysFilter.id, value.input)}
                             className={`hover:underline ${value.label === 'On Sale' ? 'text-onsale' : value.label === 'On Super Sale' ? 'text-onsupersale' : 'text-blue hover:text-brand'}`}
-                          >
-                            {value.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                              >
+                                {value.label}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
                   </>
                 ) : null}
               </div>
@@ -454,6 +454,7 @@ function ProductItem({ product, loading, toggleView, iframeContent, isExpanded, 
   const rootData = useRouteLoaderData('root');
   const [loggedIn, setLoggedIn] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
   const [activeTab, setActiveTab] = useState('login');
 
   React.useEffect(() => {
@@ -467,7 +468,11 @@ function ProductItem({ product, loading, toggleView, iframeContent, isExpanded, 
   const inWishlist = isInWishlist(product.id);
   const handleWishlist = () => {
     if (!loggedIn) { setShowLoginPrompt(true); return; }
-    if (inWishlist) removeFromWishlist(product.id); else addToWishlist(product.id);
+    if (inWishlist) removeFromWishlist(product.id); else {
+      addToWishlist(product.id);
+      setSuccessMsg('Added to wishlist');
+      setTimeout(() => setSuccessMsg(''), 2000);
+    }
   };
   const variantUrl = useVariantUrl(product.handle);
   //console.log('product data:- ', product);
@@ -678,6 +683,9 @@ function ProductItem({ product, loading, toggleView, iframeContent, isExpanded, 
           )}
         </div>
       </Modal>
+      {successMsg && (
+        <div className='fixed z-[10000] left-1/2 -translate-x-1/2 top-4 bg-green-600 text-white px-4 py-2 rounded shadow'>{successMsg}</div>
+      )}
     </>
 
   );

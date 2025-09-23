@@ -20,7 +20,9 @@ export function WishlistProvider({children}) {
 
 
   useEffect(() => {
-    //localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    if (isClient) {
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    }
   }, [wishlist]);
 
   const addToWishlist = (productId) => {

@@ -552,6 +552,7 @@ export function WishlistButton({productId}) {
   const rootData = useRouteLoaderData('root');
   const [loggedIn, setLoggedIn] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
   const [activeTab, setActiveTab] = useState('login');
 
   useEffect(() => {
@@ -570,7 +571,11 @@ export function WishlistButton({productId}) {
       return;
     }
     if (inWishlist) removeFromWishlist(productId);
-    else addToWishlist(productId);
+    else {
+      addToWishlist(productId);
+      setSuccessMsg('Added to wishlist');
+      setTimeout(() => setSuccessMsg(''), 2000);
+    }
   };
 
   return (
@@ -654,6 +659,9 @@ export function WishlistButton({productId}) {
           )}
         </div>
       </Modal>
+      {successMsg && (
+        <div className='fixed z-[10000] left-1/2 -translate-x-1/2 top-4 bg-green-600 text-white px-4 py-2 rounded shadow'>{successMsg}</div>
+      )}
     </>
   );
 }
