@@ -65,6 +65,46 @@ export default function Page() {
   const { page } = useLoaderData();
   const [showArrows, setShowArrows] = useState(false);
   const totalBrands = page?.listBrands?.references?.edges?.length || 0;
+
+  // Wishlist page special case rendering
+  if (page?.handle === 'wishlist') {
+    const {useWishlist} = require('~/components/WishlistProvider');
+    const {useRouteLoaderData, Link} = require('@remix-run/react');
+    const {useEffect} = require('react');
+    const WishlistContent = () => {
+      const {wishlist} = useWishlist();
+      const rootData = useRouteLoaderData('root');
+      useEffect(() => {}, [wishlist]);
+      return (
+        <div className="custom-container py-6">
+          <h2 className="text-2xl font-semibold mb-4">My Wishlist</h2>
+          {!wishlist?.length ? (
+            <p>Your wishlist is empty.</p>
+          ) : (
+            <ul className="list-disc pl-6">
+              {wishlist.map((id) => (
+                <li key={id} className="mb-2 break-all">
+                  <Link to={`/products/${id.split('/').pop()}`}>Product {id}</Link>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      );
+    };
+    return (
+      <div className="page">
+        <header className="custom-container mb-5 md:mb-0">
+          <div className='min-h-[100px] md:min-h-44 py-3 bg-center bg-[length:100%_100%] md:bg-cover'>
+            <div className='text-center px-5 max-w-[1170px] mx-auto text-blue'>
+              <h1 className='text-22 md:text-26 jlg:text-40 py-5 mb-0 block font-semibold'><span className='leading-none block'>Wishlist</span></h1>
+            </div>
+          </div>
+        </header>
+        <WishlistContent />
+      </div>
+    );
+  }
   return (
     <div className="page">
       <CouponBanners bannerCoupons={page.banner_coupons} />
@@ -89,7 +129,7 @@ export default function Page() {
         </div>
       </div>
 
-      {page.listCollections?.references?.edges?.length > 0 && (
+      {page?.listCollections?.references?.edges?.length > 0 && (
         <div className="page-list-collections">
           <div className='custom-container'>
             <div className="text-center mb-5 md:mb-10">
@@ -120,7 +160,7 @@ export default function Page() {
         </div>
       )}
       
-      {page.listBrands?.references?.edges?.length > 0 && (
+      {page?.listBrands?.references?.edges?.length > 0 && (
         <div className="custom-container mt-[60px] md:mt-[150px]">
           <div className="page-list-collections">
             <h2 className="text-25 font-semibold  relative mb-j15">
@@ -178,7 +218,7 @@ export default function Page() {
         </div>
       )}
 
-      <Accordion page={page} faqs={page.faqs.references.edges} />
+      <Accordion page={page} faqs={page?.faqs?.references?.edges || []} />
 
     </div>
   );
