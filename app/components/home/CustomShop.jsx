@@ -59,3 +59,58 @@ function CustomShop({ items }) {
 }
 
 export default CustomShop
+
+// Server-side loader for CustomShop items
+export async function loadCustomShopData({ context }, type = "homepage_custom_shop") {
+  const GET_METAOBJECT_QUERY = `#graphql
+    query GetMetaobject($type: String!) {
+      metaobjects(type: $type, first: 20) {
+        edges { node { handle type fields { key value } } }
+      }
+    }
+  `;
+  const GET_MEDIA_IMAGES_QUERY = `#graphql
+    query GetMediaImages($ids: [ID!]!) { nodes(ids: $ids) { ... on MediaImage { id image { url } } } }
+  `;
+
+  try {
+    const resp = await context.storefront.query(GET_METAOBJECT_QUERY, { variables: { type } });
+    const edges = resp?.metaobjects?.edges || [];
+    const items = edges.map((edge) => {
+      const fields = (edge?.node?.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
+      return {
+        shop_title: fields.shop_title || '',
+        shop_subtitle: fields.shop_subtitle || '',
+        shop_content: fields.shop_content || '',
+        shop_image: fields.shop_image || '',
+        shop_button: fields.shop_button || '',
+        button_link: fields.button_link || '#',
+        order: parseInt(fields.ads_order) || 0,
+      };
+    });
+
+    const mediaIds = items
+      .map((it) => it.shop_image)
+      .filter((id) => typeof id === 'string' && id.startsWith('gid://shopify/MediaImage/'));
+    let imageUrlMap = {};
+    if (mediaIds.length > 0) {
+      const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, { variables: { ids: mediaIds } });
+      imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
+        if (node?.id && node?.image?.url) acc[node.id] = node.image.url;
+        return acc;
+      }, {});
+    }
+
+    const normalized = items
+      .map((it) => ({
+        ...it,
+        shop_image: it.shop_image?.startsWith('gid://shopify/MediaImage/') ? (imageUrlMap[it.shop_image] || '/image/placeholder.jpg') : (it.shop_image || '/image/placeholder.jpg'),
+      }))
+      .sort((a, b) => a.order - b.order);
+
+    return normalized.slice(-2);
+  } catch (e) {
+    console.error('loadCustomShopData error', e);
+    return [];
+  }
+}
