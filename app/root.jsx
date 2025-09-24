@@ -77,13 +77,15 @@ export async function loader(args) {
   // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
-  const topMenus = await loadTopMenuData(args); 
+  const topMenus = await loadTopMenuData(args);
+  const megaMenus = await loadMegaMenusData(args, 'mega_menus');
   const {storefront, env} = args.context;
   return defer(
     {
       ...deferredData,
       ...criticalData,
       topMenus,
+      megaMenus,
       publicStoreDomain: env.PUBLIC_STORE_DOMAIN,
       shop: getShopAnalytics({
         storefront,
@@ -239,6 +241,211 @@ async function loadTopMenuData({ context }, type = "top_menus") {
   } catch (error) {
     console.error("Error fetching top menu data:", error);
     return [];
+  }
+}
+
+async function loadMegaMenusData({ context }, type = 'mega_menus') {
+  try {
+    // Attempt 1: Resolve via available_fields -> name = "Select_menus"
+    const availableData = await context.storefront.query(GET_METAOBJECT_QUERY, {
+      variables: { type: 'available_fields' },
+    });
+    const availableEdges = availableData?.metaobjects?.edges || [];
+    const selectMenusMeta = availableEdges.find((edge) => {
+      const fields = edge?.node?.fields || [];
+      const nameField = fields.find((f) => f.key === 'name');
+      return (nameField?.value || '').toLowerCase() === 'select_menus';
+    });
+
+    let menuItems = [];
+    if (selectMenusMeta) {
+      const selectFields = selectMenusMeta?.node?.fields || [];
+      // Collect referenced metaobjects from any field on this metaobject
+      const referencedNodes = selectFields.flatMap((f) => {
+        const refs = f?.references?.nodes || (f?.reference ? [f.reference] : []);
+        return refs || [];
+      });
+
+      if (referencedNodes.length) {
+        try {
+          console.log('[available_fields] Select_menus referenced nodes:', JSON.stringify(referencedNodes, null, 2));
+        } catch {}
+        // Normalize to edges-like structure for downstream processing
+        menuItems = referencedNodes.map((node) => ({ node }));
+      }
+    }
+
+    // Fallback: directly query by provided mega menu type
+    if (!menuItems.length) {
+      const megaData = await context.storefront.query(GET_METAOBJECT_QUERY, {
+        variables: { type },
+      });
+      menuItems = megaData?.metaobjects?.edges || [];
+    }
+
+    // Helper to parse link-type JSON strings like '/{"text":"Art Easels","url":"https://..."}'
+    function parseLinkValue(possibleLink) {
+      if (!possibleLink || typeof possibleLink !== 'string') return {url: possibleLink, text: ''};
+      const trimmed = possibleLink.trim();
+      const startsJson = trimmed.startsWith('{') || trimmed.startsWith('/{');
+      if (!startsJson) return {url: possibleLink, text: ''};
+      try {
+        const withoutLeadingSlash = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed;
+        const obj = JSON.parse(withoutLeadingSlash);
+        return {url: obj?.url || possibleLink, text: obj?.text || ''};
+      } catch {
+        return {url: possibleLink, text: ''};
+      }
+    }
+
+    function parseNavigationArray(possibleArray) {
+      if (!possibleArray) return [];
+      if (Array.isArray(possibleArray)) return possibleArray;
+      if (typeof possibleArray !== 'string') return [];
+      const trimmed = possibleArray.trim();
+      const looksArray = trimmed.startsWith('[') || trimmed.startsWith('/[');
+      if (!looksArray) return [];
+      try {
+        const withoutLeadingSlash = trimmed.startsWith('/') ? trimmed.slice(1) : trimmed;
+        const arr = JSON.parse(withoutLeadingSlash);
+        return Array.isArray(arr) ? arr : [];
+      } catch {
+        return [];
+      }
+    }
+
+    // Collect feature image MediaImage IDs to resolve to URLs
+    const featureImageIds = [];
+    for (const edge of menuItems) {
+      const fields = edge?.node?.fields || [];
+      for (const f of fields) {
+        if ((f.key === 'feature_image' || f.key === 'feature_image_second') && typeof f.value === 'string' && f.value.startsWith('gid://shopify/MediaImage/')) {
+          featureImageIds.push(f.value);
+        }
+      }
+    }
+
+    let mediaImageUrlMap = {};
+    if (featureImageIds.length) {
+      try {
+        const mediaResp = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, { variables: { ids: featureImageIds } });
+        mediaImageUrlMap = (mediaResp?.nodes || []).reduce((accMap, node) => {
+          if (node?.id && node?.image?.url) accMap[node.id] = node.image.url;
+          return accMap;
+        }, {});
+      } catch (e) {
+        console.error('Error resolving media images for mega menus', e);
+      }
+    }
+
+    // Normalize fields and group by parent
+    const groupedByParent = menuItems.reduce((acc, edge) => {
+      const rawFields = edge?.node?.fields || [];
+      const item = rawFields.reduce((fieldsAcc, field) => {
+        fieldsAcc[field.key] = field.value;
+        return fieldsAcc;
+      }, {});
+
+      // Use menu_title as the grouping key per requirements
+      const keyTitle = item.menu_title || '';
+      if (!keyTitle) return acc;
+
+      // Resolve select_menus → menu_navigations sections
+      const selectField = rawFields.find((f) => f.key === 'select_menus');
+      const menuNavNodes = selectField?.references?.nodes || (selectField?.reference ? [selectField.reference] : []);
+
+      if (!menuNavNodes || !menuNavNodes.length) {
+        try {
+          console.log('[mega_menus] no select_menus references for', keyTitle, 'fields:', rawFields.map(f => ({key: f.key, type: f.type})));
+        } catch {}
+      }
+
+      const sections = (menuNavNodes || []).map((node) => {
+        const refMap = (node?.fields || []).reduce((m, f) => {
+
+          console.log('fnavigation', f.key, f.value);
+
+          m[f.key] = f.value;
+          m[`__refs_${f.key}`] = f.references?.nodes || undefined;
+          m[`__ref_${f.key}`] = f.reference || undefined;
+          return m;
+        }, {});
+
+        const menuTitle = refMap.menu_title || '';
+        const parsedMenuTitleLink = parseLinkValue(refMap.menu_title_link || refMap.menu_title_url || '');
+        const menuTitleLink = parsedMenuTitleLink.url || '#';
+        const menuSubtitle = refMap.menu_subtitle || '';
+
+        const navRefs = refMap['__refs_navigations'] || (refMap['__ref_navigations'] ? [refMap['__ref_navigations']] : []);
+        let items = (navRefs || []).map((navNode) => {
+          const navMap = (navNode?.fields || []).reduce((m, f) => {
+            m[f.key] = f.value;
+            return m;
+          }, {});
+          const parsedNavLink = parseLinkValue(navMap.link || navMap.url || '');
+          const navTitle = navMap.title || navMap.menu || navMap.label || parsedNavLink.text || '';
+          const navUrl = parsedNavLink.url || '#';
+          return { title: navTitle, link: navUrl };
+        }).filter((n) => n.title || n.link);
+
+        if (!items.length) {
+          // Fallback: field 'navigation' or 'navigations' contains JSON array of {text,url}
+          const navArrayVal = refMap.navigation || refMap.navigations;
+          const arr = parseNavigationArray(navArrayVal);
+          items = arr.map((entry) => ({ title: entry?.text || '', link: entry?.url || '#' })).filter((n) => n.title || n.link);
+        }
+
+        return {
+          menuTitle,
+          menuTitleLink,
+          menuSubtitle,
+          items,
+        };
+      });
+
+      let featureImage = item.feature_image || '';
+      if (typeof featureImage === 'string' && featureImage.startsWith('gid://shopify/MediaImage/')) {
+        featureImage = mediaImageUrlMap[featureImage] || featureImage;
+      }
+      const featureImageLinkParsed = parseLinkValue(item.feature_image_link || '');
+      const featureImageLink = featureImageLinkParsed.url || '';
+      let featureImageSecond = item.feature_image_second || '';
+      if (typeof featureImageSecond === 'string' && featureImageSecond.startsWith('gid://shopify/MediaImage/')) {
+        featureImageSecond = mediaImageUrlMap[featureImageSecond] || featureImageSecond;
+      }
+      const featureImageSecondLinkParsed = parseLinkValue(item.feature_image_second_link || '');
+      const featureImageSecondLink = featureImageSecondLinkParsed.url || '';
+
+      if (!acc[keyTitle]) {
+        acc[keyTitle] = {
+          sections,
+          featureImage,
+          featureImageLink,
+          featureImageSecond,
+          featureImageSecondLink,
+        };
+      } else if (Array.isArray(acc[keyTitle])) {
+        acc[keyTitle] = {
+          sections: acc[keyTitle].concat(sections),
+          featureImage,
+          featureImageLink,
+          featureImageSecond,
+          featureImageSecondLink,
+        };
+      } else {
+        acc[keyTitle].sections = (acc[keyTitle].sections || []).concat(sections);
+        acc[keyTitle].featureImage = acc[keyTitle].featureImage || featureImage;
+        acc[keyTitle].featureImageLink = acc[keyTitle].featureImageLink || featureImageLink;
+        acc[keyTitle].featureImageSecond = acc[keyTitle].featureImageSecond || featureImageSecond;
+        acc[keyTitle].featureImageSecondLink = acc[keyTitle].featureImageSecondLink || featureImageSecondLink;
+      }
+      return acc;
+    }, {});
+
+    return groupedByParent;
+  } catch (error) {
+    console.error('Error fetching mega menu data:', error);
+    return {};
   }
 }
 
@@ -559,7 +766,24 @@ const GET_METAOBJECT_QUERY = `#graphql
           type
           fields {
             key
+            type
             value
+            reference {
+              ... on Metaobject {
+                handle
+                type
+                fields { key value }
+              }
+            }
+            references(first: 50) {
+              nodes {
+                ... on Metaobject {
+                  handle
+                  type
+                  fields { key value }
+                }
+              }
+            }
           }
         }
       }

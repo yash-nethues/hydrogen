@@ -121,9 +121,19 @@ function closeAside(event) {
 
   return (
     <>
-    <div className="bg-white border-b border-grey-200 w-full hidden md:block">
+    <div className="bg-white border-b border-grey-200 w-full hidden md:block relative">
       <div className="  m-auto custom-container">
         <ul className="flex j2xl:-mx-7 font-semibold justify-around">
+          {/* Read mega menu mapping from root loader */}
+          {(() => {
+            const data = useLoaderData();
+            // Support both direct object and nested under root data
+            var megaMenus = Array.isArray(data) ? undefined : data?.megaMenus;
+            // Fallback to empty object if not present
+            megaMenus = megaMenus || {};
+            
+            return (
+              <>
           {viewport === 'mobile' && (
             <NavLink
               end
@@ -146,11 +156,11 @@ function closeAside(event) {
             const navMenuClass = (item.title || '')
                   .toLowerCase()
                   .replace(/\s+/g, '-');
+            const mega = megaMenus[item.title] || megaMenus[item.title?.trim()] || [];
+            const megaObj = Array.isArray(mega) ? {sections: mega} : mega;
+            const submenuSections = megaObj.sections || [];
             return (
-         
-              <li className='flex' key={count}>
-                
-
+              <li className={`flex group ${submenuSections.length ? 'has-mega' : ''}`} key={count}>
                 <NavLink className=
                   {`${count === 9 || count === 10 ? 'font-bold py-2.5 px-j5 lg:p-2.5 text-[1.4vw] lg:text-[.99vw] min-[1800px]:text-lg [&.new]:hover:bg-blue-800 [&.new]:hover:text-white [&.sale]:hover:bg-onsale-300 [&.sale]:hover:text-white transition-all !text-blue hover:bg-blue min-h-[55px] flex items-center hover:!text-white ' : 'font-bold py-2.5 px-j5 lg:p-2.5 text-[1.2vw] lg:text-[.88vw]  min-[1800px]:text-base transition-all !text-blue hover:bg-blue min-h-[55px] flex items-center hover:!text-white'} ${navMenuClass} leading-tight` }
                   end
@@ -161,9 +171,61 @@ function closeAside(event) {
                  >
                   {item.title}
                 </NavLink>
+                {submenuSections.length > 0 && (
+                  <div className="invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-opacity duration-200 absolute left-0 right-0 top-full z-30 w-full bg-white border border-grey-200 shadow-md">
+                    <div className="custom-container p-4">
+                      <div className="flex flex-wrap items-start gap-6">
+                      {submenuSections.map((section, sIdx) => (
+                        <div key={sIdx} className="min-w-[220px] basis-[220px] grow">
+                          {(section.menuTitle || section.menuTitleLink) && (
+                            <div className="mb-2">
+                              {section.menuTitleLink ? (
+                                <Link to={section.menuTitleLink} prefetch="intent" className="font-semibold hover:text-brand">
+                                  {section.menuTitle || 'View'}
+                                </Link>
+                              ) : (
+                                <div className="font-semibold">{section.menuTitle}</div>
+                              )}
+                              {section.menuSubtitle ? (
+                                <div className="text-xs text-grey-500 mt-0.5">{section.menuSubtitle}</div>
+                              ) : null}
+                            </div>
+                          )}
+                          <ul className="space-y-1">
+                            {(section.items || []).map((sub, idx) => (
+                              <li key={idx} className="whitespace-nowrap">
+                                <Link to={sub.link || '#'} prefetch="intent" className="text-sm hover:text-brand">
+                                  {sub.title || 'Untitled'}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                      {(megaObj.featureImage || megaObj.featureImageSecond) && (
+                        <div className="min-w-[260px] basis-[260px] flex flex-col gap-4">
+                          {megaObj.featureImage && (
+                            <Link to={megaObj.featureImageLink || '#'} prefetch="intent" className="block">
+                              <img src={megaObj.featureImage} alt="" className="max-w-full h-auto" />
+                            </Link>
+                          )}
+                          {megaObj.featureImageSecond && (
+                            <Link to={megaObj.featureImageSecondLink || '#'} prefetch="intent" className="block">
+                              <img src={megaObj.featureImageSecond} alt="" className="max-w-full h-auto" />
+                            </Link>
+                          )}
+                        </div>
+                      )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </li>
             );
           })}
+              </>
+            );
+          })()}
         </ul>
       </div>
     </div>

@@ -45,6 +45,11 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
 
   const reviews = []
 
+  const hasValue = (val) => {
+    if (Array.isArray(val)) return val.filter(Boolean).length > 0;
+    return Boolean(String(val || '').trim());
+  };
+
   return (
     <div>
       <p className='text-blue flex flex-wrap gap-2 items-center group-[.parrentProduct]/product:hidden'>
@@ -99,13 +104,15 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
         >
           Images
         </li>
-        <li role="tab" className={`${
-            activeTab === 'videos' ? 'bg-blue text-white before:content-["-"] after:border-white after:rotate-45 after:top-1/3' : 'bg-white text-black before:content-["+"] hover:bg-blue hover:text-white after:-rotate-45 after:border-blue hover:after:border-white after:top-1/2 after:-translate-y-1/2'
-          } text-19 font-bold pl-8 pr-10 py-3 border border-grey-200 inline-block relative cursor-pointer transition-all before:absolute before:left-3 before:text-[120%] after:absolute  after:right-5 after:w-2.5 after:rounded-br-sm after:h-2.5 after:border-l-0 after:border-t-0 after:border-2 after:transition-all`}
-          onClick={() => handleTabClick('videos')}
-        >
-          Videos
-        </li>
+        {Array.isArray(productVideos) && productVideos.length > 0 && (
+          <li role="tab" className={`${
+              activeTab === 'videos' ? 'bg-blue text-white before:content-["-"] after:border-white after:rotate-45 after:top-1/3' : 'bg-white text-black before:content-["+"] hover:bg-blue hover:text-white after:-rotate-45 after:border-blue hover:after:border-white after:top-1/2 after:-translate-y-1/2'
+            } text-19 font-bold pl-8 pr-10 py-3 border border-grey-200 inline-block relative cursor-pointer transition-all before:absolute before:left-3 before:text-[120%] after:absolute  after:right-5 after:w-2.5 after:rounded-br-sm after:h-2.5 after:border-l-0 after:border-t-0 after:border-2 after:transition-all`}
+            onClick={() => handleTabClick('videos')}
+          >
+            Videos
+          </li>
+        )}
         <li role="tab" className={`${
             activeTab === 'reviews' ? 'bg-blue text-white before:content-["-"] after:border-white after:rotate-45 after:top-1/3' : 'bg-white text-black before:content-["+"] hover:bg-blue hover:text-white after:-rotate-45 after:border-blue hover:after:border-white after:top-1/2 after:-translate-y-1/2'
           } text-19 font-bold pl-8 pr-10 py-3 border border-grey-200 inline-block relative cursor-pointer transition-all before:absolute before:left-3 before:text-[120%] after:absolute  after:right-5 after:w-2.5 after:rounded-br-sm after:h-2.5 after:border-l-0 after:border-t-0 after:border-2 after:transition-all`}
@@ -135,52 +142,52 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
             <div className='moreInfo group-[.parrentProduct]/product:hidden' role="tabpanel">
               <table className="table-auto border border-grey-200 text-left text-gray-900">
                 <tbody>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Color</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Color">
-                      {colorDescription}
-                    </td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Series</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Series">
-                      {Array.isArray(paintsAttributes.series) 
-                        ? paintsAttributes.series.join(', ') 
-                        : paintsAttributes.series}
-                    </td>
-                  </tr>
-                                      <tr className='even:bg-base-400'>
-                      <th className='border border-grey-200 p-2.5 font-semibold'>Viscosity</th>
-                      <td className="border border-grey-200 p-2.5" data-th="Hair Type	">
-                        {Array.isArray(viscosity) 
-                          ? viscosity.join(', ') 
-                          : viscosity}
+                  {hasValue(colorDescription) && (
+                    <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Color</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Color">{colorDescription}</td>
+                    </tr>
+                  )}
+                  {hasValue(paintsAttributes?.series) && (
+                    <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Series</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Series">
+                        {Array.isArray(paintsAttributes.series) ? paintsAttributes.series.join(', ') : paintsAttributes.series}
                       </td>
                     </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Format</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Ferrule">
-                      {Array.isArray(paintsAttributes.format) 
-                        ? paintsAttributes.format.join(', ') 
-                        : paintsAttributes.format}
-                    </td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Pigment</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Handle">
-                      {Array.isArray(paintsAttributes.pigment) 
-                        ? paintsAttributes.pigment.join(', ') 
-                        : paintsAttributes.pigment}
-                    </td>
-                  </tr>
-                  <tr className='even:bg-base-400'>
-                    <th className='border border-grey-200 p-2.5 font-semibold'>Size</th>
-                    <td className="border border-grey-200 p-2.5" data-th="Series">
-                      {Array.isArray(paintsAttributes.size) 
-                        ? paintsAttributes.size.join(', ') 
-                        : paintsAttributes.size}
-                    </td>
-                  </tr>
+                  )}
+                  {hasValue(viscosity) && (
+                    <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Viscosity</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Viscosity">
+                        {Array.isArray(viscosity) ? viscosity.join(', ') : viscosity}
+                      </td>
+                    </tr>
+                  )}
+                  {hasValue(paintsAttributes?.format) && (
+                    <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Format</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Format">
+                        {Array.isArray(paintsAttributes.format) ? paintsAttributes.format.join(', ') : paintsAttributes.format}
+                      </td>
+                    </tr>
+                  )}
+                  {hasValue(paintsAttributes?.pigment) && (
+                    <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Pigment</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Pigment">
+                        {Array.isArray(paintsAttributes.pigment) ? paintsAttributes.pigment.join(', ') : paintsAttributes.pigment}
+                      </td>
+                    </tr>
+                  )}
+                  {hasValue(paintsAttributes?.size) && (
+                    <tr className='even:bg-base-400'>
+                      <th className='border border-grey-200 p-2.5 font-semibold'>Size</th>
+                      <td className="border border-grey-200 p-2.5" data-th="Size">
+                        {Array.isArray(paintsAttributes.size) ? paintsAttributes.size.join(', ') : paintsAttributes.size}
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -191,7 +198,7 @@ export function ProductTabs({ images, productVideos, descriptionHtml, pdfObjects
             </div>
           )}
 
-          {activeTab === 'videos' && (
+          {activeTab === 'videos' && Array.isArray(productVideos) && productVideos.length > 0 && (
             <div className='videos' role="tabpanel">
               <ProductTabVideo images={images} productVideos={productVideos} />
             </div>

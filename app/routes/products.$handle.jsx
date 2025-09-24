@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import {useIsClient} from '~/hooks/useIsClient';
 import {defer} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useRouteLoaderData, Link} from '@remix-run/react';
 import { Navigation, Pagination, Scrollbar, A11y } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/css';    
@@ -31,6 +31,7 @@ import BoughtTogetherSilder from "~/components/BoughtTogetherSilder";
 import RelatedSet from "~/components/RelatedSet";
 import RelatedToSee from '~/components/RelatedToSee';
 import ArtistsViewedPDSlider from '~/components/ArtistsViewedPDSlider';
+import RecentlyViewed from '~/components/RecentlyViewed';
 import {ProductTabs} from '~/components/ProductTabs';
 
 /**
@@ -78,8 +79,15 @@ async function loadCriticalData({context, params, request}) {
       selectedOptions: getSelectedProductOptions(request),
     },
   });
+  // Helper to check if product is grouped
+  const isGroupProduct = (p) => {
+    const type = (p?.metafields || []).filter(Boolean).find((m) => m?.key === 'select_product_type')?.value;
+    return type === 'Grouped Product';
+  };
+
 
   const metafieldsList = (product?.metafields || []).filter(Boolean);
+  const relatedRefs = product?.relatedRefs?.references?.nodes || [];
   const parseIdArray = (raw) => {
     const isGid = (v) => typeof v === 'string' && /^gid:\/\/shopify\//.test(v.trim());
     if (!raw) return [];
@@ -191,15 +199,16 @@ async function loadCriticalData({context, params, request}) {
     },
   });
 
-  const newArrivalID = '483298181417';
-  const professionalID = '484561191209';
+  // Fetch featured collections dynamically (by handle) instead of hardcoded IDs
+  const featuredArrivalHandle = 'new-arrivals';
+  const featuredProHandle = 'professional-collection';
 
-  const arrivalcollectionData = await storefront.query(GET_COLLECTION_BY_ID_QUERY, {
-    variables: { id: `gid://shopify/Collection/${newArrivalID}` },
+  const arrivalcollectionData = await storefront.query(GET_COLLECTION_BY_HANDLE_QUERY, {
+    variables: { handle: featuredArrivalHandle },
   });
 
-  const professionalcollectionData = await storefront.query(GET_COLLECTION_BY_ID_QUERY, {
-    variables: { id: `gid://shopify/Collection/${professionalID}` },
+  const professionalcollectionData = await storefront.query(GET_COLLECTION_BY_HANDLE_QUERY, {
+    variables: { handle: featuredProHandle },
   });
 
   // Fetch child products if they exist
@@ -300,10 +309,209 @@ async function loadCriticalData({context, params, request}) {
     childProducts = childProducts.filter(Boolean);
   }
 
+
+  // get parent products
+  const {products: allProductsResp} = await storefront.query(`
+    query {
+      products(first: 100) {
+        nodes {
+          id
+          title
+          handle
+          metafield(namespace: "custom", key: "child_products") {
+            value
+          }
+        }
+      }
+    }
+  `);
+  
+  let parentProduct = null;
+  
+  for (const p of allProductsResp.nodes) {
+    if (!p.metafield?.value) continue;
+  
+    try {
+      const vals = JSON.parse(p.metafield.value); // metafield is JSON array
+      if (Array.isArray(vals) && vals.includes(product.id)) {
+        parentProduct = p;
+        break; // ✅ stop at the first match
+      }
+    } catch {
+      if (p.metafield.value.includes(product.id)) {
+        parentProduct = p;
+        break;
+      }
+    }
+  }
+  // Fetch Jerry's related products if they exist
+  // Prefer referenced products if metafield is a list of references
+  let relatedProducts = relatedRefs.length > 0 ? relatedRefs : [];
+  if (relatedProducts.length === 0) {
+    // Fallback to parsing raw IDs when references aren't available
+    const rawRelatedProducts = metafieldsList.find((m) => m?.key === "jerry_s_related_products")?.value;
+    const relatedProductIds = parseIdArray(rawRelatedProducts);
+    if (relatedProductIds.length > 0) {
+      const {nodes: relatedNodes} = await storefront.query(RELATED_PRODUCTS_BY_IDS_QUERY, {
+        variables: { ids: relatedProductIds },
+      });
+      relatedProducts = (relatedNodes || []).filter(Boolean);
+    }
+  }
+
+  // Compute grouped product price range from child products (min-max across all child products)
+  let groupPriceRange = null;
+  if (isGroupProduct(product) && childProductIds.length > 0) {
+    const {nodes: childPriceNodes} = await storefront.query(CHILD_PRODUCTS_PRICE_QUERY, {
+      variables: { productIds: childProductIds },
+    });
+    const prices = (childPriceNodes || [])
+      .filter(Boolean)
+      .map((n) => {
+        const min = parseFloat(n?.priceRange?.minVariantPrice?.amount || '0');
+        const max = parseFloat(n?.priceRange?.maxVariantPrice?.amount || '0');
+        const currencyCode = n?.priceRange?.minVariantPrice?.currencyCode;
+        return {min, max, currencyCode};
+      })
+      .filter((p) => Number.isFinite(p.min) && Number.isFinite(p.max));
+
+    if (prices.length > 0) {
+      const currencyCode = prices.find((p) => p.currencyCode)?.currencyCode;
+      const minAmount = prices.reduce((acc, p) => Math.min(acc, p.min), Infinity);
+      const maxAmount = prices.reduce((acc, p) => Math.max(acc, p.max), 0);
+      if (Number.isFinite(minAmount) && Number.isFinite(maxAmount)) {
+        groupPriceRange = {
+          min: minAmount,
+          max: maxAmount,
+          currencyCode: currencyCode || product?.selectedOrFirstAvailableVariant?.price?.currencyCode,
+        };
+      }
+    }
+  }
+
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 
+
+  // Build related sets from references (limit to 2)
+  const relatedSets = (product?.relatedSetsRefs?.references?.nodes || []).filter(Boolean).slice(0, 2);
+
+  // Build upsell products (frequently bought together)
+  let upsellProducts = (product?.upsellRefs?.references?.nodes || []).filter(Boolean);
+  if (upsellProducts.length === 0) {
+    const rawUpsell = metafieldsList.find((m) => m?.key === "upsell_products")?.value;
+    const upsellIds = parseIdArray(rawUpsell);
+    if (upsellIds.length > 0) {
+      const {nodes: upsellNodes} = await storefront.query(RELATED_PRODUCTS_BY_IDS_QUERY, {
+        variables: { ids: upsellIds },
+      });
+      upsellProducts = (upsellNodes || []).filter(Boolean);
+    }
+  }
+
+  // For upsell grouped products, compute price range from their child products
+  const upsellChildIdMap = new Map();
+  upsellProducts.forEach((p) => {
+    const typeField = (p?.metafields || []).find((m) => m?.key === 'select_product_type');
+    const isGroup = (typeField?.value || '').toLowerCase().includes('group');
+    if (!isGroup) return;
+    const rawChildren = (p?.metafields || []).find((m) => m?.key === 'child_products')?.value;
+    const ids = parseIdArray(rawChildren);
+    if (ids.length > 0) upsellChildIdMap.set(p.id, ids);
+  });
+
+  if (upsellChildIdMap.size > 0) {
+    const allChildIds = Array.from(upsellChildIdMap.values()).flat();
+    const {nodes: upsellChildPriceNodes} = await storefront.query(CHILD_PRODUCTS_PRICE_QUERY, {
+      variables: { productIds: allChildIds },
+    });
+    const priceById = new Map();
+    (upsellChildPriceNodes || []).forEach((n) => {
+      if (!n) return;
+      priceById.set(n.id, {
+        min: parseFloat(n?.priceRange?.minVariantPrice?.amount || '0'),
+        max: parseFloat(n?.priceRange?.maxVariantPrice?.amount || '0'),
+        currencyCode: n?.priceRange?.minVariantPrice?.currencyCode,
+      });
+    });
+
+    upsellProducts = upsellProducts.map((p) => {
+      const childIds = upsellChildIdMap.get(p.id) || [];
+      if (childIds.length === 0) return p;
+      const prices = childIds
+        .map((id) => priceById.get(id))
+        .filter((v) => v && Number.isFinite(v.min) && Number.isFinite(v.max));
+      if (prices.length === 0) return p;
+      const currencyCode = prices.find((x) => x.currencyCode)?.currencyCode;
+      const minAmount = prices.reduce((acc, x) => Math.min(acc, x.min), Infinity);
+      const maxAmount = prices.reduce((acc, x) => Math.max(acc, x.max), 0);
+      if (!Number.isFinite(minAmount) || !Number.isFinite(maxAmount)) return p;
+      return {
+        ...p,
+        groupPriceRange: { min: minAmount, max: maxAmount, currencyCode },
+        isGroupProduct: true,
+      };
+    });
+  }
+
+  // Build cross-sell products (artists also viewed)
+  let crossSellProducts = (product?.crossSellRefs?.references?.nodes || []).filter(Boolean);
+  if (crossSellProducts.length === 0) {
+    const rawCrossSell = metafieldsList.find((m) => m?.key === "cross_sell_products")?.value;
+    const crossIds = parseIdArray(rawCrossSell);
+    if (crossIds.length > 0) {
+      const {nodes: crossNodes} = await storefront.query(RELATED_PRODUCTS_BY_IDS_QUERY, {
+        variables: { ids: crossIds },
+      });
+      crossSellProducts = (crossNodes || []).filter(Boolean);
+    }
+  }
+
+  // For cross-sell grouped products, compute price range from their child products
+  const crossChildIdMap = new Map();
+  crossSellProducts.forEach((p) => {
+    const typeField = (p?.metafields || []).find((m) => m?.key === 'select_product_type');
+    const isGroup = (typeField?.value || '').toLowerCase().includes('group');
+    if (!isGroup) return;
+    const rawChildren = (p?.metafields || []).find((m) => m?.key === 'child_products')?.value;
+    const ids = parseIdArray(rawChildren);
+    if (ids.length > 0) crossChildIdMap.set(p.id, ids);
+  });
+
+  if (crossChildIdMap.size > 0) {
+    const allChildIds = Array.from(crossChildIdMap.values()).flat();
+    const {nodes: crossChildPriceNodes} = await storefront.query(CHILD_PRODUCTS_PRICE_QUERY, {
+      variables: { productIds: allChildIds },
+    });
+    const priceById = new Map();
+    (crossChildPriceNodes || []).forEach((n) => {
+      if (!n) return;
+      priceById.set(n.id, {
+        min: parseFloat(n?.priceRange?.minVariantPrice?.amount || '0'),
+        max: parseFloat(n?.priceRange?.maxVariantPrice?.amount || '0'),
+        currencyCode: n?.priceRange?.minVariantPrice?.currencyCode,
+      });
+    });
+
+    crossSellProducts = crossSellProducts.map((p) => {
+      const childIds = crossChildIdMap.get(p.id) || [];
+      if (childIds.length === 0) return p;
+      const prices = childIds
+        .map((id) => priceById.get(id))
+        .filter((v) => v && Number.isFinite(v.min) && Number.isFinite(v.max));
+      if (prices.length === 0) return p;
+      const currencyCode = prices.find((x) => x.currencyCode)?.currencyCode;
+      const minAmount = prices.reduce((acc, x) => Math.min(acc, x.min), Infinity);
+      const maxAmount = prices.reduce((acc, x) => Math.max(acc, x.max), 0);
+      if (!Number.isFinite(minAmount) || !Number.isFinite(maxAmount)) return p;
+      return {
+        ...p,
+        groupPriceRange: { min: minAmount, max: maxAmount, currencyCode },
+        isGroupProduct: true,
+      };
+    });
+  }
 
   return {
     product,
@@ -316,7 +524,13 @@ async function loadCriticalData({context, params, request}) {
     metaobjects,
     arrivalcollectionData,
     professionalcollectionData,
-    childProducts
+    childProducts,
+    relatedProducts,
+    relatedSets,
+    groupPriceRange,
+    upsellProducts,
+    crossSellProducts,
+    parentProduct
   };
 }
 
@@ -334,32 +548,128 @@ function loadDeferredData({context, params}) {
 }
 
 export function WishlistButton({productId}) {
-  const {
-    addToWishlist,
-    removeFromWishlist,
-    isInWishlist,
-  } = useWishlist();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const rootData = useRouteLoaderData('root');
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [activeTab, setActiveTab] = useState('login');
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.resolve(rootData?.isLoggedIn)
+      .then((val) => { if (!cancelled) setLoggedIn(Boolean(val)); })
+      .catch(() => { if (!cancelled) setLoggedIn(false); });
+    return () => { cancelled = true; };
+  }, [rootData?.isLoggedIn]);
 
   const inWishlist = isInWishlist(productId);
 
+  const handleClick = () => {
+    if (!loggedIn) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    if (inWishlist) removeFromWishlist(productId);
+    else {
+      addToWishlist(productId);
+      setSuccessMsg('Added to wishlist');
+      setTimeout(() => setSuccessMsg(''), 2000);
+    }
+  };
+
   return (
-    <button className='flex gap-2 items-center'
-      onClick={() =>
-        inWishlist ? removeFromWishlist(productId) : addToWishlist(productId)
-      }
-    >
+    <>
+      <button className='flex gap-2 items-center' onClick={handleClick}>
         <svg width="26" height="26" aria-hidden="true">
           <use href={`#icon-${inWishlist ? 'wishlistAdded' : 'wishlistRemoved'}`} />
         </svg>
-      Add to Favorites
-    </button>
+        Add to Favorites
+      </button>
+
+      <Modal
+        show={showLoginPrompt}
+        onClose={() => setShowLoginPrompt(false)}
+        width="w-[520px]"
+        headerClasses=""
+        footerClasses="hidden"
+        headerContent={<span className='text-lg font-semibold'>Sign in required</span>}
+      >
+        <div className="w-full">
+          <div className="flex border-b mb-6">
+            <button type="button" onClick={() => setActiveTab('login')} className={`w-1/2 py-2 text-center font-semibold focus:outline-none ${activeTab==='login' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500 hover:text-pink-600'}`}>Login</button>
+            <button type="button" onClick={() => setActiveTab('register')} className={`w-1/2 py-2 text-center font-semibold focus:outline-none ${activeTab==='register' ? 'text-pink-600 border-b-2 border-pink-600' : 'text-gray-500 hover:text-pink-600'}`}>Register</button>
+          </div>
+
+          {activeTab === 'login' ? (
+            <div>
+              <h2 className="text-xl font-bold mb-2">Customer Login</h2>
+              <p className="text-gray-600 mb-4">Already a customer? Sign in now for the best experience!</p>
+              <form method="post" action="/account/login">
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Email *</label>
+                  <input type="email" name="customer[email]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Password *</label>
+                  <input type="password" name="customer[password]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                </div>
+                <div className="flex items-center mb-4">
+                  <input type="checkbox" id="remember" className="mr-2" />
+                  <label htmlFor="remember" className="text-gray-600">Remember Me</label>
+                </div>
+                <button type="submit" className="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700">Log In</button>
+              </form>
+              <div className="mt-4 text-sm">
+                <Link to="/account/recover" prefetch="intent" className="text-pink-600 hover:underline">Click here & reset my password</Link>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <h2 className="text-xl font-bold mb-4">Create an Account</h2>
+              <form method="post" action="/account">
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-gray-700 mb-1">First Name *</label>
+                    <input type="text" name="customer[first_name]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 mb-1">Last Name *</label>
+                    <input type="text" name="customer[last_name]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                  </div>
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Email *</label>
+                  <input type="email" name="customer[email]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Password *</label>
+                  <input type="password" name="customer[password]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-1">Confirm Password *</label>
+                  <input type="password" name="customer[password_confirmation]" required className="w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500" />
+                </div>
+                <button type="submit" className="w-full bg-teal-600 text-white py-2 rounded-lg hover:bg-teal-700">Create an Account</button>
+              </form>
+              <p className="mt-4 text-sm">Already have an account?{' '}
+                <button type="button" onClick={() => setActiveTab('login')} className="text-pink-600 hover:underline">Login</button>
+              </p>
+            </div>
+          )}
+        </div>
+      </Modal>
+      {successMsg && (
+        <div className='fixed z-[10000] left-1/2 -translate-x-1/2 top-4 bg-green-600 text-white px-4 py-2 rounded shadow'>{successMsg}</div>
+      )}
+    </>
   );
 }
 
 
 export default function Product() {
   /** @type {LoaderReturnData} */
-  const {product, videoObjects, viscosityObjects, pdfobjectIds, pdfObjects, rawMeta1, paintsMetaobjects, collection, arrivalcollectionData, professionalcollectionData, childProducts} = useLoaderData();
+  const {product, videoObjects, viscosityObjects, pdfobjectIds, pdfObjects, rawMeta1, paintsMetaobjects, collection, arrivalcollectionData, professionalcollectionData, childProducts, relatedProducts, relatedSets, groupPriceRange, upsellProducts, crossSellProducts, parentProduct} = useLoaderData();
   
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -405,8 +715,7 @@ export default function Product() {
   const paintsMediumsAttribute = safeMetafields.find((m) => m?.key === 'paints_mediums_multiselect_attribute')?.value;
   const productType = safeMetafields.find((m) => m?.key === 'select_product_type')?.value;
   const rawChildProducts = safeMetafields.find((m) => m?.key === 'child_products')?.value;
-  console.log('rawChildProducts', rawChildProducts);
-  console.log('childProducts from loader', childProducts);
+ 
 
   const mainPVC = options?.[0]?.optionValues?.[0]?.name;
   const mainPVS = options?.[1]?.optionValues?.[0]?.name;
@@ -464,10 +773,10 @@ export default function Product() {
     }
   };
 
-  console.log('product Data New:-', product);
 
   const [quantity, setQuantity] = useState(1);
   const [filterModal, setFilterModal] = useState(false);
+  // Defaults to oz; adjusted after mount based on size string
   const [unit, setUnit] = useState('oz');
 
   const color = selectedVariant.selectedOptions.find(
@@ -561,12 +870,12 @@ export default function Product() {
     }
     return acc;
   }, { viscosity: [] });
-    
-  const referenceSize = Array.isArray(mergedPaintsAttributes.size) 
-    ? mergedPaintsAttributes.size[0] 
-    : mergedPaintsAttributes.size;
-
+  
+  // Helper to format reference size according to current unit (oz/ml)
   const getDisplayReferenceSize = () => {
+    const referenceSize = Array.isArray(mergedPaintsAttributes.size)
+      ? mergedPaintsAttributes.size[0]
+      : mergedPaintsAttributes.size;
     if (!referenceSize) return '';
     const base = referenceSize.trim();
     const ozMatch = base.match(/([\d,.]+)\s*oz/i);
@@ -578,8 +887,11 @@ export default function Product() {
         return `${amount} OZ`;
       }
       if (mlMatch) {
-        const amount = mlMatch[1].replace(',', '');
-        return `${amount} ML`;
+        // Convert ML to OZ for display
+        const ml = parseFloat(mlMatch[1].replace(',', ''));
+        if (Number.isNaN(ml)) return base;
+        const ozFixed = (ml / 29.5735).toFixed(2);
+        return `${ozFixed} OZ`;
       }
       return base;
     }
@@ -597,6 +909,18 @@ export default function Product() {
     }
     return base;
   };
+
+  // Default unit based on the raw reference size from metafields (ML vs OZ)
+  useEffect(() => {
+    const rawRef = Array.isArray(mergedPaintsAttributes.size)
+      ? mergedPaintsAttributes.size[0]
+      : mergedPaintsAttributes.size;
+    const s = String(rawRef || '').toLowerCase();
+    if (s.includes('ml')) setUnit('ml');
+    else if (s.includes('oz')) setUnit('oz');
+  }, [product?.id]);
+    
+  // (old reference size helpers removed and replaced with displaySize computation below)
 
   return (
     <div className={`group/product ${match ? 'parrentProduct' : 'childProduct'}`}>
@@ -662,10 +986,22 @@ export default function Product() {
             </div>
             <div className="flex flex-wrap gap-4 w-full mt-4 group-[.childProduct]/product:hidden">
               <div className=" text-blue text-26 font-semibold mt-5 ">
-                <ProductPrice
-                  price={selectedVariant?.price}
-                  compareAtPrice={selectedVariant?.compareAtPrice}
-                />
+                {productType === 'Grouped Product' && groupPriceRange ? (
+                  <span>
+                    {new Intl.NumberFormat('en-US', { style: 'currency', currency: groupPriceRange.currencyCode }).format(groupPriceRange.min)}
+                    {groupPriceRange.max !== groupPriceRange.min && (
+                      <>
+                        {' '}-{' '}
+                        {new Intl.NumberFormat('en-US', { style: 'currency', currency: groupPriceRange.currencyCode }).format(groupPriceRange.max)}
+                      </>
+                    )}
+                  </span>
+                ) : (
+                  <ProductPrice
+                    price={selectedVariant?.price}
+                    compareAtPrice={selectedVariant?.compareAtPrice}
+                  />
+                )}
               </div>
               <div className=" bg-gray-100 py-1.5 px-3 text-blue text-sm">
                 <span className='font-medium'>Save</span>
@@ -687,7 +1023,9 @@ export default function Product() {
                       <span>Size : </span>
                       <span>{getDisplayReferenceSize()}</span>
                     </div>
-                    <UnitSwitcher value={unit} onUnitChange={(selectedUnit) => setUnit(selectedUnit)} />
+                    {(function(){ const s = String(getDisplayReferenceSize() || '').toLowerCase(); return s.includes('ml') || s.includes('oz'); })() && (
+                      <UnitSwitcher value={unit} onUnitChange={(selectedUnit) => setUnit(selectedUnit)} />
+                    )}
                     <div className="text-17 mb-0.5 font-medium">
                       <span>Format : </span>
                       <span>{mergedPaintsAttributes.format || format}</span>
@@ -850,15 +1188,17 @@ export default function Product() {
                 </div>
                 <p>Or Click Shop All Below</p>
               </div>
-              <div className='mt-5 p-2.5 text-center bg-grey-100 border items-center border-grey-200 shadow-md flex flex-col'>
-                <span className='m-2.5 font-medium'>See All Sizes & Shapes Available</span>
-                <div className='relative mb-2.5 text-green'>
-                  <svg width="25" height="25" aria-hidden="true" className='inline-block mr-2 -translate-y-1 -scale-100'>
-                    <use href="#icon-roundArrow" />
-                  </svg>
-                  <a href={`/products/${product.handle}`} className='text-22 font-semibold underline'>{title}</a>
+              {parentProduct && (
+                <div className='mt-5 p-2.5 text-center bg-grey-100 border items-center border-grey-200 shadow-md flex flex-col'>
+                  <span className='m-2.5 font-medium'>See All Sizes & Shapes Available</span>
+                  <div className='relative mb-2.5 text-green'>
+                    <svg width="25" height="25" aria-hidden="true" className='inline-block mr-2 -translate-y-1 -scale-100'>
+                      <use href="#icon-roundArrow" />
+                    </svg>
+                    <a href={`/products/${parentProduct.handle}`} className='text-22 font-semibold underline'>{parentProduct.title}</a>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
             <div className='group-[.childProduct]/product:hidden'>
               <div className='shortDescription'>
@@ -874,7 +1214,7 @@ export default function Product() {
                 </a>
               </div>
               <div className="mt-8 pt-5  border-t border-grey-200  related_slider">
-                  <RelatedToSee arrivalsCollection={arrivalcollectionData.collection}/>
+                  <RelatedToSee relatedProducts={relatedProducts}/>
               </div>   
               <div className="mt-j30">
                 <ul className='flex gap-10 justify-between [&>li>a]:flex [&>li>a]:gap-2 [&>li>a]:items-center [&>li]:text-blue [&>li>a]:text-blue [&>li]:text-sm [&>li]:font-semibold'>
@@ -930,16 +1270,34 @@ export default function Product() {
       <div className='artists_sec pt-10 '>
         <div className='container 2xl:container'>
           <div className="flex flex-wrap">
-            <BoughtTogetherSilder arrivalsCollection={arrivalcollectionData.collection} />
-            <RelatedSet arrivalsCollection={arrivalcollectionData.collection} />
+            <BoughtTogetherSilder products={upsellProducts} />
+            <RelatedSet products={relatedSets} />
           </div>
         </div>
       </div>
       <div className='upsale pt-20 group-[.parrentProduct]/product:hidden'>
         <div className='container 2xl:container'>
-          <ArtistsViewedPDSlider artistCollection={arrivalcollectionData.collection} />
+          <ArtistsViewedPDSlider products={crossSellProducts} />
         </div>
         
+      </div>
+      <div className='pt-10 group-[.parrentProduct]/product:hidden'>
+        <div className='container 2xl:container'>
+          {/* Recently Viewed */}
+          <RecentlyViewed currentProduct={{
+            id: product.id,
+            handle: product.handle,
+            title: product.title,
+            imageUrl: images?.nodes?.[0]?.url || '',
+            price: selectedVariant?.price || null,
+            isGroupProduct: productType === 'Grouped Product',
+            groupPriceRange: groupPriceRange ? {
+              min: groupPriceRange.min,
+              max: groupPriceRange.max,
+              currencyCode: groupPriceRange.currencyCode,
+            } : null,
+          }} />
+        </div>
       </div>
       
       <Modal show={filterModal} onClose={() => setFilterModal(false)}  width="w-[95%]" headerClasses="hidden" footerClasses="hidden"
@@ -1108,6 +1466,10 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       value
       type
     }
+    nameShort: metafield(namespace: "custom", key: "name_short") {
+      value
+      type
+    }
   }
 `;
 
@@ -1157,6 +1519,106 @@ const PRODUCT_FRAGMENT = `#graphql
       description
       title
     }
+    # Direct access to related products metafield with references
+    relatedRefs: metafield(namespace: "custom", key: "jerry_s_related_products") {
+      key
+      type
+      value
+      references(first: 20) {
+        nodes {
+          __typename
+          ... on Product {
+            id
+            title
+            handle
+            featuredImage { url altText }
+            priceRange {
+              minVariantPrice { amount currencyCode }
+              maxVariantPrice { amount currencyCode }
+            }
+          }
+        }
+      }
+    }
+    # Cross-sell products metafield (artists also viewed)
+    crossSellRefs: metafield(namespace: "custom", key: "cross_sell_products") {
+      key
+      type
+      value
+      references(first: 20) {
+        nodes {
+          __typename
+          ... on Product {
+            id
+            title
+            handle
+            featuredImage { url altText }
+            priceRange {
+              minVariantPrice { amount currencyCode }
+              maxVariantPrice { amount currencyCode }
+            }
+            metafields(identifiers: [
+              {namespace: "custom", key: "child_products"},
+              {namespace: "custom", key: "select_product_type"}
+            ]) {
+              key
+              value
+              type
+            }
+          }
+        }
+      }
+    }
+    # Upsell products metafield (frequently bought together)
+    upsellRefs: metafield(namespace: "custom", key: "upsell_products") {
+      key
+      type
+      value
+      references(first: 20) {
+        nodes {
+          __typename
+          ... on Product {
+            id
+            title
+            handle
+            featuredImage { url altText }
+            priceRange {
+              minVariantPrice { amount currencyCode }
+              maxVariantPrice { amount currencyCode }
+            }
+            metafields(identifiers: [
+              {namespace: "custom", key: "child_products"},
+              {namespace: "custom", key: "select_product_type"}
+            ]) {
+              key
+              value
+              type
+            }
+          }
+        }
+      }
+    }
+    # Related sets metafield (expects 2 products)
+    relatedSetsRefs: metafield(namespace: "custom", key: "related_producuts") {
+      key
+      type
+      value
+      references(first: 10) {
+        nodes {
+          __typename
+          ... on Product {
+            id
+            title
+            handle
+            featuredImage { url altText }
+            priceRange {
+              minVariantPrice { amount currencyCode }
+              maxVariantPrice { amount currencyCode }
+            }
+          }
+        }
+      }
+    }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
 `;
@@ -1202,6 +1664,10 @@ const CHILD_PRODUCTS_QUERY = `#graphql
         id
         title
         handle
+        nameShort: metafield(namespace: "custom", key: "name_short") {
+          value
+          type
+        }
         selectedOrFirstAvailableVariant {
           ...ProductVariant
         }
@@ -1216,6 +1682,28 @@ const CHILD_PRODUCTS_QUERY = `#graphql
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
+`;
+
+// Query related products by ids
+const RELATED_PRODUCTS_BY_IDS_QUERY = `#graphql
+  query RelatedProductsByIds(
+    $country: CountryCode
+    $language: LanguageCode
+    $ids: [ID!]!
+  ) @inContext(country: $country, language: $language) {
+    nodes(ids: $ids) {
+      ... on Product {
+        id
+        title
+        handle
+        featuredImage { url altText }
+        priceRange {
+          minVariantPrice { amount currencyCode }
+          maxVariantPrice { amount currencyCode }
+        }
+      }
+    }
+  }
 `;
 
 const PRODUCT_VIDEOS_QUERY = `#graphql
@@ -1240,6 +1728,51 @@ query GetMetaobjects($ids: [ID!]!) {
     }
   }
 }`;
+
+
+const GET_COLLECTION_BY_HANDLE_QUERY = `#graphql
+query GetCollectionByHandle($handle: String!) {
+  collection(handle: $handle) {
+    id
+    title
+    description
+    image { url altText }
+    products(first: 10) {
+      edges {
+        node {
+          id
+          title
+          handle
+          featuredImage { url altText }
+          priceRange {
+            minVariantPrice { amount currencyCode }
+            maxVariantPrice { amount }
+          }
+        }
+      }
+    }
+  }
+}
+`;
+
+// Query to fetch price ranges for multiple child products
+const CHILD_PRODUCTS_PRICE_QUERY = `#graphql
+  query ChildProductsPrice(
+    $country: CountryCode
+    $language: LanguageCode
+    $productIds: [ID!]!
+  ) @inContext(country: $country, language: $language) {
+    nodes(ids: $productIds) {
+      ... on Product {
+        id
+        priceRange {
+          minVariantPrice { amount currencyCode }
+          maxVariantPrice { amount currencyCode }
+        }
+      }
+    }
+  }
+`;
 
 const PRODUCT_PDF_QUERY = `#graphql
 query GetPdfNodes($ids: [ID!]!) {

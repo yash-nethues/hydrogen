@@ -8,6 +8,7 @@ import 'swiper/css';
 import { Link, Await } from '@remix-run/react';
 import { Suspense } from 'react';
 import { Image, Money } from '@shopify/hydrogen';
+import { useIsClient } from "~/hooks/useIsClient";
 
 // Utility function to check if a product is a group product
 function isGroupProduct(product) {
@@ -69,7 +70,11 @@ function GroupProductPrice({ product }) {
   );
 }
 
-function BetterMaterials({ products, title }) {
+function BetterMaterials({ products, title, featuredList }) {
+    const featured = Array.isArray(featuredList)
+      ? featuredList.find((f) => (f?.featuring_section || '').trim() === (title || '').trim())
+      : null;
+    const isClient = useIsClient();
     return (
       <div className="container mt-j30 md:mt-[50px] jlg:mt-[65px] md:px-10 2xl:px-[60px]">
         <div className='-mx-5 md:mx-0'>
@@ -78,12 +83,15 @@ function BetterMaterials({ products, title }) {
           </div>
           <div className="flex items-start">
             <div className="hidden flex-auto md:block md:w-1/4 pr-5 j2xl:pr-[50px]">
-              <Link href="/"><img
-                  src="/image/mezzo-artist-organizer-storage-racks.jpg"
-                  alt="Mezzo Artist Organizer Storage Racks"
+              {featured ? (
+              <Link to={featured?.promo_url || "/"} title={featured?.promo_image_title || ""}>
+                <img
+                  src={featured?.promo_image || "/image/mezzo-artist-organizer-storage-racks.jpg"}
+                  alt={featured?.promo_image_title || "Featured"}
                   className="w-full h-full object-cover"
                 />
               </Link>
+              ) : null}
             </div>
             <div className="w-full flex-none md:w-3/4 px-5 pb-2.5 md:p-0 md:pl-10">
               <div className='relative px-[25px] my-j30'>
@@ -123,7 +131,7 @@ function BetterMaterials({ products, title }) {
                       
                       return (
                         <>
-                          {limitedProducts.length > 0 ? (
+                          {isClient && limitedProducts.length > 0 ? (
                             <>
                               <Swiper
                                       modules={[Navigation, Pagination, Scrollbar, A11y]}
@@ -152,6 +160,19 @@ function BetterMaterials({ products, title }) {
                                 {limitedProducts.map((product) => (
                                 <SwiperSlide key={product.id} className='h-auto'>
                                   <div className="flex flex-col min-h-full pb-[50px] bg-white relative rounded-sm text-center">
+                                    <div className='jerry-badge'>
+                                      <span className='special-offer hidden'></span>
+                                      <span className='free-offer hidden'></span>
+                                      <span className='bulk hidden'></span>
+                                      <span className='top-sellers hidden'></span>
+                                      <span className='new'></span>
+                                      <span className='sale'></span>
+                                      <span className='beft-value hidden'></span>
+                                      <span className='super-sale hidden'></span>
+                                      <span className='has-new-items hidden'></span>
+                                      <span className='out-of-stock hidden'></span>
+                                      <span className='only-at-jerrys hidden'></span>
+                                    </div>
                                     <Link to={`/products/${product.handle}`} className="grow-0">
                                       <div className="w-full aspect-square">
                                         <img

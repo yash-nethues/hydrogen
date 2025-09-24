@@ -1,7 +1,9 @@
 import React from 'react'
-import {Await, useLoaderData, Link} from '@remix-run/react';
+import { Link } from '@remix-run/react';
+import { RichTextRenderer } from '~/components/RichTextRenderer';
 
-function CustomShop() {
+function CustomShop({ items }) {
+    if (!Array.isArray(items) || items.length === 0) return null;
     return (
         <>
         <div className="container md:px-10 2xl:px-[60px] mt-j30 md:mt-[50px] jlg:mt-[65px]">
@@ -12,76 +14,43 @@ function CustomShop() {
                         </h2>
                         <p className="!text-white !leading-snug text-15 sm:text-base jlg:text-xl block"> Trust Jerry’s Skilled Craftsman <br />To Custom Make <br />Canvases &amp; Framing
                             <span className="text-[70%] block mt-2.5">Made Here in The USA</span>
-                        </p>                        
+                        </p>
                     </div>
                 </div>
                 <div className="w-full p-j5 pt-j15 md:p-j15 tb:p-j30 jlg:w-70 bg-white sm:bg-grey-100 sm:border sm:border-grey-200 flex sm:flex-wrap">
-                    <div className='p-j5 pb-[55px] relative sm:p-2.5 sm:pb-[55px] md:!pb-[100px] tb:p-5 sm:m-2.5 border border-grey-200 rounded-sm bg-white flex-1 max-w-[50%] sm:max-w-none'>
-                        <h3 className='text-xs bg-blue text-white mb-j5 md:text-lg jlg:text-xl jxl:text-[25px] w-full p-j5 md:p-0 text-center md:bg-transparent md:text-blue md:mb-j15 leading-tight'>Jerry's Custom Stretched <br/> Canvas Department</h3>
-                        <h6 className='text-[11px] md:text-sm jxl:text-lg text-center text-blue mb-2.5 md:mb-j30'><strong>Create Your Professional Custom Canvas Today</strong></h6>
+                  {items.slice(0, 2).map((entry, idx) => (
+                    <div key={idx} className='p-j5 pb-[55px] relative sm:p-2.5 sm:pb-[55px] md:!pb-[100px] tb:p-5 sm:m-2.5 border border-grey-200 rounded-sm bg-white flex-1 max-w-[50%] sm:max-w-none'>
+                        {entry.shop_title && (
+                          <h3 className='text-xs bg-blue text-white mb-j5 md:text-lg jlg:text-xl jxl:text-[25px] w-full p-j5 md:p-0 text-center md:bg-transparent md:text-blue md:mb-j15 leading-tight' dangerouslySetInnerHTML={{__html: entry.shop_title}} />
+                        )}
+                        {entry.shop_subtitle && (
+                          <h6 className='text-[11px] md:text-sm jxl:text-lg text-center text-blue mb-2.5 md:mb-j30' dangerouslySetInnerHTML={{__html: `<strong>${entry.shop_subtitle}</strong>`}} />
+                        )}
                         <div className='flex flex-col md:flex-row md:gap-x-3 tb:gap-x-4 j2xl:gap-x-5'>
                             <div className='customShopImg text-center flex-none md:w-20 tb:w-32 jlg:w-20 jxl:w-32 j2xl:w-[150px]'>
-                                <img src="/image/golden-open-40off-sale-free-brush.jpg" alt="" className="aspect-square object-cover w-1/2 md:w-full inline-block" />
+                                <img src={entry.shop_image || "/image/placeholder.jpg"} alt="" className="aspect-square object-cover w-1/2 md:w-full inline-block" />
                             </div>
                             <div className='customShopList h-16 md:h-auto sm:h-24 overflow-hidden text-xs sm:text-13 tb:text-15 p-j5 md:p-0 w-full after:absolute after:inset-0 after:top-auto after:h-4/5 after:bg-gradient-to-t after:from-white after:md:hidden relative'>
-                                <ul className=" mb-2.5 flex w-full leading-normal flex-col gap-1">
-                                    <li className="flex gap-x-2">
-                                        <svg  className='flex-none w-3 h-3 tb:w-3.5 tb:h-3.5 mt-px sm:mt-0.5 tb:mt-1' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14.45 8.66">
-                                            <line fill="none" stroke="#343434" stroke-miterlimit="10" y1="4.34" x2="13" y2="4.34"/>
-                                            <polyline fill="none" stroke="#343434" stroke-miterlimit="10" points="9.77 8.3 13.74 4.33 9.77 0.35"/>
-                                        </svg>
-                                        <span>74 Types of Canvas (cotton/linen)</span>
-                                    </li>
-                                    <li className="flex gap-x-2">
-                                        <svg  className='flex-none w-3 h-3 tb:w-3.5 tb:h-3.5 mt-px sm:mt-0.5 tb:mt-1' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14.45 8.66">
-                                            <line fill="none" stroke="#343434" stroke-miterlimit="10" y1="4.34" x2="13" y2="4.34"/>
-                                            <polyline fill="none" stroke="#343434" stroke-miterlimit="10" points="9.77 8.3 13.74 4.33 9.77 0.35"/>
-                                        </svg>
-                                        <span>9 Stretcher Bar</span>
-                                    </li>
-                                    <li className="flex gap-x-2">
-                                        <svg  className='flex-none w-3 h-3 tb:w-3.5 tb:h-3.5 mt-px sm:mt-0.5 tb:mt-1' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14.45 8.66">
-                                            <line fill="none" stroke="#343434" stroke-miterlimit="10" y1="4.34" x2="13" y2="4.34"/>
-                                            <polyline fill="none" stroke="#343434" stroke-miterlimit="10" points="9.77 8.3 13.74 4.33 9.77 0.35"/>
-                                        </svg>
-                                        <span>100's of Custom Configurations</span>
-                                    </li>
-                                    <li className="flex gap-x-2">
-                                        <svg  className='flex-none w-3 h-3 tb:w-3.5 tb:h-3.5 mt-px sm:mt-0.5 tb:mt-1' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14.45 8.66">
-                                            <line fill="none" stroke="#343434" stroke-miterlimit="10" y1="4.34" x2="13" y2="4.34"/>
-                                            <polyline fill="none" stroke="#343434" stroke-miterlimit="10" points="9.77 8.3 13.74 4.33 9.77 0.35"/>
-                                        </svg>
-                                        <span>4 Easy Steps</span>
-                                    </li>
-                                    <li className="flex gap-x-2">
-                                        <svg  className='flex-none w-3 h-3 tb:w-3.5 tb:h-3.5 mt-px sm:mt-0.5 tb:mt-1' xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14.45 8.66">
-                                            <line fill="none" stroke="#343434" stroke-miterlimit="10" y1="4.34" x2="13" y2="4.34"/>
-                                            <polyline fill="none" stroke="#343434" stroke-miterlimit="10" points="9.77 8.3 13.74 4.33 9.77 0.35"/>
-                                        </svg>
-                                        <span>Expert Craftmanship backed by 125 years of Industry Experience</span>
-                                    </li>
-                                </ul>
+                                {entry.shop_content ? (
+                                  (() => {
+                                    try {
+                                      const json = JSON.parse(entry.shop_content);
+                                      if (json && typeof json === 'object') {
+                                        return <div className="mb-2.5 flex w-full leading-normal flex-col gap-1"><RichTextRenderer content={json} variant="customShop" /></div>;
+                                      }
+                                    } catch (_) {}
+                                    return <div className="mb-2.5 flex w-full leading-normal flex-col gap-1" dangerouslySetInnerHTML={{__html: entry.shop_content}} />
+                                  })()
+                                ) : null}
                             </div>
                         </div>
-                        <div className='flex absolute  inset-0 md:inset-5 !top-auto p-j5 md:p-0 md:pt-5 border-t border-grey-200 justify-center '>
-                            <Link to="" className="btn-primary max-[479px]:p-2.5 max-[479px]:text-[10px] max-[479px]:leading-4 sm:text-xs md:text-15 h-auto uppercase">Custom Stretched Canvas</Link>
-                        </div>
+                        {entry.shop_button && (
+                          <div className='flex absolute  inset-0 md:inset-5 !top-auto p-j5 md:p-0 md:pt-5 border-t border-grey-200 justify-center '>
+                              <a href={entry.button_link || "#"} className="btn-primary max-[479px]:p-2.5 max-[479px]:text-[10px] max-[479px]:leading-4 sm:text-xs md:text-15 h-auto uppercase">{entry.shop_button}</a>
+                          </div>
+                        )}
                     </div>
-                    <div className='p-j5 pb-[55px] relative sm:p-2.5 sm:pb-[55px] md:!pb-[100px] tb:p-5 sm:m-2.5 border border-grey-200 rounded-sm bg-white flex-1 max-w-[50%] sm:max-w-none'>
-                        <h3 className='text-xs bg-blue text-white mb-j5 md:text-lg jlg:text-xl jxl:text-[25px] w-full p-j5 md:p-0 text-center md:bg-transparent md:text-blue md:mb-j15 leading-tight'>Jerry's Custom Framing - <br/> Expert Frames </h3>
-                        <h6 className='text-[11px] md:text-sm jxl:text-lg text-center text-blue mb-2.5 md:mb-j30'><b>Large Selection of Custom Frames Online</b></h6>
-                        <div className='flex flex-col md:flex-row  md:gap-x-3 tb:gap-x-4 j2xl:gap-x-5'>
-                            <div className='customShopImg text-center flex-none md:w-20 tb:w-32 jlg:w-20 jxl:w-32 j2xl:w-[150px]'>
-                                <img src="/image/golden-open-40off-sale-free-brush.jpg" alt="" className="aspect-square object-cover w-1/2 md:w-full inline-block" />
-                            </div>
-                            <div className='customShopList [&_p]:mb-2.5 leading-normal h-16 md:h-auto sm:h-24 overflow-hidden text-xs sm:text-13 tb:text-15 p-j5 md:p-0 w-full after:absolute after:inset-0 after:top-auto after:h-4/5 after:bg-gradient-to-t after:from-white after:md:hidden relative'>
-                                <p>Shop a large selection of custom frames in wood or metal. Shop many styles, colors and create you very own custom frame with our online frame making tools. Expertly made here in our warehouse by our in-house frame specialists. Expert Craftmanship backed by 125 years of Industry Experience!</p>
-                            </div>
-                        </div>
-                        <div className='flex absolute  inset-0 md:inset-5 !top-auto p-j5 md:p-0 md:pt-5 border-t border-grey-200 justify-center '>
-                            <Link to="" className="btn-primary max-[479px]:p-2.5 max-[479px]:text-[10px] max-[479px]:leading-4 sm:text-xs md:text-15 h-auto uppercase">Custom Frames Online</Link>
-                        </div>
-                    </div>
+                  ))}
                 </div>
             </div>
         </div>
@@ -90,3 +59,58 @@ function CustomShop() {
 }
 
 export default CustomShop
+
+// Server-side loader for CustomShop items
+export async function loadCustomShopData({ context }, type = "homepage_custom_shop") {
+  const GET_METAOBJECT_QUERY = `#graphql
+    query GetMetaobject($type: String!) {
+      metaobjects(type: $type, first: 20) {
+        edges { node { handle type fields { key value } } }
+      }
+    }
+  `;
+  const GET_MEDIA_IMAGES_QUERY = `#graphql
+    query GetMediaImages($ids: [ID!]!) { nodes(ids: $ids) { ... on MediaImage { id image { url } } } }
+  `;
+
+  try {
+    const resp = await context.storefront.query(GET_METAOBJECT_QUERY, { variables: { type } });
+    const edges = resp?.metaobjects?.edges || [];
+    const items = edges.map((edge) => {
+      const fields = (edge?.node?.fields || []).reduce((acc, f) => { acc[f.key] = f.value; return acc; }, {});
+      return {
+        shop_title: fields.shop_title || '',
+        shop_subtitle: fields.shop_subtitle || '',
+        shop_content: fields.shop_content || '',
+        shop_image: fields.shop_image || '',
+        shop_button: fields.shop_button || '',
+        button_link: fields.button_link || '#',
+        order: parseInt(fields.ads_order) || 0,
+      };
+    });
+
+    const mediaIds = items
+      .map((it) => it.shop_image)
+      .filter((id) => typeof id === 'string' && id.startsWith('gid://shopify/MediaImage/'));
+    let imageUrlMap = {};
+    if (mediaIds.length > 0) {
+      const mediaResponse = await context.storefront.query(GET_MEDIA_IMAGES_QUERY, { variables: { ids: mediaIds } });
+      imageUrlMap = (mediaResponse?.nodes || []).reduce((acc, node) => {
+        if (node?.id && node?.image?.url) acc[node.id] = node.image.url;
+        return acc;
+      }, {});
+    }
+
+    const normalized = items
+      .map((it) => ({
+        ...it,
+        shop_image: it.shop_image?.startsWith('gid://shopify/MediaImage/') ? (imageUrlMap[it.shop_image] || '/image/placeholder.jpg') : (it.shop_image || '/image/placeholder.jpg'),
+      }))
+      .sort((a, b) => a.order - b.order);
+
+    return normalized.slice(-2);
+  } catch (e) {
+    console.error('loadCustomShopData error', e);
+    return [];
+  }
+}

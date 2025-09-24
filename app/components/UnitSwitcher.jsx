@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 
 export default function UnitSwitcher({ onUnitChange, value }) {
-  const [unit, setUnit] = useState(value || 'oz');
+  const normalized = (value || 'oz').toLowerCase();
+  const [unit, setUnit] = useState(normalized === 'ml' ? 'ml' : 'oz');
 
   useEffect(() => {
-    if (value && value !== unit) {
-      setUnit(value);
+    if (value && value.toLowerCase() !== unit) {
+      setUnit(value.toLowerCase());
     }
   }, [value]);
 

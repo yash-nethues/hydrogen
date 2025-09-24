@@ -7,7 +7,7 @@ export function WishlistProvider({children}) {
   const [wishlist, setWishlist] = useState([]);
   const isClient = useIsClient();
 
-  console.log('wishlist data:- ', wishlist);
+  // console.debug('wishlist data', wishlist);
 
   useEffect(() => {
     if (isClient) {
@@ -20,7 +20,9 @@ export function WishlistProvider({children}) {
 
 
   useEffect(() => {
-    //localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    if (isClient) {
+      localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    }
   }, [wishlist]);
 
   const addToWishlist = (productId) => {

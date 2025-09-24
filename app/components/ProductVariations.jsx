@@ -23,12 +23,6 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   // Check if we're working with child products (they have childAttributes)
   const isChildProducts = productVariants && productVariants.length > 0 && productVariants[0].childAttributes;
   
-  // Debug logging for child products
-  if (isChildProducts) {
-    console.log('Child products detected:', productVariants.length);
-    console.log('First child product childAttributes:', productVariants[0]?.childAttributes);
-  }
-  
   // Create filter options based on whether we're using child products or regular variants
   const filterOptions = isChildProducts 
     ? {
@@ -59,9 +53,6 @@ export function ProductVariations({ images, productVariants, productVideos, prod
         size: [...new Set(productVariants.flatMap(v => v.selectedOptions?.find(opt => opt.name.toLowerCase() === 'size')?.value || []))],
         format: [...new Set(productVariants.flatMap(v => v.selectedOptions?.find(opt => opt.name.toLowerCase() === 'format')?.value || []))],
       };
-
-  // Debug logging for filter options
-  console.log('Filter options:', filterOptions);
 
   // Toggle filter section visibility
   const toggleFilter = () => {
@@ -118,53 +109,53 @@ export function ProductVariations({ images, productVariants, productVideos, prod
   
   // Filter variants based on selected filters
   const filteredVariants = productVariants.filter(variant => {
-    let color, size, format;
-    
+    const toArray = (v) => (Array.isArray(v) ? v : (v ? [v] : []));
+    const norm = (s) => String(s || '').trim();
+    const intersects = (a, b) => a.length === 0 || b.some((x) => a.includes(x));
+
+    let colors = [], sizes = [], formats = [];
+
     if (isChildProducts) {
-      // For child products, try to get color from paints_mediums_multiselect_attribute metafield first, fallback to childAttributes
-      const colorFromMetafield = variant.paintsMetaobjects?.map(meta => {
-        const colorField = meta.fields?.find(f => f.key === 'color_name');
-        if (colorField?.reference?.__typename === 'Metaobject') {
-          const candidates = ['color_name', 'value', 'text', 'name', 'title'];
-          for (const candidate of candidates) {
-            const value = colorField.reference.fields?.find(rf => rf.key === candidate)?.value;
-            if (value) return value;
+      // For child products, build arrays
+      const colorsFromMeta = (variant.paintsMetaobjects || [])
+        .map((meta) => {
+          const colorField = (meta.fields || []).find((f) => f.key === 'color_name');
+          if (colorField?.reference?.__typename === 'Metaobject') {
+            const candidates = ['color_name', 'value', 'text', 'name', 'title'];
+            for (const candidate of candidates) {
+              const v = colorField.reference.fields?.find((rf) => rf.key === candidate)?.value;
+              if (v) return v;
+            }
           }
-        }
-        return colorField?.value || '';
-      }).filter(Boolean) || [];
-      
-      // Use metafield color if available, otherwise fallback to childAttributes
-      color = colorFromMetafield.length > 0 ? colorFromMetafield[0] : (variant.childAttributes?.color?.[0] || '');
-      size = variant.childAttributes?.size?.[0] || '';
-      format = variant.childAttributes?.format?.[0] || '';
+          return colorField?.value || '';
+        })
+        .filter(Boolean)
+        .map(norm);
+
+      colors = colorsFromMeta.length > 0 ? colorsFromMeta : toArray(variant.childAttributes?.color).map(norm);
+      sizes = toArray(variant.childAttributes?.size).map(norm);
+      formats = toArray(variant.childAttributes?.format).map(norm);
     } else {
-      // For regular variants, get from selectedOptions
-      color = variant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'color')?.value || '';
-      size = variant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'size')?.value || '';
-      format = variant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'format')?.value || '';
+      // Regular variants (single values per option)
+      const color = variant.selectedOptions?.find((opt) => opt.name.toLowerCase() === 'color')?.value;
+      const size = variant.selectedOptions?.find((opt) => opt.name.toLowerCase() === 'size')?.value;
+      const format = variant.selectedOptions?.find((opt) => opt.name.toLowerCase() === 'format')?.value;
+      colors = toArray(color).map(norm);
+      sizes = toArray(size).map(norm);
+      formats = toArray(format).map(norm);
     }
-    
-    // Check color filter
-    if (filters.color.length > 0 && !filters.color.includes(color)) {
-      return false;
-    }
-    
-    // Check size filter
-    if (filters.size.length > 0 && !filters.size.includes(size)) {
-      return false;
-    }
-    
-    // Check format filter
-    if (filters.format.length > 0 && !filters.format.includes(format)) {
-      return false;
-    }
-    
-    // Check size filter (from size buttons)
-    if (sizeFilters.length > 0 && !sizeFilters.includes(size)) {
-      return false;
-    }
-    
+
+    // Normalize selected filters (already strings)
+    const selColors = (filters.color || []).map(norm);
+    const selSizes = (filters.size || []).map(norm);
+    const selFormats = (filters.format || []).map(norm);
+    const btnSizes = (sizeFilters || []).map(norm);
+
+    if (!intersects(selColors, colors)) return false;
+    if (!intersects(selSizes, sizes)) return false;
+    if (!intersects(selFormats, formats)) return false;
+    if (btnSizes.length > 0 && !intersects(btnSizes, sizes)) return false;
+
     return true;
   });
 
@@ -316,6 +307,68 @@ export function ProductVariations({ images, productVariants, productVideos, prod
     }
   };
 
+  // Helper to get variant short name (name_short from paints metaobjects if available)
+  const getVariantShortName = (variant) => {
+    // Prefer explicit variant metafield (custom.product_variant_name)
+    if (variant?.metafield?.value) return variant.metafield.value;
+    // Also accept explicit nameShort alias if present
+    if (variant?.nameShort?.value) return variant.nameShort.value;
+    // If this is a child product (custom), the API may expose nameShort on the product itself
+    if (isChildProducts && variant?.nameShort?.value) return variant.nameShort.value;
+
+    // Try child product paints metaobjects (name_short)
+    const metas = variant?.paintsMetaobjects || [];
+    for (const meta of metas) {
+      const fields = meta?.fields || [];
+      const possibleKeys = ['name_short', 'product_variant_name', 'short_name', 'variant_name_short'];
+      for (const key of possibleKeys) {
+        const sf = fields.find((f) => f.key === key);
+        if (!sf) continue;
+        if (sf.reference?.__typename === 'Metaobject') {
+          const candidates = [key, 'value', 'text', 'name', 'title'];
+          for (const c of candidates) {
+            const v = sf.reference.fields?.find((rf) => rf.key === c)?.value;
+            if (v) return v;
+          }
+        }
+        if (sf.value) return sf.value;
+      }
+    }
+    // Fallbacks for non-child variants or when meta not present
+    return variant?.productTitle || variant?.title || '';
+  };
+
+  // Build a map of color name -> color_code from paints metaobjects (for child products)
+  const childColorCodeByName = (() => {
+    const map = {};
+    if (!isChildProducts) return map;
+    productVariants.forEach((v) => {
+      const metas = v?.paintsMetaobjects || [];
+      metas.forEach((meta) => {
+        const fields = meta?.fields || [];
+        const nameField = fields.find((f) => f.key === 'color_name');
+        const codeField = fields.find((f) => f.key === 'color_code');
+        const codeField2 = fields.find((f) => f.key === 'color_code_2');
+        let colorName = '';
+        if (nameField?.reference?.__typename === 'Metaobject') {
+          const candidates = ['color_name', 'value', 'text', 'name', 'title'];
+          for (const c of candidates) {
+            const val = nameField.reference.fields?.find((rf) => rf.key === c)?.value;
+            if (val) { colorName = val; break; }
+          }
+        } else {
+          colorName = nameField?.value || '';
+        }
+        const colorCode = (codeField?.value || '').trim();
+        const colorCode2 = (codeField2?.value || '').trim();
+        if (colorName && (colorCode || colorCode2)) {
+          map[colorName] = { c1: colorCode || '#FFFFFF', c2: colorCode2 || '' };
+        }
+      });
+    });
+    return map;
+  })();
+
   return (
     <>
         {/* View toggle buttons */}
@@ -386,21 +439,38 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                    <label className='font-semibold mb-0 leading-none'>Color</label>
                    <div className='flex flex-wrap items-center gap-6'>
                      <ul className='flex gap-4'>
-                       {filterOptions.color.map((color) => (
-                         <li key={color}>
-                           <label className='p-0 pl-6 leading-6 relative' style={{ 'background': '#FFFFFF' }}>
-                             <input 
-                               className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
-                               type="checkbox"  
-                               value={color}
-                               checked={filters.color.includes(color)}
-                               onChange={(e) => handleFilterChange('color', color, e.target.checked)}
-                             /> 
-                             <span className='ps-j5 pe-2.5 bg-white'>{color}</span>
-                             <span className='absolute w-[22px] h-[21px] opacity-0 peer-checked:opacity-100 bg-white left-px top-px after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b after:border-blue'></span>
-                           </label>
-                         </li>
-                       ))}
+                       {filterOptions.color.map((color) => {
+                         const fallbackMap = { black: '#000000', white: '#FFFFFF', red: '#FF0000', blue: '#0076FF', yellow: '#FFE400', green: '#00A651', orange: '#FFA500', purple: '#800080', brown: '#8B4513', grey: '#808080', gray: '#808080' };
+                         const mapEntry = childColorCodeByName[color];
+                         const c1 = mapEntry?.c1 || fallbackMap[color?.toLowerCase()] || '#FFFFFF';
+                         const c2 = mapEntry?.c2 || '';
+                         const isChecked = filters.color.includes(color);
+                         const labelStyle = c2
+                           ? { background: `linear-gradient(90deg, ${c1} 0%, ${c1} 50%, ${c2} 50%, ${c2} 100%)` }
+                           : { background: c1 };
+                         const boxBackground = c2
+                           ? `linear-gradient(90deg, ${c1} 0%, ${c1} 50%, ${c2} 50%, ${c2} 100%)`
+                           : c1;
+                         const boxStyle = {
+                           border: isChecked ? `1px solid ${c1}` : '1px solid #e5e7eb',
+                           background: boxBackground,
+                         };
+                         return (
+                           <li key={color}>
+                             <label className='p-0 pl-6 leading-6 relative' style={labelStyle}>
+                               <input 
+                                 className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
+                                 type="checkbox"  
+                                 value={color}
+                                 checked={filters.color.includes(color)}
+                                 onChange={(e) => handleFilterChange('color', color, e.target.checked)}
+                               /> 
+                               <span className='ps-j5 pe-2.5 bg-white'>{color}</span>
+                               <span className='absolute w-[22px] h-[21px] opacity-0 peer-checked:opacity-100 left-px top-px after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b after:border-blue' style={boxStyle}></span>
+                             </label>
+                           </li>
+                         );
+                       })}
                      </ul>
                      {filters.color.length > 0 && (
                        <button 
@@ -499,20 +569,27 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       swatch,
                     } = value;
                     if (option.name == 'Color') {
-                      var colorCode = '#FFFFFF';
-                      if(name == 'Black'){
-                        var colorCode = '#000000';
-                      }else if(name == 'Red'){
-                        var colorCode = '#FF0000';
-                      }else if(name == 'Blue'){
-                        var colorCode = '#0076FF';
-                      }else if(name == 'Yellow'){
-                        var colorCode = '#FFE400';
-                      }
-                      
+                      // Prefer swatch.color from Storefront API, fallback to a small name map
+                      const fallbackMap = {
+                        black: '#000000',
+                        white: '#FFFFFF',
+                        red: '#FF0000',
+                        blue: '#0076FF',
+                        yellow: '#FFE400',
+                        green: '#00A651',
+                        orange: '#FFA500',
+                        purple: '#800080',
+                        brown: '#8B4513',
+                        grey: '#808080',
+                        gray: '#808080',
+                      };
+                      const colorCode = (swatch?.color && swatch.color.trim()) || fallbackMap[name?.toLowerCase()] || '#FFFFFF';
+                      const isChecked = filters.color.includes(name);
+                      const labelStyle = { background: colorCode };
+                      const boxStyle = { border: isChecked ? `1px solid ${colorCode}` : '1px solid transparent' };
                       return (
                         <li key={name}>
-                          <label className='p-0 pl-6 leading-6 relative' style={{ 'background': colorCode }}>
+                          <label className='p-0 pl-6 leading-6 relative' style={labelStyle}>
                               <input 
                                 className='opacity-0 z-10 m-0 w-6 peer h-6 top-0 left-0 absolute' 
                                 type="checkbox"  
@@ -521,7 +598,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                                 onChange={(e) => handleFilterChange('color', name, e.target.checked)}
                               /> 
                               <span className='ps-j5 pe-2.5 bg-white'>{name}</span>
-                              <span className='absolute w-[22px] h-[21px] opacity-0 peer-checked:opacity-100 bg-white left-px top-px after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b after:border-blue'></span>
+                              <span className='absolute w-[22px] h-[21px] opacity-0 peer-checked:opacity-100 bg-white left-px top-px after:absolute after:left-[7px] after:top-[2px] after:w-[6px] after:h-[13px] after:rotate-45 after:border-r after:border-b after:border-blue' style={boxStyle}></span>
                           </label>
                         </li>
                       )
@@ -665,7 +742,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                       >
                         <img src={variant.image.url} alt={variant.metafield?.value || variant.productTitle || variant.title} className="w-full aspect-square object-cover" />
                         <div className='flex flex-col'>
-                          <p className="text-inherit mb-0">{variant.metafield?.value || variant.productTitle || variant.title}</p>
+                          <p className="text-inherit mb-0">{getVariantShortName(variant)}</p>
                           <span className='text-xs'>{size}</span>
                           <span className='text-xs text-blue flex flex-wrap justify-between group-[.active]/gridItem:flex-col group-hover/gridItem:flex-col group-[.active]/gridItem:justify-center group-hover/gridItem:justify-center'>
                             <span className='font-semibold group-[.active]/gridItem:text-[80%] group-hover/gridItem:text-[80%]'>Reg. Price</span>
@@ -696,21 +773,62 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                 <div className='w-2/5 flex-none md:sticky md:top-10 max-w-[430px] bg-white rounded-sm border border-grey-200 p-5'>
                   <div className='mt-4'>
                     <strong className='block'>Name</strong>
-                    <span data-blink="Click Here" className="relative before:pointer-events-none before:animate-blink1 before:content-[attr(data-blink)] before:inline-block before:opacity-0  before:px-2.5 before:py-j5 before:text-white before:bg-brand before:absolute before:top-full before:text-10/3 before:uppercase after:pointer-events-none after:absolute after:left-[4px] after:top-full after:w-1.5 after:aspect-square after:bg-brand after:rotate-45 after:-translate-y-1/2 after:opacity-0 after:animate-blink1"><a href="">{selectedVariant.metafield?.value || selectedVariant.productTitle || selectedVariant.title}</a></span>
+                    {(() => {
+                      // Build URL for the selected variant
+                      let color = '', size = '', format = '';
+                      if (isChildProducts) {
+                        color = selectedVariant.childAttributes?.color?.[0] || '';
+                        size = selectedVariant.childAttributes?.size?.[0] || '';
+                        format = selectedVariant.childAttributes?.format?.[0] || '';
+                      } else {
+                        color = selectedVariant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'color')?.value || '';
+                        size = selectedVariant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'size')?.value || '';
+                        format = selectedVariant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'format')?.value || '';
+                      }
+                      const toParam = (label, val) => val ? `${label}=${encodeURIComponent(val)}` : '';
+                      const query = [toParam('Color', color), toParam('Size', size), toParam('Format', format)].filter(Boolean).join('&');
+                      const href = `/products/${selectedVariant.product.handle}${query ? `?${query}` : ''}`;
+                      return (
+                        <span data-blink="Click Here" className="relative before:pointer-events-none before:animate-blink1 before:content-[attr(data-blink)] before:inline-block before:opacity-0  before:px-2.5 before:py-j5 before:text-white before:bg-brand before:absolute before:top-full before:text-10/3 before:uppercase after:pointer-events-none after:absolute after:left-[4px] after:top-full after:w-1.5 after:aspect-square after:bg-brand after:rotate-45 after:-translate-y-1/2 after:opacity-0 after:animate-blink1">
+                          <a href={href}>{getVariantShortName(selectedVariant)}</a>
+                        </span>
+                      );
+                    })()}
                   </div>
                   <div className="mt-4 flex gap-x-4">
                     <div className='flex w-2/3 gap-x-4'>
                       <div className='flex-grow'>
                         <strong className='block'>Size</strong>
-                        <span>2 oz</span>
+                        {(() => {
+                          let size = '';
+                          if (isChildProducts) {
+                            size = selectedVariant.childAttributes?.size?.[0] || '';
+                          } else {
+                            size = selectedVariant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'size')?.value || '';
+                          }
+                          return <span>{size}</span>;
+                        })()}
                       </div>
                       <div className='flex-grow'>
                         <strong className='block'>item#</strong>
-                        <span>65481</span>
+                        {(() => {
+                          const sku = selectedVariant?.sku;
+                          const fallbackId = selectedVariant?.id ? selectedVariant.id.split('/').pop() : '';
+                          return <span>{sku || fallbackId || '-'}</span>;
+                        })()}
                       </div>
                     </div>
                     <div className='w-1/3 relative'>
-                      <span className='text-green'>In Stock</span>
+                      {(() => {
+                        const available = typeof selectedVariant?.availableForSale === 'boolean'
+                          ? selectedVariant.availableForSale
+                          : (typeof selectedVariant?.quantityAvailable === 'number' ? selectedVariant.quantityAvailable > 0 : true);
+                        return (
+                          <span className={available ? 'text-green' : 'text-red-600'}>
+                            {available ? 'In Stock' : 'Out of Stock'}
+                          </span>
+                        );
+                      })()}
                       <div className='flex flex-col absolute left-0 top-full'>
                         <span className="prod-alert-label hidden">Product Badge:</span>
                         <ul className="badgesFlags flex flex-wrap gap-1">
@@ -737,7 +855,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                               <p><strong>Transparency:</strong> Semi Opaque</p>
                             </div>
                           </li>                          
-                          <li className="alert-item w-6 group/tooltip rounded-sm [&.prop-65]:!bg-[transparent] [&.super-sale]:!bg-green [&.super-sale]:!text-white [&.super-sale]:!shadow-none [&.prop-65]:!shadow-none [&.prop-65]:!border-0 [&.super-sale]:!border-0 prop-65">
+                          <li className="alert-item w-6 group/tooltip rounded-sm [&.prop-65]:!bg-[transparent] [&.super-sale]:!bg-green [&.super-sale]:!text-white [&.super-sale]:!shadow-none [&.prop-65]:!shadow-none [&.prop-65]:border-0 [&.super-sale]:!border-0 prop-65">
                             <svg width="14" height="14" aria-hidden="true" className='group-[.prop-65]/tooltip:w-6 group-[.prop-65]/tooltip:h-6'>
                               <use href="#icon-prop-65" />
                             </svg>
@@ -1012,7 +1130,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                             </div>
                             <div className="w-[55%] bg-gray-100 p-2.5">
                               <span  onClick={() => setExpandedVariantId(null)} className="absolute top-0 right-0 bg-brand-100 text-sm flex items-center justify-center w-8 h-8 text-white text-center cursor-pointer">X</span>
-                              <h2 className="text-2xl font-normal pe-8 mb-2.5"><a href="" className="hover:text-brand">{variant.metafield?.value || variant.productTitle || variant.title}</a></h2>
+                              <h2 className="text-2xl font-normal pe-8 mb-2.5"><a href="" className="hover:text-brand">{getVariantShortName(variant)}</a></h2>
                               <div className="flex flex-wrap flex-col gap-y-2">
                                 <div className="flex flex-wrap flex-col">
                                   <span className="prod-alert-label hidden">Product Badge:</span>
@@ -1113,7 +1231,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                                 <div className="pl-2 w-[70%]">
                                 <VariantAddCartBtn
                                   productOptions={productOptions}
-                                  selectedVariant={variant}
+                                  selectedVariant={selectedVariant}
                                   quantity={quantity}
                                 />             
                                 </div>
@@ -1142,7 +1260,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                     </td>
                     <td>
                       <div className="text-left">
-                        <span className="text-left">{variant.metafield?.value || variant.productTitle || variant.title}</span>
+                        <span className="text-left">{getVariantShortName(variant)}</span>
                       </div>
                     </td>
                     <td>
@@ -1204,7 +1322,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                                 <p><strong>Transparency:</strong> Semi Opaque</p>
                               </div>
                             </li>                          
-                            <li className="alert-item w-5 h-5 group/tooltip rounded-sm [&.prop-65]:!bg-[transparent] [&.super-sale]:!bg-green [&.super-sale]:!text-white [&.super-sale]:!shadow-none [&.prop-65]:!shadow-none [&.prop-65]:!border-0 [&.super-sale]:!border-0 prop-65">
+                            <li className="alert-item w-5 h-5 group/tooltip rounded-sm [&.prop-65]:!bg-[transparent] [&.super-sale]:!bg-green [&.super-sale]:!text-white [&.super-sale]:!shadow-none [&.prop-65]:!shadow-none [&.prop-65]:border-0 [&.super-sale]:!border-0 prop-65">
                               <svg width="14" height="14" aria-hidden="true" className='group-[.prop-65]/tooltip:w-5 group-[.prop-65]/tooltip:h-5'>
                                 <use href="#icon-prop-65" />
                               </svg>
