@@ -27,7 +27,7 @@ export function PageLayout({
       <CartAside cart={cart} />
       <SearchAside />
       <HeaderTop />
-      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} />
+      <MobileMenuAside header={header} publicStoreDomain={publicStoreDomain} className="bg-grey-50" />
      
       {header && (
         <Header
@@ -152,11 +152,11 @@ function SearchAside() {
  *   publicStoreDomain: PageLayoutProps['publicStoreDomain'];
  * }}
  */
-function MobileMenuAside({header, publicStoreDomain}) {
+function MobileMenuAside({header, publicStoreDomain, className = ""}) {
   return (
     header.menu &&
     header.shop.primaryDomain?.url && (
-      <Aside type="mobile" heading="MENU">
+      <Aside type="mobile" heading="MENU" className={className}>
         <HeaderMenu
           menu={header.menu}
           viewport="mobile"

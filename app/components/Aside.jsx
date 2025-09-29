@@ -15,7 +15,7 @@ import {createContext, useContext, useEffect, useState} from 'react';
  *   heading: React.ReactNode;
  * }}
  */
-export function Aside({children, heading, type}) {
+export function Aside({children, heading, type, className = ""}) {
   const {type: activeType, close} = useAside();
   const expanded = type === activeType;
 
@@ -43,7 +43,7 @@ export function Aside({children, heading, type}) {
       role="dialog"
     >
       <button className="close-outside" onClick={close} />
-      <aside>
+      <aside className={`${className}`}>
         <header>
           <h3>{heading}</h3>
           <button className="close reset" onClick={close} aria-label="Close">

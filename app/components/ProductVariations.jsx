@@ -709,7 +709,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                        format = variant.selectedOptions?.find(opt => opt.name.toLowerCase() === 'format')?.value || '';
                      }
 
-                    const variantName = variant.metafield?.value || variant.productTitle || variant.title;
+                    const variantName = getVariantShortName(variant);
                     const variantPrice = variant.price.amount;
 
                     const variantId = variant.id.split('/').pop();
@@ -740,7 +740,7 @@ export function ProductVariations({ images, productVariants, productVideos, prod
                         onClick={() => setSelectedVariant(variant)} 
                         className={`relative group/gridItem [&.active]:scale-125 [&.active]:translate-y-4 hover:scale-125 hover:translate-y-4 hover:shadow-text [&.active]:-mb-9 hover:-mb-9 [&.active]:shadow-text w-[120px] hover:z-10 [&.active]:z-10 text-14/4 text-center bg-white border border-grey-200 p-j5 rounded-sm flex flex-col gap-y-1 ${selectedVariant?.id === variant.id ? 'active' : ''}`}
                       >
-                        <img src={variant.image.url} alt={variant.metafield?.value || variant.productTitle || variant.title} className="w-full aspect-square object-cover" />
+                        <img src={variant.image.url} alt={getVariantShortName(variant)} className="w-full aspect-square object-cover" />
                         <div className='flex flex-col'>
                           <p className="text-inherit mb-0">{getVariantShortName(variant)}</p>
                           <span className='text-xs'>{size}</span>

@@ -15,8 +15,6 @@
   "dependencies": {
     "@apollo/client": "^3.13.1",
     "@fancyapps/ui": "^5.0.36",
-    "@fortawesome/free-solid-svg-icons": "^7.0.1",
-    "@fortawesome/react-fontawesome": "^3.0.2",
     "@react-icons/all-files": "^4.1.0",
     "@remix-run/react": "^2.13.1",
     "@remix-run/server-runtime": "^2.13.1",

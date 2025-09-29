@@ -295,6 +295,8 @@ async function loadCriticalData({context, params, request}) {
           // Add product title and attributes to variant for display purposes
           return {
             ...variant,
+            // carry over product-level short name metafield so UI can render it
+            nameShort: product.nameShort,
             productTitle: product.title,
             productHandle: product.handle,
             childAttributes: mergedChildAttributes,

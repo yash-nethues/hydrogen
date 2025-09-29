@@ -363,7 +363,7 @@ async function loadMegaMenusData({ context }, type = 'mega_menus') {
       const sections = (menuNavNodes || []).map((node) => {
         const refMap = (node?.fields || []).reduce((m, f) => {
 
-          console.log('fnavigation', f.key, f.value);
+        //  console.log('fnavigation', f.key, f.value);
 
           m[f.key] = f.value;
           m[`__refs_${f.key}`] = f.references?.nodes || undefined;
@@ -375,7 +375,9 @@ async function loadMegaMenusData({ context }, type = 'mega_menus') {
         const parsedMenuTitleLink = parseLinkValue(refMap.menu_title_link || refMap.menu_title_url || '');
         const menuTitleLink = parsedMenuTitleLink.url || '#';
         const menuSubtitle = refMap.menu_subtitle || '';
-
+        const menuIcon = refMap.menu_icon || '';
+        const menuIconHover = refMap.menu_hover_icon || '';
+        const menuClass = refMap.menu_class || '';
         const navRefs = refMap['__refs_navigations'] || (refMap['__ref_navigations'] ? [refMap['__ref_navigations']] : []);
         let items = (navRefs || []).map((navNode) => {
           const navMap = (navNode?.fields || []).reduce((m, f) => {
@@ -399,6 +401,9 @@ async function loadMegaMenusData({ context }, type = 'mega_menus') {
           menuTitle,
           menuTitleLink,
           menuSubtitle,
+          menuIcon,
+          menuIconHover,
+          menuClass,
           items,
         };
       });

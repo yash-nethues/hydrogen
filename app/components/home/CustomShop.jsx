@@ -14,7 +14,7 @@ function CustomShop({ items }) {
                         </h2>
                         <p className="!text-white !leading-snug text-15 sm:text-base jlg:text-xl block"> Trust Jerry’s Skilled Craftsman <br />To Custom Make <br />Canvases &amp; Framing
                             <span className="text-[70%] block mt-2.5">Made Here in The USA</span>
-                        </p>
+                        </p>                        
                     </div>
                 </div>
                 <div className="w-full p-j5 pt-j15 md:p-j15 tb:p-j30 jlg:w-70 bg-white sm:bg-grey-100 sm:border sm:border-grey-200 flex sm:flex-wrap">
@@ -45,9 +45,9 @@ function CustomShop({ items }) {
                             </div>
                         </div>
                         {entry.shop_button && (
-                          <div className='flex absolute  inset-0 md:inset-5 !top-auto p-j5 md:p-0 md:pt-5 border-t border-grey-200 justify-center '>
+                        <div className='flex absolute  inset-0 md:inset-5 !top-auto p-j5 md:p-0 md:pt-5 border-t border-grey-200 justify-center '>
                               <a href={entry.button_link || "#"} className="btn-primary max-[479px]:p-2.5 max-[479px]:text-[10px] max-[479px]:leading-4 sm:text-xs md:text-15 h-auto uppercase">{entry.shop_button}</a>
-                          </div>
+                        </div>
                         )}
                     </div>
                   ))}
