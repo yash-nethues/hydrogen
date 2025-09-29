@@ -646,9 +646,9 @@ export default function Collection() {
 
           {/* Full width ads section below child collections on parent collection pages */}
           {fullWidthAds.length > 0 && (
-            <div className="custom-container mt-8">
+            <div className="custom-container  ">
               {fullWidthAds.map((ad, idx) => (
-                <div key={`fw-${idx}`} className="mb-5">
+                <div key={`fw-${idx}`} className="mt-10 p-5 bg-grey-100 border border-grey-200 hidden md:block">
                   {ad.href ? (
                     <a href={ad.href} className='block'>
                       <img src={ad.img} alt={ad.alt || 'Advertisement'} className="w-full h-auto" />
@@ -709,8 +709,8 @@ export default function Collection() {
                 </SwiperSlide>
                 ))}
               </Swiper>
-              <button className={`n_arrow-left arrow swiper-button-prev after:hidden before:w-5 before:h-5 ml-1 ${ !showArrows ? "hidden" : ""}`}></button>
-              <button className={`n_arrow-right arrow swiper-button-next after:hidden before:w-5 before:h-5  ${ !showArrows ? "hidden" : ""}`}></button>            
+              <button className={`n_arrow-left arrow swiper-button-prev !-mt-j5 after:hidden before:w-5 before:h-5 ml-1 ${ !showArrows ? "hidden" : ""}`}></button>
+              <button className={`n_arrow-right arrow swiper-button-next  !-mt-j5  after:hidden before:w-5 before:h-5  ${ !showArrows ? "hidden" : ""}`}></button>            
             </div>
           </div>
         </>

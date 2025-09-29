@@ -135,7 +135,7 @@
     }
     .swiper-button-prev,
     .swiper-button-next {
-      @apply w-j30 h-[62px] origin-right mt-0 -translate-y-1/2 max-[767px]:before:w-[15px] max-[767px]:before:h-[15px];
+      @apply w-j30 h-[62px] origin-right !mt-0 -translate-y-1/2 after:!hidden max-[767px]:before:w-[15px] max-[767px]:before:h-[15px];
     }
     .jerry-badge {
       @apply [&_span]:w-[45px] [&_span]:h-[26px] absolute left-0 top-0 flex flex-col gap-1 [&_span]:bg-badge [&_span]:bg-no-repeat [&_.special-offer]:bg-[left_top] [&_.free-offer]:bg-[left_top_-26px] [&_.bulk]:bg-[left_top_-52px] [&_.top-sellers]:bg-[left_top_-78px] [&_.new]:bg-[left_top_-104px] [&_.sale]:bg-[left_top_-130px] [&_.best-value]:bg-[left_top_-156px] [&_.super-sale]:bg-[left_top_-182px] [&_.has-new-items]:bg-[left_top_-208px] [&_.out-of-stock]:bg-[left_top_-234px] [&_.only-at-jerrys]:bg-[left_top_-260px];
